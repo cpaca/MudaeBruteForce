@@ -493,17 +493,24 @@ int main() {
     // validate that no bundlesStr are exceeding seriesID:
     // Validate bundles.
     for(size_t i = 0; i < numBundles; i++){
-        size_t idx = 1;
         auto expectedSize = bundleData[i][0];
+
+        size_t idx = 1; // idx 0 is size so not a series
         size_t actualSize = 0;
+        size_t lastSeriesId = 0;
         auto seriesID = bundleData[i][idx];
         while(seriesID != -1){
             if(seriesID >= numSeries){
                 std::cerr << "Bundle has invalid SeriesID: " << bundleNames[i] << "\n";
                 return 1;
             }
+            if(seriesID < lastSeriesId){
+                std::cerr << "Bundle series are not in sorted order: " << bundleNames[i] << "\n";
+                return 3;
+            }
             actualSize += seriesData[seriesID][0];
             idx++;
+            lastSeriesId = seriesID;
             seriesID = bundleData[i][idx];
         }
 
