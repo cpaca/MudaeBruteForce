@@ -314,6 +314,15 @@ __global__ void makeError(const size_t numBundles, const size_t numSeries) {
     delete[] debugNum;
 }
 
+/**
+ * Attempts to find the best Disable List.
+ * @param deviceBundles The bundles. Format: [BundleSize, SeriesID, SeriesID, ... SeriesID, -1, BundleSize, ...]
+ * @param bundleIndices The index of each BundleSize value.
+ * @param numBundles How many bundles there are
+ * @param deviceSeries The series. Format: [SeriesSize, SeriesValue, SeriesSize, SeriesValue, ...]
+ * @param numSeries How many series there are. Note that deviceSeries is of length numSeries*2
+ * @param freeBundles Which bundles are "free" (for example, all western series can be disabled for free)
+ */
 __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndices, const size_t numBundles,
                          const size_t* deviceSeries, const size_t numSeries,
                          const size_t* freeBundles){
