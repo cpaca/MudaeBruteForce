@@ -304,16 +304,21 @@ const size_t OVERLAP_LIMIT = 30000;
 
 /**
  * Attempts to find the best Disable List.
- * @param deviceBundles The bundles. Format: [BundleSize, SeriesID, SeriesID, ... SeriesID, -1, BundleSize, ...]
- * @param bundleIndices The index of each BundleSize value.
+ * @param bundleSizes The size of each bundle.
  * @param numBundles How many bundles there are
- * @param deviceSeries The series. Format: [SeriesSize, SeriesValue, SeriesSize, SeriesValue, ...]
- * @param numSeries How many series there are. Note that deviceSeries is of length numSeries*2
- * @param freeBundles Which bundles are "free" (for example, all western series can be disabled for free)
+ * @param deviceSeries List of series. Format: [SeriesSize, SeriesValue, SeriesSize, SeriesValue, ...]
+ * @param seriesBundles List of what bundles each series is in. Format: [Bundle, Bundle, -1, Bundle, ...]
+ *  For series without a bundle, I suggest just pointing to -1.
+ * @param seriesBundlesIndices The index of seriesBundles that each series points to. So, for a given series n,
+ *  seriesBundles[seriesBundlesIndices[n]] = [bundleWithSeries, bundleWithSeries, ... , -1] and hopefully,
+ *  unless n = 0, seriesBundles[seriesBundlesIndices[n]-1] should be -1 because it was the end of the last instance.
+ * @param numSeries How many series there are. Note seriesBundlesIndices should be of length numSEries and deviceSeries
+ *  should be of length numSeries*2
+ * @param freeBundles The list of free bundles.
  */
-__global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndices, const size_t numBundles,
-                         const size_t* deviceSeries, const size_t numSeries,
-                         const size_t* freeBundles){
+__global__ void findBest(const size_t* bundleSizes, const size_t numBundles,
+                         const size_t* deviceSeries, const size_t* seriesBundles, const size_t* seriesBundlesIndices,
+                         const size_t numSeries, const size_t* freeBundles){
     // printf("CUDA findBest Executing\n");
     // The first numSeries indices (ie from 0 to numSeries-1) represent if a series is active
     // The rest represent if a bundle is active
@@ -338,7 +343,7 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
     for(size_t i = 0; i < numBundles; i++){
         if(freeBundles[i] != 0){
             // this bundle is free
-            disabledSets[disabledSetsIndex] = i;
+            disabledSets[disabledSetsIndex] = numSeries + i; // because the bundles are stored after the series' locations
             disabledSetsIndex++;
             numFreeBundles++;
         }
@@ -384,7 +389,7 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
         }
         else{
             // printf("CUDA Calculating bundle set size\n");
-            setSize = deviceBundles[bundleIndices[setToDisable - numSeries]];
+            setSize = bundleSizes[setToDisable - numSeries];
         }
         // Is it?
         // printf("CUDA checking if set is too large\n");
