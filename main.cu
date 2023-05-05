@@ -299,21 +299,6 @@ const size_t MAX_DL = 50;
 // Overlap limit, defined in Mudae
 const size_t OVERLAP_LIMIT = 30000;
 
-__global__ void makeError(const size_t numBundles, const size_t numSeries) {
-    // printf("CUDA findBest Executing\n");
-    // The first numSeries indices (ie from 0 to numSeries-1) represent if a series is active
-    // The rest represent if a bundle is active
-    size_t numSets = numSeries + numBundles;
-    bool *activatedSets = new bool[numSets];
-    // printf("CUDA Initializing activatedSets\n");
-    char *debugNum = new char[10];
-    for (size_t i = 0; i < numSets; i++) {
-        activatedSets[i] = false;
-        printf("Moving on\n");
-    }
-    delete[] debugNum;
-}
-
 /**
  * Attempts to find the best Disable List.
  * @param deviceBundles The bundles. Format: [BundleSize, SeriesID, SeriesID, ... SeriesID, -1, BundleSize, ...]
