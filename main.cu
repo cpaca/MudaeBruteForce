@@ -131,8 +131,8 @@ void convertArrToCuda(size_t* &arr, size_t arrSize){
  *  Note that each bundle need not be the same size. (Hence the -1 termination.)
  * @param numBundles The number of bundles.
  * @param[out] deviceBundles Output: The bundleData, represented as a 1D array. Basically, a flattened version of bundleData.
- * @param[out] bundleIndices The index (in deviceBundles) of each bundle. Note that bundleIndices[0] = 0 since the first
- *  bundle will obviously start at the first index of deviceBundles.
+ * @param[out] bundleIndices The index (in bundleSeries) of each bundle. Note that bundleIndices[0] = 0 since the first
+ *  bundle will obviously start at the first index of bundleSeries.
  */
 void copyBundlesToDevice(size_t** bundleData, size_t numBundles, size_t* &deviceBundles, size_t* &bundleIndices){
     // First, we need to convert bundleData into a 1D array.
@@ -183,7 +183,7 @@ void copyBundlesToDevice(size_t** bundleData, size_t numBundles, size_t* &device
         throw std::logic_error("The flattened list isn't the right size.");
     }
 
-    // Finally, CUDAify deviceBundles and bundleIndices
+    // Finally, CUDAify bundleSeries and bundleIndices
     convertArrToCuda(bundleIndices, numBundles);
     convertArrToCuda(deviceBundles, flattenedSize);
 }
@@ -267,7 +267,7 @@ __device__ void deviceStrCat(char* dest, const char* src){
 /**
  * Activates a bundle located at bundleIndex.
  * Returns 0 if there is no value gained by activating the bundle.
- * @param bundleIndex The index of the bundle in deviceBundles. Therefore, deviceBundles[bundleIndex] = bundleSize.
+ * @param bundleIndex The index of the bundle in bundleSeries. Therefore, bundleSeries[bundleIndex] = bundleSize.
  * @param deviceBundles 1D array of bundle data
  * @param deviceSeries 1D array of series data
  * @param activatedSets List of already-activated series
@@ -302,6 +302,20 @@ const size_t MAX_FREE_BUNDLES = 5;
 // Overlap limit, defined in Mudae
 const size_t OVERLAP_LIMIT = 30000;
 
+// For each bundle, what series are in it?
+size_t* bundleSeries = nullptr;
+// Index of each bundle in bundleSeries. So bundleSeries[bundleIndices[n]] is the first index of a bundle in bundleSeries.
+size_t* bundleIndices = nullptr;
+
+// Data about each series.
+// deviceSeries[2n] is the size of series n
+// deviceSeries[2n+1] is the value of series n
+size_t* deviceSeries = nullptr;
+
+// Free bundles.
+// If freeBundles[n] is non-zero, then bundle n is free.
+size_t* freeBundles = nullptr;
+
 /**
  * Attempts to find the best Disable List.
  * @param bundleSizes The size of each bundle.
@@ -316,6 +330,7 @@ const size_t OVERLAP_LIMIT = 30000;
  *  should be of length numSeries*2
  * @param freeBundles The list of free bundles.
  */
+ /*
 __global__ void findBest(const size_t* bundleSizes, const size_t numBundles,
                          const size_t* deviceSeries, const size_t* seriesBundles, const size_t* seriesBundlesIndices,
                          const size_t numSeries, const size_t* freeBundles){
@@ -452,6 +467,7 @@ __global__ void findBest(const size_t* bundleSizes, const size_t numBundles,
     // Free up memory.
     delete[] disabledSets;
 }
+//*/
 
 int main() {
     size_t numBundles;
@@ -503,7 +519,7 @@ int main() {
     // There's also togglehentai on some servers.
     // So we should keep track of that.
     // This is size_t, even if it could be bool*, just for consistency.
-    auto* freeBundles = new size_t[numBundles];
+    freeBundles = new size_t[numBundles];
     std::string freeBundleNames[] = {"Western", "Hentai"};
     int numFreeBundles = sizeof(freeBundleNames)/sizeof(freeBundleNames[0]);
     int freeBundlesFound = 0;
@@ -534,21 +550,21 @@ int main() {
     // Can't do that for bundleData because bundleData is non-rectangular.
     // ... bleh, cudaMallocPitch is annoying, I might also do seriesData as a 1D array...
 
-    size_t* deviceBundles = nullptr;
-    size_t* bundleIndices = nullptr;
-    copyBundlesToDevice(bundleData, numBundles, deviceBundles, bundleIndices);
-    if(deviceBundles == nullptr || bundleIndices == nullptr){
+    bundleSeries = nullptr;
+    bundleIndices = nullptr;
+    copyBundlesToDevice(bundleData, numBundles, bundleSeries, bundleIndices);
+    if(bundleSeries == nullptr || bundleIndices == nullptr){
         throw std::logic_error("Device bundles and/or bundleIndices did not get overwritten properly.");
     }
 
-    size_t* deviceSeries = nullptr;
+    deviceSeries = nullptr;
     copySeriesToDevice(seriesData, numSeries, deviceSeries);
     if(deviceSeries == nullptr){
         throw std::logic_error("Device series did not get overwritten properly.");
     }
 
     // Objects available in Device memory:
-    //  deviceBundles, bundleIndices
+    //  bundleSeries, bundleIndices
     //  deviceSeries
     //  freeBundles
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
@@ -559,7 +575,7 @@ int main() {
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
     for(int i = 0; i < 128; i++) {
-        findBest<<<64, 1024>>>(deviceBundles, bundleIndices, numBundles, deviceSeries, numSeries, freeBundles);
+        // findBest<<<64, 1024>>>(bundleSeries, bundleIndices, numBundles, deviceSeries, numSeries, freeBundles);
         cudaDeviceSynchronize();
         cudaError_t lasterror = cudaGetLastError();
         if (lasterror != cudaSuccess) {
@@ -587,7 +603,7 @@ int main() {
     // Free up CUDA.
     cudaFree(freeBundles);
     cudaFree(deviceSeries);
-    cudaFree(deviceBundles);
+    cudaFree(bundleSeries);
     cudaFree(bundleIndices);
 
     return 0;
