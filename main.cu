@@ -315,16 +315,6 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
     // The first numSeries indices (ie from 0 to numSeries-1) represent if a series is active
     // The rest represent if a bundle is active
     size_t numSets = numSeries + numBundles;
-    bool* activatedSets = new bool[numSets];
-    // printf("CUDA Initializing activatedSets\n");
-//    char* debugNum = new char[10];
-    for(size_t i = 0; i < numSets; i++){
-//        deviceItos(debugNum, i);
-//        deviceStrCat(debugNum, "\n");
-//        printf("%s", debugNum);
-        activatedSets[i] = false;
-    }
-//    delete[] debugNum;
 
     // printf("CUDA Calculating seed\n");
     size_t seed = (blockIdx.x << 10) + threadIdx.x;
@@ -340,15 +330,8 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
     auto* disabledSets = new size_t[MAX_DL];
 
     // Activate the freeBundles
-    for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
-        if(freeBundles[bundleNum] != 0){
-            // This bundle is active.
-            // we don't actually need to save the score for this since all sets will have this for free
-            // and don't have to check activatedSets because it just got set to all-false
-            activatedSets[numSeries + bundleNum] = true;
-            activateBundle(bundleIndices[bundleNum], deviceBundles, deviceSeries, activatedSets);
-        }
-    }
+    // TODO: Activate the free bundles somehow.
+    //  Note that freeBundles[bundleNum] is free if it is nonzero
 
     // printf("CUDA entering while loop\n");
     size_t numFails = 0;
@@ -361,11 +344,7 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
         // Pick a set to disable.
         // printf("CUDA picking a set to disable\n");
         size_t setToDisable = generateRandom(seed) % numSets;
-        if(activatedSets[setToDisable]){
-            // Already disabled this one.
-            numFails++;
-            continue;
-        }
+        // TODO: Check to determine if a set has already been disabled.
         // LOGIC NOTE:
         // If we're here, then one of two things is true:
         // Either we're going to activate the set
@@ -378,7 +357,7 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
         //  and any bundle the set is in will DEFINITELY be too fat to be activated, anyway
         //  and we should "fail faster" next time
         //  So activatedSets[setToDisable] = true (fail at the above statement)
-        activatedSets[setToDisable] = true;
+        // TODO: Is the logic note relevant anymore in the new system?
         // End of fun logic
 
         // See if set is small enough
@@ -415,8 +394,8 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
         }
         else{
             // This set is a BUNDLE.
-            size_t bundleValue =
-                    activateBundle(setToDisable - numSeries, deviceBundles, deviceSeries, activatedSets);
+            // TODO: Activate the bundle somehow.
+            size_t bundleValue = -1;
             if(bundleValue == 0){
                 continue; // don't add this bundle to disableSeries
             }
@@ -452,7 +431,6 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
 
     // Free up memory.
     delete[] disabledSets;
-    delete[] activatedSets;
 }
 
 int main() {
