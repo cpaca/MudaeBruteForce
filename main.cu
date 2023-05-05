@@ -296,6 +296,9 @@ __device__ size_t activateBundle(const size_t &bundleIndex, const size_t* device
 __device__ size_t bestScore = 0;
 // Maximum number of bundles/series that can be activated.
 const size_t MAX_DL = 50;
+// Maximum number of free bundles.
+// Can be changed whenever, but keep it low or CUDA will demand much more memory than necessary.
+const size_t MAX_FREE_BUNDLES = 5;
 // Overlap limit, defined in Mudae
 const size_t OVERLAP_LIMIT = 30000;
 
@@ -327,11 +330,23 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
     size_t remainingOverlap = OVERLAP_LIMIT;
     // and only so many items can be disabled.
     size_t DLSlotsUsed = 0;
-    auto* disabledSets = new size_t[MAX_DL];
+    size_t disabledSetsIndex = 0; // Have to do it this way for freeBundles.
+    auto* disabledSets = new size_t[MAX_DL+MAX_FREE_BUNDLES];
 
     // Activate the freeBundles
-    // TODO: Activate the free bundles somehow.
-    //  Note that freeBundles[bundleNum] is free if it is nonzero
+    int numFreeBundles = 0;
+    for(size_t i = 0; i < numBundles; i++){
+        if(freeBundles[i] != 0){
+            // this bundle is free
+            disabledSets[disabledSetsIndex] = i;
+            disabledSetsIndex++;
+            numFreeBundles++;
+        }
+    }
+    if(numFreeBundles > MAX_FREE_BUNDLES){
+        printf("Increase MAX_FREE_BUNDLES.\n");
+        return;
+    }
 
     // printf("CUDA entering while loop\n");
     size_t numFails = 0;
@@ -416,7 +431,7 @@ __global__ void findBest(const size_t* deviceBundles, const size_t* bundleIndice
         deviceItos(num, score);
         deviceStrCat(betterStr, num);
         deviceStrCat(betterStr, ", series used, ");
-        for(size_t DLIdx = 0; DLIdx < DLSlotsUsed; DLIdx++){
+        for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
             deviceItos(num, disabledSets[DLIdx]);
             deviceStrCat(betterStr, num);
             deviceStrCat(betterStr, ", ");
