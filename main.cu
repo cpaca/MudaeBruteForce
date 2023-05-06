@@ -2,6 +2,14 @@
 #include <fstream>
 #include <string>
 
+// Maximum number of bundles/series that can be activated.
+#define MAX_DL 50
+// Maximum number of free bundles.
+// Can be changed whenever, but keep it low or CUDA will demand much more memory than necessary.
+#define MAX_FREE_BUNDLES 5
+// Overlap limit, defined in Mudae
+#define OVERLAP_LIMIT 30000
+
 std::string* getLines(const std::string& fileName, size_t& arrSize){
     std::ifstream bundleFile;
     bundleFile.open(fileName);
@@ -319,13 +327,6 @@ bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_
 
 // Score to beat.
 __device__ size_t bestScore = 0;
-// Maximum number of bundles/series that can be activated.
-const size_t MAX_DL = 50;
-// Maximum number of free bundles.
-// Can be changed whenever, but keep it low or CUDA will demand much more memory than necessary.
-const size_t MAX_FREE_BUNDLES = 5;
-// Overlap limit, defined in Mudae
-const size_t OVERLAP_LIMIT = 30000;
 
 // For each bundle, what series are in it?
 // (Index 0 is also the bundle's size.)
