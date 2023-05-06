@@ -436,7 +436,7 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
  */
 __device__ bool bundleOverlap(const size_t* A, const size_t* B){
     for(size_t offset = 0; offset < setBundlesSetSize; offset++){
-        if(A[offset] & B[offset]){
+        if((A[offset] & B[offset]) != 0){
             return true;
         }
     }
@@ -493,8 +493,9 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // To address restriction 3, we need to know what bundles are used.
     printf("CUDA calculating used bundles\n");
     auto* bundlesUsed = new size_t[setBundlesSetSize];
-    for(size_t item = 0; item < disabledSetsIndex; item++){
-        if(item > numSeries){
+    for(size_t idx = 0; idx < disabledSetsIndex; idx++){
+        size_t item = disabledSets[idx];
+        if(item >= numSeries){
             size_t bundleNum = item - numSeries;
             size_t bundlesUsedWordSize = 8 * sizeof(size_t);
             size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
@@ -519,7 +520,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
                 }
             }
         }
-
         if(applySeries){
             // Add this series's value to the score.
             score += deviceSeries[(2 * seriesNum) + 1];
