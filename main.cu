@@ -424,6 +424,7 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
     }
     //*/
 
+    cudaMemcpyToSymbol(setBundlesSetSize, &host_setBundlesSetSize, sizeof(host_setBundlesSetSize));
     convertArrToCuda(host_setBundles, numSets * host_setBundlesSetSize);
     cudaMemcpyToSymbol(setBundles, &host_setBundles, sizeof(host_setBundles));
 }
@@ -662,18 +663,21 @@ int main() {
     // Can't do that for bundleData because bundleData is non-rectangular.
     // ... bleh, cudaMallocPitch is annoying, I might also do seriesData as a 1D array...
 
-    bundleSeries = nullptr;
-    bundleIndices = nullptr;
-    copyBundlesToDevice(bundleData, numBundles, bundleSeries, bundleIndices);
-    if(bundleSeries == nullptr || bundleIndices == nullptr){
+    size_t* host_bundleSeries = nullptr;
+    size_t* host_bundleIndices = nullptr;
+    copyBundlesToDevice(bundleData, numBundles, host_bundleSeries, host_bundleIndices);
+    if(host_bundleSeries == nullptr || host_bundleIndices == nullptr){
         throw std::logic_error("Device bundles and/or bundleIndices did not get overwritten properly.");
     }
+    cudaMemcpyToSymbol(bundleSeries, &host_bundleSeries, sizeof(host_bundleSeries));
+    cudaMemcpyToSymbol(bundleIndices, &host_bundleIndices, sizeof(host_bundleIndices));
 
-    deviceSeries = nullptr;
-    copySeriesToDevice(seriesData, numSeries, deviceSeries);
-    if(deviceSeries == nullptr){
+    size_t* host_deviceSeries = nullptr;
+    copySeriesToDevice(seriesData, numSeries, host_deviceSeries);
+    if(host_deviceSeries == nullptr){
         throw std::logic_error("Device series did not get overwritten properly.");
     }
+    cudaMemcpyToSymbol(deviceSeries, &host_deviceSeries, sizeof(host_deviceSeries));
 
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     // Section 3.2.2 uses "int N" in both host and device memory.
