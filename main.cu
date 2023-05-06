@@ -529,7 +529,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
-    if(oldBest <= score){
+    if(oldBest < score){
         // Copied straight from the old implementation of findBest.
         char betterStr[1000] = "Better DL Found, score: ";
         char* num = new char[10];
@@ -543,6 +543,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
         deviceStrCat(betterStr, "\n");
         size_t secondCheck = atomicMax(&bestScore, score);
+        // if this was < instead of <= and there was a "best score", it would spam out that best score nonstop
         if(secondCheck <= score) {
             printf("%s", betterStr);
         }
@@ -687,7 +688,7 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    findBest<<<1, 1024>>>(numBundles, numSeries);
+    findBest<<<1024, 1024>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {
