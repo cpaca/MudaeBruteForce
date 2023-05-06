@@ -135,8 +135,28 @@ void convertArrToCuda(size_t* &arr, size_t arrSize){
  */
 void copyArrToCuda(size_t* &to, size_t* from, size_t arrSize){
     cudaMalloc(&to, arrSize * sizeof(size_t));
-    cudaMemcpy(to, from, arrSize * sizeof(size_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(&to, from, arrSize * sizeof(size_t), cudaMemcpyHostToDevice);
     delete[] from;
+}
+
+/**
+ * Converts series data into a 1D array created using cudaMalloc.
+ *  This is different to copyBundlesToDevice because the trailing -1s at the end of each bundle are NOT copied
+ *  Also, since we know this is a rectangular array, many optimizations can be done.
+ * @param seriesData Series data. Note that this is a rectangular array of numSeries height and 2 items wide.
+ * @param numSeries Number of series.
+ * @param[out] deviceSeries Series data. This is made using cudaMalloc, and is a 1D array.
+ */
+void copySeriesToDevice(size_t** seriesData, size_t numSeries, size_t* &deviceSeries){
+    // First, create the 1D array on host.
+    deviceSeries = new size_t[numSeries*2];
+    for(size_t s = 0; s < numSeries; s++){
+        deviceSeries[(2*s)] = seriesData[s][0];
+        deviceSeries[(2*s)+1] = seriesData[s][1];
+    }
+    // Convert to CUDA.
+    convertArrToCuda(deviceSeries, 2*numSeries);
+    // huh, that was easier than the bundles.
 }
 
 /**
@@ -359,26 +379,6 @@ void copyBundlesToDevice(size_t** bundleData, size_t numBundles){
     copyArrToCuda(bundleSeries, hostBundles, flattenedSize);
 }
 
-/**
- * Converts series data into a 1D array created using cudaMalloc.
- *  This is different to copyBundlesToDevice because the trailing -1s at the end of each bundle are NOT copied
- *  Also, since we know this is a rectangular array, many optimizations can be done.
- * @param seriesData Series data. Note that this is a rectangular array of numSeries height and 2 items wide.
- * @param numSeries Number of series.
- * @param[out] deviceSeries Series data. This is made using cudaMalloc, and is a 1D array.
- */
-void copySeriesToDevice(size_t** seriesData, size_t numSeries){
-    // First, create the array on host.
-    auto* seriesArr = new size_t[numSeries*2];
-    for(size_t s = 0; s < numSeries; s++){
-        seriesArr[(2*s)] = seriesData[s][0];
-        seriesArr[(2*s)+1] = seriesData[s][1];
-    }
-    // Convert to CUDA.
-    copyArrToCuda(deviceSeries, seriesArr, 2*numSeries);
-    // huh, that was easier than the bundles.
-}
-
 __device__ size_t getSetSize(size_t setNum, size_t numSeries){
     if(setNum < numSeries){
         return deviceSeries[2*setNum];
@@ -478,7 +478,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Apply the free bundles.
     printf("CUDA applying free bundles.\n");
     for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
-        printf("Attempting to access freeBundles.\n");
         if(freeBundles[bundleNum] != 0){
             disabledSets[disabledSetsIndex] = bundleNum + numSeries;
             disabledSetsIndex++;
@@ -676,7 +675,11 @@ int main() {
 
     copyBundlesToDevice(bundleData, numBundles);
 
-    copySeriesToDevice(seriesData, numSeries);
+    deviceSeries = nullptr;
+    copySeriesToDevice(seriesData, numSeries, deviceSeries);
+    if(deviceSeries == nullptr){
+        throw std::logic_error("Device series did not get overwritten properly.");
+    }
 
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     // Section 3.2.2 uses "int N" in both host and device memory.
