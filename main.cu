@@ -445,13 +445,13 @@ __device__ bool bundleOverlap(const size_t* A, const size_t* B){
 
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Set up randomness
-    printf("CUDA setting up randomness\n");
+    // printf("CUDA setting up randomness\n");
     size_t numSets = numSeries + numBundles;
     size_t seed = (blockIdx.x << 10) + threadIdx.x;
     seed = generateRandom(seed) ^ clock();
 
     // There are three DL limitations.
-    printf("CUDA initializing DL limitations 1 and 2\n");
+    // printf("CUDA initializing DL limitations 1 and 2\n");
     // You can disable at most a certain number of series. (MAX_DL)
     auto* disabledSets = new size_t[MAX_DL + MAX_FREE_BUNDLES];
     size_t disabledSetsIndex = 0;
@@ -462,7 +462,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // That limitation is handled when the score is calculated.
 
     // Apply the free bundles.
-    printf("CUDA applying free bundles.\n");
+    // printf("CUDA applying free bundles.\n");
     for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
         if(freeBundles[bundleNum] != 0){
             disabledSets[disabledSetsIndex] = bundleNum + numSeries;
@@ -472,7 +472,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
     // Create a theoretical DL.
     // This addresses restriction 1.
-    printf("CUDA creating theoretical DL\n");
+    // printf("CUDA creating theoretical DL\n");
     size_t numFails = 0;
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
         size_t setToAdd = generateRandom(seed) % numSets;
@@ -491,7 +491,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     }
 
     // To address restriction 3, we need to know what bundles are used.
-    printf("CUDA calculating used bundles\n");
+    // printf("CUDA calculating used bundles\n");
     auto* bundlesUsed = new size_t[setBundlesSetSize];
     for(size_t idx = 0; idx < disabledSetsIndex; idx++){
         size_t item = disabledSets[idx];
@@ -506,7 +506,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     }
 
     // Calculate the score.
-    printf("CUDA calculating score\n");
+    // printf("CUDA calculating score\n");
     size_t score = 0;
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
@@ -526,7 +526,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
     }
 
-    printf("CUDA checking if this is the best score.\n");
+    // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
     if(oldBest <= score){
         // Copied straight from the old implementation of findBest.
@@ -548,7 +548,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         delete[] num;
     }
 
-    printf("CUDA findBest finished.\n");
+    // printf("CUDA findBest finished.\n");
 
     // Free up memory.
     delete[] bundlesUsed;
@@ -686,7 +686,7 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    findBest<<<1, 1>>>(numBundles, numSeries);
+    findBest<<<1, 1024>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {
