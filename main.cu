@@ -640,16 +640,16 @@ int main() {
     // There's also togglehentai on some servers.
     // So we should keep track of that.
     // This is size_t, even if it could be bool*, just for consistency.
-    auto* host_freeBundles = new size_t[numBundles];
+    freeBundles = new size_t[numBundles];
     std::string freeBundleNames[] = {"Western", "Hentai"};
     int numFreeBundles = sizeof(freeBundleNames)/sizeof(freeBundleNames[0]);
     int freeBundlesFound = 0;
     for(size_t i = 0; i < numBundles; i++){
         std::string bundleName = bundleNames[i];
-        host_freeBundles[i] = 0;
+        freeBundles[i] = 0;
         for(const std::string& freeBundleName : freeBundleNames){
             if(freeBundleName == bundleName){
-                host_freeBundles[i] = ~0; // not 0 = all 1s (0xfff...)
+                freeBundles[i] = ~0; // not 0 = all 1s (0xfff...)
                 freeBundlesFound += 1;
                 break;
             }
@@ -662,7 +662,10 @@ int main() {
     }
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
-    copyArrToCuda(freeBundles, host_freeBundles, numBundles);
+    convertArrToCuda(freeBundles, numBundles);
+    if(freeBundles == nullptr){
+        std::cout << "FreeBundles not initialized correctly.";
+    }
 
     initializeSetBundles(numBundles, numSeries, bundleData);
 
