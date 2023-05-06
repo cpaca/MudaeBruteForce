@@ -694,12 +694,15 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    findBest<<<64, 1024>>>(numBundles, numSeries);
-    cudaDeviceSynchronize();
-    cudaError_t lasterror = cudaGetLastError();
-    if (lasterror != cudaSuccess) {
-        const char *errName = cudaGetErrorName(lasterror);
-        printf("%s\n", errName);
+    for(size_t i = 0; i < 64; i++) {
+        findBest<<<2048, 1024>>>(numBundles, numSeries);
+        cudaDeviceSynchronize();
+        cudaError_t lasterror = cudaGetLastError();
+        if (lasterror != cudaSuccess) {
+            const char *errName = cudaGetErrorName(lasterror);
+            printf("%s\n", errName);
+            break;
+        }
     }
     printf("FindBest finished\n");
 
