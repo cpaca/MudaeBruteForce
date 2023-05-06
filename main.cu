@@ -292,6 +292,31 @@ __device__ size_t activateBundle(const size_t &bundleIndex, const size_t* device
     return improvedValue;
 }
 
+bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_t numSeries, size_t** bundleData){
+    if(bundleNum >= numBundles){
+        return false;
+    }
+    if(setNum >= numSeries){
+        // this is a bundle, not a series
+        setNum -= numSeries;
+        return setNum == bundleNum;
+    }
+    // This is a series and a valid bundle number.
+    // bundlePtr points to the start of the bundle.
+    // was done this way before because I was using bundleIndices cause I forgot this isn't device code.
+    size_t* bundlePtr = bundleData[bundleNum];
+    // Note that the start of the bundle is the SIZE of the bundle, but we actually want the next value.
+    bundlePtr++;
+    // Search for our series (ie search for setNum)
+    // Note that with the optimization on Python's side, bundle_data is in sorted order.
+    while((*bundlePtr) < setNum){
+        bundlePtr++;
+    }
+    // Now either bundlePtr is at setNum
+    // or bundlePtr is past setNum
+    return (*bundlePtr) == setNum;
+}
+
 // Score to beat.
 __device__ size_t bestScore = 0;
 // Maximum number of bundles/series that can be activated.
@@ -303,18 +328,89 @@ const size_t MAX_FREE_BUNDLES = 5;
 const size_t OVERLAP_LIMIT = 30000;
 
 // For each bundle, what series are in it?
-size_t* bundleSeries = nullptr;
+__device__ size_t* bundleSeries = nullptr;
 // Index of each bundle in bundleSeries. So bundleSeries[bundleIndices[n]] is the first index of a bundle in bundleSeries.
-size_t* bundleIndices = nullptr;
+__device__ size_t* bundleIndices = nullptr;
+
+// For each set, what bundles contain it?
+// The format is... kind of a long description.
+// First, let setBundlesSetSize = (numBundles/sizeof(size_t))
+// And for shorthand, let sBSS = setBundlesSetSize
+// Indices setBundles[setNum * sBSS] to setBundles[(setNum+1)*sBSS - 1] are the indices for set setNum
+// In other words, to loop over all values in setBundles relevant to a set:
+// for(int i = 0; i < sBSS; i++){/*do something with setBundles[setNum*sBSS + i]*/}
+//
+// Now express setBundles[0], setBundles[1], ... as a bitstream.
+// The first bit represents if the set is in bundle # 0
+// The second bit represents if the set is in bundle # 1
+// etc.
+// Because this is a bitstream and size_t is 64-bits:
+// the 65th bit (aka, the first bit of setBundles[1], aka setBundles[1]&0) represents if the set is in bundle #65
+//
+// Note that this is setBundles, so it needs to work for all SETS. Even Bundles.
+// Also note that for bundles, their "bitstream" is all 0s except for itself, where it is 1.
+// TODO: Optimization: Bundles which are entirely contained within other bundles (ex cover corp is in vtubers)
+//  could have a better setBundles value.
+__device__ size_t* setBundles = nullptr;
+__device__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
 
 // Data about each series.
 // deviceSeries[2n] is the size of series n
 // deviceSeries[2n+1] is the value of series n
-size_t* deviceSeries = nullptr;
+__device__ size_t* deviceSeries = nullptr;
 
 // Free bundles.
 // If freeBundles[n] is non-zero, then bundle n is free.
-size_t* freeBundles = nullptr;
+__device__ size_t* freeBundles = nullptr;
+
+// Initializes setBundles.
+// Note that this needs to be placed after the fuckton of variables because it manipulates some of them.
+void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData){
+    // create setBundles.
+    // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
+    // Explanation of +1: If there are 7 bundles, setSize should be 1, not 0.
+    setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
+    size_t numSets = numBundles + numSeries;
+    // if setBundlesSetSize is -1 for some reason this will allocate petabytes of memory (won't work)
+    // or, more likely, throw an error
+    setBundles = new size_t[numSets * setBundlesSetSize];
+    // Set up the series.
+    // there's a more computationally efficient way to do this but the GPU part is where i'm worried about that.
+    for(size_t setNum = 0; setNum < numSets; setNum++){
+        for(size_t i = 0; i < setBundlesSetSize; i++){
+            size_t setBundlesIdx = (setNum * setBundlesSetSize) + i;
+            size_t setBundlesValue = 0;
+            // again *8 because 8 bits in a byte
+            for(size_t bundleOffset = 0; bundleOffset < (sizeof(size_t)*8); bundleOffset++){
+                size_t bundleNumToCheck = (sizeof(size_t) * i) + bundleOffset;
+                if(bundleContainsSet(setNum, bundleNumToCheck, numBundles, numSeries, bundleData)){
+                    setBundlesValue = setBundlesValue | (1 << bundleOffset);
+                }
+            }
+            setBundles[setBundlesIdx] = setBundlesValue;
+        }
+    }
+
+    // Validation.
+    // Comment out if you don't want that validation.
+    /*
+    for(size_t setNum = 0; setNum < numSets; setNum++){
+        std::cout << "Bundles for set " << std::to_string(setNum) << "\n";
+        size_t bundleNum = 0;
+        for(size_t i = 0; i < setBundlesSetSize; i++){
+            size_t setBundlesVal = setBundles[(setBundlesSetSize * setNum) + i];
+            while(setBundlesVal > 0){
+                if(setBundlesVal%2 != 0) {
+                    std::cout << std::to_string(bundleNum) << "\n";
+                }
+                setBundlesVal /= 2;
+                bundleNum++;
+            }
+        }
+        std::cout << "\n";
+    }
+    //*/
+}
 
 /**
  * Attempts to find the best Disable List.
@@ -480,6 +576,20 @@ int main() {
     }
     delete[] bundlesStr;
 
+    // doing some validation
+    // comment out if you don't want that validation.
+    /*
+    for(size_t i = 0; i < numBundles; i++){
+        std::cout << "Validating bundle " << std::to_string(i) << "\n";
+        size_t* bundlePtr = bundleData[i];
+        while(*bundlePtr != -1){
+            std::cout << std::to_string(*bundlePtr) << ", ";
+            bundlePtr++;
+        }
+        std::cout << "\n";
+    }
+    //*/
+
     // next read the seriesStr
     size_t numSeries;
     std::string* seriesStr = getLines("../series_data.txt", numSeries);
@@ -550,6 +660,8 @@ int main() {
     // And convert freeBundles into a CUDA usable form.
     convertArrToCuda(freeBundles, numBundles);
 
+    initializeSetBundles(numBundles, numSeries, bundleData);
+
     // time to do CUDA.
     // https://forums.developer.nvidia.com/t/how-to-cudamalloc-two-dimensional-array/4042
     // Mother fucker, I'm gonna have to convert the bundleData into a 1D array.
@@ -570,10 +682,6 @@ int main() {
         throw std::logic_error("Device series did not get overwritten properly.");
     }
 
-    // Objects available in Device memory:
-    //  bundleSeries, bundleIndices
-    //  deviceSeries
-    //  freeBundles
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     // Section 3.2.2 uses "int N" in both host and device memory.
 
@@ -581,20 +689,19 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    for(int i = 0; i < 128; i++) {
-        // findBest<<<64, 1024>>>(bundleSeries, bundleIndices, numBundles, deviceSeries, numSeries, freeBundles);
-        cudaDeviceSynchronize();
-        cudaError_t lasterror = cudaGetLastError();
-        if (lasterror != cudaSuccess) {
-            const char *errName = cudaGetErrorName(cudaGetLastError());
-            printf("%s\n", errName);
-            break;
-        }
+    // findBest<<<64, 1024>>>(bundleSeries, bundleIndices, numBundles, deviceSeries, numSeries, freeBundles);
+    cudaDeviceSynchronize();
+    cudaError_t lasterror = cudaGetLastError();
+    if (lasterror != cudaSuccess) {
+        const char *errName = cudaGetErrorName(cudaGetLastError());
+        printf("%s\n", errName);
+//        break;
     }
     printf("FindBest finished\n");
 
     // Free up memory.
     std::cout << "Freeing up memory.\n";
+    delete[] setBundles;
     // Free up the bundles.
     for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
         delete[] bundleData[bundleNum];
