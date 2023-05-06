@@ -163,7 +163,7 @@ void copyBundlesToDevice(size_t** bundleData, size_t numBundles, size_t* &device
         }
         // and one more for the -1 position.
         flattenedSize++;
-        bundleIdx++;
+        // bundleIdx++;
     }
 
     // Now we can construct our 1D array
@@ -450,6 +450,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     size_t numSets = numSeries + numBundles;
     size_t seed = (blockIdx.x << 10) + threadIdx.x;
     seed = generateRandom(seed) ^ clock();
+    // seed = 0; // debug to get the same result every time
 
     // There are three DL limitations.
     // printf("CUDA initializing DL limitations 1 and 2\n");
@@ -484,6 +485,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             disabledSets[disabledSetsIndex] = setToAdd;
             disabledSetsIndex++;
             DLSlotsUsed++;
+            remainingOverlap -= setSize;
             numFails = 0;
         }
         else{
@@ -494,6 +496,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // To address restriction 3, we need to know what bundles are used.
     // printf("CUDA calculating used bundles\n");
     auto* bundlesUsed = new size_t[setBundlesSetSize];
+    memset(bundlesUsed, 0, sizeof(size_t) * setBundlesSetSize);
     for(size_t idx = 0; idx < disabledSetsIndex; idx++){
         size_t item = disabledSets[idx];
         if(item >= numSeries){
@@ -541,7 +544,10 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             deviceStrCat(betterStr, num);
             deviceStrCat(betterStr, ", ");
         }
-        deviceStrCat(betterStr, "\n");
+        deviceStrCat(betterStr, "\n Remaining overlap: ");
+        deviceItos(num, remainingOverlap);
+        deviceStrCat(betterStr, num);
+        deviceStrCat(betterStr, "\n\n");
         size_t secondCheck = atomicMax(&bestScore, score);
         // if this was < instead of <= and there was a "best score", it would spam out that best score nonstop
         if(secondCheck <= score) {
@@ -688,13 +694,12 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    findBest<<<1024, 1024>>>(numBundles, numSeries);
+    findBest<<<64, 1024>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {
         const char *errName = cudaGetErrorName(lasterror);
         printf("%s\n", errName);
-//        break;
     }
     printf("FindBest finished\n");
 
