@@ -328,6 +328,7 @@ const size_t MAX_FREE_BUNDLES = 5;
 const size_t OVERLAP_LIMIT = 30000;
 
 // For each bundle, what series are in it?
+// (Index 0 is also the bundle's size.)
 __device__ size_t* bundleSeries = nullptr;
 // Index of each bundle in bundleSeries. So bundleSeries[bundleIndices[n]] is the first index of a bundle in bundleSeries.
 __device__ size_t* bundleIndices = nullptr;
@@ -363,22 +364,34 @@ __device__ size_t* deviceSeries = nullptr;
 // If freeBundles[n] is non-zero, then bundle n is free.
 __device__ size_t* freeBundles = nullptr;
 
+__device__ size_t getSetSize(size_t setNum, size_t numSeries){
+    if(setNum < numSeries){
+        return deviceSeries[2*setNum];
+    }
+    else{
+        return bundleSeries[bundleIndices[setNum - numSeries]];
+    }
+}
+
 // Initializes setBundles.
 // Note that this needs to be placed after the fuckton of variables because it manipulates some of them.
 void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData){
     // create setBundles.
     // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
     // Explanation of +1: If there are 7 bundles, setSize should be 1, not 0.
-    setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
+    // host_ added because I can't write device data directly @ host level.
+    const size_t host_setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
+    cudaMemcpyToSymbol(setBundlesSetSize, &host_setBundlesSetSize, sizeof(size_t));
     size_t numSets = numBundles + numSeries;
+
     // if setBundlesSetSize is -1 for some reason this will allocate petabytes of memory (won't work)
     // or, more likely, throw an error
-    setBundles = new size_t[numSets * setBundlesSetSize];
+    auto* host_setBundles = new size_t[numSets * host_setBundlesSetSize];
     // Set up the series.
     // there's a more computationally efficient way to do this but the GPU part is where i'm worried about that.
     for(size_t setNum = 0; setNum < numSets; setNum++){
-        for(size_t i = 0; i < setBundlesSetSize; i++){
-            size_t setBundlesIdx = (setNum * setBundlesSetSize) + i;
+        for(size_t i = 0; i < host_setBundlesSetSize; i++){
+            size_t setBundlesIdx = (setNum * host_setBundlesSetSize) + i;
             size_t setBundlesValue = 0;
             // again *8 because 8 bits in a byte
             for(size_t bundleOffset = 0; bundleOffset < (sizeof(size_t)*8); bundleOffset++){
@@ -387,7 +400,7 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
                     setBundlesValue = setBundlesValue | (1 << bundleOffset);
                 }
             }
-            setBundles[setBundlesIdx] = setBundlesValue;
+            host_setBundles[setBundlesIdx] = setBundlesValue;
         }
     }
 
@@ -397,8 +410,8 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
     for(size_t setNum = 0; setNum < numSets; setNum++){
         std::cout << "Bundles for set " << std::to_string(setNum) << "\n";
         size_t bundleNum = 0;
-        for(size_t i = 0; i < setBundlesSetSize; i++){
-            size_t setBundlesVal = setBundles[(setBundlesSetSize * setNum) + i];
+        for(size_t i = 0; i < host_setBundlesSetSize; i++){
+            size_t setBundlesVal = setBundles[(host_setBundlesSetSize * setNum) + i];
             while(setBundlesVal > 0){
                 if(setBundlesVal%2 != 0) {
                     std::cout << std::to_string(bundleNum) << "\n";
@@ -410,6 +423,135 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
         std::cout << "\n";
     }
     //*/
+
+    convertArrToCuda(host_setBundles, numSets * host_setBundlesSetSize);
+    cudaMemcpyToSymbol(setBundles, &host_setBundles, sizeof(host_setBundles));
+}
+
+/**
+ * Given two lists of bundles in the setBundles format, this returns whether there is an overlap in those bundles.
+ * So 0b00010111 and 0b00100010 have a bundle overlap (bundle 6) but neither has a bundle overlap with 0b11000000
+ * as neither of them uses bundles 0 or 1.
+ */
+__device__ bool bundleOverlap(const size_t* A, const size_t* B){
+    for(size_t offset = 0; offset < setBundlesSetSize; offset++){
+        if(A[offset] & B[offset]){
+            return true;
+        }
+    }
+    return false;
+}
+
+__global__ void findBest(const size_t numBundles, const size_t numSeries){
+    // Set up randomness
+    printf("CUDA setting up randomness\n");
+    size_t numSets = numSeries + numBundles;
+    size_t seed = (blockIdx.x << 10) + threadIdx.x;
+    seed = generateRandom(seed) ^ clock();
+
+    // There are three DL limitations.
+    printf("CUDA initializing DL limitations 1 and 2\n");
+    // You can disable at most a certain number of series. (MAX_DL)
+    auto* disabledSets = new size_t[MAX_DL + MAX_FREE_BUNDLES];
+    size_t disabledSetsIndex = 0;
+    size_t DLSlotsUsed = 0;
+    // You can disable at most a certain number of characters. (Overlap limit.)
+    size_t remainingOverlap = OVERLAP_LIMIT;
+    // A series cannot be disabled twice.
+    // That limitation is handled when the score is calculated.
+
+    // Apply the free bundles.
+    printf("CUDA applying free bundles.\n");
+    for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
+        if(freeBundles[bundleNum] != 0){
+            disabledSets[disabledSetsIndex] = bundleNum + numSeries;
+            disabledSetsIndex++;
+        }
+    }
+
+    // Create a theoretical DL.
+    // This addresses restriction 1.
+    printf("CUDA creating theoretical DL\n");
+    size_t numFails = 0;
+    while(DLSlotsUsed < MAX_DL && numFails < 1000){
+        size_t setToAdd = generateRandom(seed) % numSets;
+        size_t setSize = getSetSize(setToAdd, numSeries);
+        // This addresses restriction 2.
+        if(setSize < remainingOverlap){
+            // Add this set to the DL
+            disabledSets[disabledSetsIndex] = setToAdd;
+            disabledSetsIndex++;
+            DLSlotsUsed++;
+            numFails = 0;
+        }
+        else{
+            numFails++;
+        }
+    }
+
+    // To address restriction 3, we need to know what bundles are used.
+    printf("CUDA calculating used bundles\n");
+    auto* bundlesUsed = new size_t[setBundlesSetSize];
+    for(size_t item = 0; item < disabledSetsIndex; item++){
+        if(item > numSeries){
+            size_t bundleNum = item - numSeries;
+            size_t bundlesUsedWordSize = 8 * sizeof(size_t);
+            size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
+            size_t bundleOffset = bundleNum % bundlesUsedWordSize;
+            bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
+        }
+        // else: not a bundle so not apart of bundlesUsed
+    }
+
+    // Calculate the score.
+    printf("CUDA calculating score\n");
+    size_t score = 0;
+    for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
+        size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
+        bool applySeries = bundleOverlap(bundlesUsed, seriesBundles);
+        if(!applySeries){
+            // check if the series is in the DL.
+            for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
+                if(disabledSets[DLIdx] == seriesNum){
+                    applySeries = true;
+                    break; // only breaks out of one for loop
+                }
+            }
+        }
+
+        if(applySeries){
+            // Add this series's value to the score.
+            score += deviceSeries[(2 * seriesNum) + 1];
+        }
+    }
+
+    printf("CUDA checking if this is the best score.\n");
+    size_t oldBest = atomicMax(&bestScore, score);
+    if(oldBest <= score){
+        // Copied straight from the old implementation of findBest.
+        char betterStr[1000] = "Better DL Found, score: ";
+        char* num = new char[10];
+        deviceItos(num, score);
+        deviceStrCat(betterStr, num);
+        deviceStrCat(betterStr, ", series used, ");
+        for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
+            deviceItos(num, disabledSets[DLIdx]);
+            deviceStrCat(betterStr, num);
+            deviceStrCat(betterStr, ", ");
+        }
+        deviceStrCat(betterStr, "\n");
+        size_t secondCheck = atomicMax(&bestScore, score);
+        if(secondCheck <= score) {
+            printf("%s", betterStr);
+        }
+        delete[] num;
+    }
+
+    printf("CUDA findBest finished.\n");
+
+    // Free up memory.
+    delete[] bundlesUsed;
+    delete[] disabledSets;
 }
 
 /**
@@ -659,6 +801,9 @@ int main() {
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
     convertArrToCuda(freeBundles, numBundles);
+    if(freeBundles == nullptr){
+        std::cout << "FreeBundles not initialized correctly.";
+    }
 
     initializeSetBundles(numBundles, numSeries, bundleData);
 
@@ -689,11 +834,11 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    // findBest<<<64, 1024>>>(bundleSeries, bundleIndices, numBundles, deviceSeries, numSeries, freeBundles);
+    findBest<<<1, 1>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {
-        const char *errName = cudaGetErrorName(cudaGetLastError());
+        const char *errName = cudaGetErrorName(lasterror);
         printf("%s\n", errName);
 //        break;
     }
@@ -701,7 +846,6 @@ int main() {
 
     // Free up memory.
     std::cout << "Freeing up memory.\n";
-    delete[] setBundles;
     // Free up the bundles.
     for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
         delete[] bundleData[bundleNum];
@@ -715,10 +859,9 @@ int main() {
     delete[] seriesData;
     delete[] seriesNames;
     // Free up CUDA.
-    cudaFree(freeBundles);
-    cudaFree(deviceSeries);
-    cudaFree(bundleSeries);
-    cudaFree(bundleIndices);
+    // Well they're all __device__ variables now
+    // <https://forums.developer.nvidia.com/t/will-cuda-free-the-memory-when-my-application-exit/16113/5>
+    // and they'll get auto-freed when application exit.
 
     return 0;
 }
