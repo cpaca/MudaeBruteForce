@@ -365,15 +365,6 @@ __device__ size_t* deviceSeries = nullptr;
 // If freeBundles[n] is non-zero, then bundle n is free.
 __device__ size_t* freeBundles = nullptr;
 
-__device__ size_t getSetSize(size_t setNum, size_t numSeries){
-    if(setNum < numSeries){
-        return deviceSeries[2*setNum];
-    }
-    else{
-        return bundleSeries[bundleIndices[setNum - numSeries]];
-    }
-}
-
 // Initializes setBundles.
 // Note that this needs to be placed after the fuckton of variables because it manipulates some of them.
 void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData){
@@ -477,8 +468,23 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // printf("CUDA creating theoretical DL\n");
     size_t numFails = 0;
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
+        numFails++;
         size_t setToAdd = generateRandom(seed) % numSets;
-        size_t setSize = getSetSize(setToAdd, numSeries);
+        // Calculate the size of this set.
+        size_t setSize;
+        if(setToAdd < numSeries){
+            size_t* setPtr = deviceSeries + (2*setToAdd);
+            if(*(setPtr+1) == 0){
+                // also a fail, which is addressed by the numFails right at the beginning.
+                continue;
+            }
+            setSize = *setPtr;
+        }
+        else{
+            // Perhaps I could just set setPtr = bundleSeries + (bundleIndices[setToAdd-numSeries]);
+            // and then setSize = setPtr[0]?
+            setSize = bundleSeries[bundleIndices[setToAdd - numSeries]];
+        }
         // This addresses restriction 2.
         if(setSize < remainingOverlap){
             // Add this set to the DL
@@ -488,9 +494,8 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             remainingOverlap -= setSize;
             numFails = 0;
         }
-        else{
-            numFails++;
-        }
+        // otherwise failed
+        // aka the numFails right at the beginning
     }
 
     // To address restriction 3, we need to know what bundles are used.
@@ -532,6 +537,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
+    // if this was <= instead of < and the "best score" got achieved, it would spam out that best score nonstop
     if(oldBest < score){
         // Copied straight from the old implementation of findBest.
         char betterStr[1000] = "Better DL Found, score: ";
@@ -549,7 +555,8 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         deviceStrCat(betterStr, num);
         deviceStrCat(betterStr, "\n\n");
         size_t secondCheck = atomicMax(&bestScore, score);
-        // if this was < instead of <= and there was a "best score", it would spam out that best score nonstop
+        // If this was < instead of <=, this would never print (because bestScore either = score, from this, or > score,
+        // from another thread
         if(secondCheck <= score) {
             printf("%s", betterStr);
         }
