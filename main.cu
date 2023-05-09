@@ -477,7 +477,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             remainingOverlap -= setSize;
             numFails = 0;
 
-            if(minSize < remainingOverlap){
+            if(minSize > remainingOverlap){
                 // I accepted the infinite loop before and it finished really quickly
                 // but now I've decided I want to continue collecting the very, very small series
                 // just in case they have useful information.
