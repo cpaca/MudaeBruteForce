@@ -252,7 +252,18 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             // and then setSize = setPtr[0]?
             setSize = bundleSeries[bundleIndices[setToAdd - numSeries]];
         }
+
         if(setSize < minSize){
+            continue;
+        }
+
+        // Determine redundancy.
+        // First, determine the bundles for this set:
+        size_t* selfBundles = setBundles + (setBundlesSetSize * setToAdd);
+        // Then determine if this set is redundant:
+        if(bundleOverlap(selfBundles, bundlesUsed)){
+            // This set has already been addressed by a previous bundle.
+            // In other words, this set is redundant.
             continue;
         }
 
