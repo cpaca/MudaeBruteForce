@@ -165,6 +165,25 @@ __device__ bool bundleOverlap(const size_t* A, const size_t* B){
     return false;
 }
 
+/**
+ * If set represents the Set ID of a bundle, then bundlesUsed is modified to acknowledge that that bundle is
+ * activated.
+ * @param numSeries The total number of series there are.
+ * @param bundlesUsed MAY BE MODIFIED to acknowledge this set being added to bundlesUsed.
+ * @param setToAdd The Set ID of a bundle.
+ */
+__device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size_t set) {
+    if(set >= numSeries){
+        // setToAdd is actually a bundle to add
+        // If this bundle is being used, we need to acknowledge that in bundlesUsed
+        size_t bundleNum = set - numSeries;
+        size_t bundlesUsedWordSize = 8 * sizeof(size_t);
+        size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
+        size_t bundleOffset = bundleNum % bundlesUsedWordSize;
+        bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
+    }
+}
+
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Set up randomness
     // printf("CUDA setting up randomness\n");
@@ -189,17 +208,28 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // A series cannot be disabled twice.
     // That limitation is handled when the score is calculated.
 
+    // To address restriction 3, we need to know what bundles are used.
+    auto* bundlesUsed = new size_t[setBundlesSetSize];
+    memset(bundlesUsed, 0, sizeof(size_t) * setBundlesSetSize);
+
     // Apply the free bundles.
     // printf("CUDA applying free bundles.\n");
     for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
         if(freeBundles[bundleNum] != 0){
+            // Add bundle to disabledSets...
             disabledSets[disabledSetsIndex] = bundleNum + numSeries;
             disabledSetsIndex++;
+
+            // ... but more importantly add bundle to bundlesUsed
+            // I think the compiler will inline it and apply 0, bundlesUsed, bundleNum
+            // so I don't have to.
+            activateBundle(numSeries, bundlesUsed, bundleNum + numSeries);
         }
     }
 
     // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
-    size_t minSize = generateRandom(seed) % 1000;
+    size_t origMinSize = generateRandom(seed) % 1000;
+    size_t minSize = origMinSize;
 
     // Create a theoretical DL.
     // This addresses restriction 1.
@@ -223,17 +253,31 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             // and then setSize = setPtr[0]?
             setSize = bundleSeries[bundleIndices[setToAdd - numSeries]];
         }
+
         if(setSize < minSize){
             continue;
         }
+
+        // Determine redundancy.
+        // First, determine the bundles for this set:
+        size_t* selfBundles = setBundles + (setBundlesSetSize * setToAdd);
+        // Then determine if this set is redundant:
+        if(bundleOverlap(selfBundles, bundlesUsed)){
+            // This set has already been addressed by a previous bundle.
+            // In other words, this set is redundant.
+            continue;
+        }
+
         // This addresses restriction 2.
         if(setSize < remainingOverlap){
-            // Add this set to the DL
+            // ADD THIS SET TO THE DL
             disabledSets[disabledSetsIndex] = setToAdd;
             disabledSetsIndex++;
             DLSlotsUsed++;
             remainingOverlap -= setSize;
             numFails = 0;
+
+            activateBundle(numSeries, bundlesUsed, setToAdd);
 
             while(minSize > remainingOverlap){
                 // I accepted the infinite loop before and it finished really quickly
@@ -244,22 +288,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
         // otherwise failed
         // aka the numFails right at the beginning
-    }
-
-    // To address restriction 3, we need to know what bundles are used.
-    // printf("CUDA calculating used bundles\n");
-    auto* bundlesUsed = new size_t[setBundlesSetSize];
-    memset(bundlesUsed, 0, sizeof(size_t) * setBundlesSetSize);
-    for(size_t idx = 0; idx < disabledSetsIndex; idx++){
-        size_t item = disabledSets[idx];
-        if(item >= numSeries){
-            size_t bundleNum = item - numSeries;
-            size_t bundlesUsedWordSize = 8 * sizeof(size_t);
-            size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
-            size_t bundleOffset = bundleNum % bundlesUsedWordSize;
-            bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
-        }
-        // else: not a bundle so not apart of bundlesUsed
     }
 
     // Calculate the score.
@@ -279,20 +307,18 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
     // Calculate score directly from series
     for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
-        size_t seriesNum = disabledSets[DLIdx];
-        if(seriesNum > numSeries){
-            // This is a bundle, not a series.
-            continue;
-        }
+        size_t setNum = disabledSets[DLIdx];
 
-        size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
+        // Note that if setNum is a bundle, it'll get caught by bundleOverlap anyway.
+
+        size_t* seriesBundles = setBundles + (setBundlesSetSize * setNum);
         if(bundleOverlap(bundlesUsed, seriesBundles)){
             // Already got covered by the bundles earlier.
             continue;
         }
 
         // Add this series's score.
-        size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
+        size_t seriesValue = deviceSeries[(2 * setNum) + 1];
         score += seriesValue;
     }
 
@@ -315,8 +341,8 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         deviceItos(num, remainingOverlap);
         deviceStrCat(betterStr, num);
 
-        deviceStrCat(betterStr, "\nMin size: ");
-        deviceItos(num, minSize);
+        deviceStrCat(betterStr, "\nOriginal minSize: ");
+        deviceItos(num, origMinSize);
         deviceStrCat(betterStr, num);
 
         deviceStrCat(betterStr, "\n\n");
