@@ -666,7 +666,7 @@ Last Round Arthur$3$2
 Leadale no Daichi nite$6$5
 Legend$1$1
 Legend of Himiko$1$1
-Liar Liar: Usotsuki Tenkousei wa Ikasama Cheat chan to Game wo Seisuru sou desu$7$7
+Liar Liar$7$7
 Library Wars$5$2
 Lingerie Girl wo Okini Mesu Mama$1$1
 Little Busters!$23$13
@@ -9262,3 +9262,961 @@ Yankee wa Isekai de Seirei ni Aisaremasu.$4$3
 Yasei no Last Boss ga Arawareta!$6$5
 Your and My Asylum$1$1
 Yuusha Party ni Kawaii Ko ga Ita no de, Kokuhaku Shite Mita$2$1
+A-Channel$10$9
+Anima Yell!$9$8
+Anne Happy$7$6
+Bocchi the Rock!$9$9
+Comic Girls$9$9
+Endro~!$8$8
+GA Geijutsuka Art Design Class$5$5
+Gakkougurashi!$15$14
+GJ-bu$10$9
+Gochuumon wa Usagi desu ka?$19$16
+Houkago Saikoro Club$5$4
+Houkago Teibou Nisshi$5$5
+K-On!$16$14
+K-On! Shuffle$3$3
+Kiniro Mosaic$12$11
+Koisuru Asteroid$15$15
+Koufuku Graffiti$3$3
+Love Lab$6$5
+NEW GAME!$14$13
+Ramen Daisuki Koizumi-san$4$4
+RPG Fudousan$4$4
+Sansha Sanyou$12$9
+Slow Loop$6$6
+Slow Start$11$11
+Stella no Mahou$7$7
+Urara Meirochou$8$8
+Wakaba*Girl$4$4
+Yama no Susume$13$11
+Yuru Camp△$14$12
+Yuyushiki$7$7
+Akane-iro ni Somaru Saka$2$2
+Fate/Grand Carnival$1$0
+Liz to Aoi Tori$2$2
+Regalia: The Three Sacred Stars$4$4
+Soushin Shoujo Matoi$3$3
+Wave!!$8$0
+10th -You and I Fell in Love With the Same Person.-$3$1
+25-ji no Ghost Writer$2$1
+666 Satan$3$1
+A Lazy Guy Woke Up as a Girl One Morning$1$0
+ACCA: 13-ku Kansatsu-ka$14$3
+Aizawa-san Zoushoku$1$1
+Akame ga Kill!$39$21
+Akame ga Kill! Zero$7$6
+Akarui Sekai Keikaku$5$5
+Ani no Yome to Kurashiteimasu.$2$2
+Ankoku Kishi no Ore Desuga Saikyou no Paladin wo Mezashimasu$2$2
+Aoharu x Kikanjuu$10$3
+Aphorism$6$2
+Arachnid$2$2
+Arakawa Under the Bridge$16$6
+Asahina Wakaba to Marumaru na kareshi$2$1
+Assassin & Cinderella$2$1
+Astro Fighter Sunred$3$1
+Awkward Senpai$2$1
+B. Ichi$2$0
+Bamboo Blade$7$5
+Barakamon$19$7
+Beelzebub-jou no Okinimesu mama.$8$4
+Bitter Virgin$3$2
+Black Butler$58$16
+Bloody Cross$9$3
+Boku wa Robot Goshi no Kimi ni Koi wo Suru$1$1
+Boukensha License o Hakudatsu Sareta Ossan Dakedo, Manamusume ga Dekita no de Nonbiri Jinsei$1$1
+Bungaku Shoujo$5$5
+Cherry Magic! Thirty Years of Virginity Can Make You a Wizard?!$2$0
+Children$1$1
+Chitose-kun wa Ramune Bin no Naka$6$5
+Combini de Kimi to no 5 fun kan$2$1
+Cool Doji Danshi$5$0
+Crimson-Shell$1$0
+Cuticle Tantei Inaba$6$0
+Dareka wo Norawazu ni Irarenai Kono Sekai de$1$0
+Dead Mount Death Play$8$2
+Dear My Living Dead$2$1
+Deep Insanity$6$4
+Destined to Be Eaten Within a Year By the Predacious Heroine$1$1
+Devil Survivor 2$15$6
+Do It Yourself!!$6$6
+Dou ka Ore wo Hanatte Oitekure$1$1
+Doubt$1$1
+Drakengard: Fatal Crimson$1$0
+Dynamic Chord$2$0
+End Roll Back$1$0
+Engage Kiss$5$4
+Eris no Seihai$2$2
+Eve no Jikan$6$6
+Final Fantasy Lost Stranger$2$1
+Fractale$3$2
+From the Red Fog$3$1
+Fujimura-kun Mates$6$5
+Fukanzen na Hito no Tame ni$1$1
+Fukigen na Mononokean$8$2
+Fullmetal Alchemist$66$25
+Fuse Teppo Musume no Torimonocho$2$1
+Garden Sphere$2$1
+Gekkan Shoujo Nozaki-kun$19$8
+Genjitsu de Rabukome Dekinai to Dare ga Kimeta?$4$4
+Goblin Slayer$19$12
+Goblin Slayer Side Story II: Dai Katana$2$0
+Graineliers$2$0
+Gugure! Kokkuri-san$5$3
+Hajimete no Suwa-san$1$1
+Hakata Tonkotsu Ramens$6$1
+Hakui no Ousama$2$1
+Hanamaru Youchien$2$2
+Happy Sugar Life$8$6
+Heroman$5$2
+Hi Score Girl$12$7
+Higurashi no Naku Koro ni Rei (Manga)$6$4
+Hikikomari Kyuuketsuki no Monmon$2$2
+Hinowa ga Yuku!$6$5
+Hori-san to Miyamura-kun$21$10
+I Want To Be Close$1$1
+I'm Around Thirty and Finally in Love$5$3
+I'm Only 14 But I'll Make You Happy!$1$1
+Ibitsu (2009)$1$1
+Ijimeru Aitsu ga Warui no ka, Ijimerareta Boku ga Warui no ka?$1$0
+Im$17$3
+Inu x Boku SS$9$3
+Isshuukan Friends.$4$2
+Jackals$1$0
+Jahy-sama wa Kujikenai!$9$9
+Jaku-Chara Tomozaki-kun$10$6
+Jibaku Shounen Hanako-kun$31$12
+Jigoku ni Ochite yo, Onii-chan$1$1
+Jijou o Shiranai Tenkousei ga Guigui Kuru.$2$1
+Jungle wa Itsumo Haré nochi Guu$6$3
+Juushin Enbu$1$0
+Kabe ni Mary.com$3$3
+Kaijin Reijou$8$8
+Kakegurui$26$22
+Kakegurui Twin$9$8
+Kamimura Yuuka wa Kou Itta.$1$1
+Keikenzumi na Kimi to, Keiken Zero na Ore ga, Otsukiai suru Hanashi.$1$1
+Kimi no Okaasan wo Boku ni Kudasai!$1$1
+Kimi to Boku.$8$2
+Kimitte Watashi no Koto Suki Nandeshou?$1$1
+Kirei na Kurokami$3$3
+Kirei ni Shitemoraemasu ka.$3$3
+Kitakubu Katsudou Kiroku$5$5
+Kore ga Watashi no Goshujin-sama$3$3
+Kurenai Ouji$2$0
+Kusuriya no Hitorigoto$8$6
+Kuzumi-kun, Kuuki Yometemasu ka?$4$2
+Kyou no Cerberus$6$6
+Kyuujitsu no Warumono-san$1$0
+Leave Me and Go.$3$2
+Magical Girl Spec-Ops Asuka$11$11
+Majo no Geboku to Maou no Tsuno$1$1
+Mamono-tachi Wa Katazuke Rarenai$3$2
+Mannen D-rank no Chuunen Boukensha, Yotta Ikioi de Densetsu no Ken wo Hikkonuku$3$3
+Matantei Loki Ragnarok$6$2
+May no Maiden$1$1
+Meido no Koi wa Enma Shidai!$2$1
+Mememori-kun ni wa Kanawanai$1$0
+Minus Skill-mochi Yonin ga Atsumattara, Nanka Synergy Hakki Shite Saikyou Party ga Dekita Ken$4$3
+Mom, Please Don't Come Adventuring With Me!$1$1
+Mononoke$2$0
+Moribito$3$2
+Moscow 2160$1$0
+Munou na Nana$15$7
+Murciélago$7$6
+My Recently Hired Maid Is Suspicious$4$3
+Nabari no Ou$11$3
+Nanashi no Asterism$2$2
+Nankoufuraku no Maoujou e Youkoso$5$4
+Natsu no Arashi!$8$5
+NeNeNe$2$1
+Nil Admirari no Tenbin$7$0
+Ojisama to Neko$2$0
+Okyu no Trinity$4$2
+One Room, Hi Atari Futsuu, Tenshi Tsuki$1$1
+Onna ga Nigate na Yankee to Shoujo no Hanashi$2$1
+Ore no Kokan wa Bishoujo Datta no ka$1$1
+Otonari no Tenshi-sama ni Itsu no Ma ni ka Dame Ningen ni Sareteita Ken$5$2
+Our Lives After the Apocalypse$1$1
+Oushitsu Kyoushi Heine$9$0
+Pandora Hearts$30$14
+Paniponi Dash!$18$17
+Plastic Neesan$3$3
+Protagonist x Rival$2$2
+Prunus Girl$2$0
+Ragna Crimson$13$10
+Rakudai Kishi no Cavalry$20$13
+Red Raven$5$2
+Rinne no Lagrange$5$4
+Rose Guns Days$24$0
+Ryushika Ryushika$1$1
+Ryuuou no Oshigoto!$13$11
+Sabikui Bisco$6$2
+Sachi-iro no One Room$4$1
+Saiteihen no Otoko$2$1
+Saiyuki$20$4
+Sakugan Labyrinth Marker$4$2
+Samurai Flamenco$31$6
+Sangatsu wa Ore-sama ni Narimasu$1$1
+Seibetsu 'Mona Lisa' no Kimi e.$1$1
+Seifuku no Vampiress Lord$4$4
+Sekai de Tadahitori no Mamono Tsukai ~Tenshoku Shitara Maou ni Machigawa Remashita~$1$1
+selector infected WIXOSS -Re/verse-$1$1
+Senmetsu Madou no Saikyou Kenja$1$1
+Servant x Service$5$4
+Seto no Hanayome$14$7
+Shachiku-san wa Youjo Yuurei ni Iyasaretai.$7$7
+Shi ga Futari wo Wakatsu made$9$4
+Shikabane Hime$4$4
+Shikkakumon no Saikyou Kenja$4$3
+Shimekiri Mae niwa Yuri ga Hakadoru$2$2
+Shinigami to Gin no Kishi$4$1
+Shinigami-sama to 4-nin no Kanojo$3$3
+Shinohayu the Dawn of Age$2$2
+Shiori Experience: Jimi na Watashi to Hen na Ojisan$7$5
+Shokei Shoujo no Ikiru Michi$8$8
+Shota x Oni$2$0
+Shoujo Jiten$6$5
+Skate-Leading☆Stars$6$0
+Slime Tensei. Daikenja ga Youjo Elf ni Dakishimeraretemasu$1$1
+Soul Eater NOT!$5$5
+Space☆Dandy$14$6
+Spiral: Suiri no Kizuna$6$2
+Star Driver$9$6
+Star Ocean: Till the End of Time$9$0
+Suki na Ko ga Megane wo Wasureta$2$1
+Suki x Suki$1$1
+Sumomomo Momomo$4$3
+Super no Ura de Yani Suu Futari$2$1
+Superior$2$1
+switch$2$0
+Tasogare Otome x Amnesia$4$3
+Tatoe Hai ni Nattemo$2$2
+Tatoeba Last Dungeon Mae no Mura no Shounen ga Joban no Machi de Kurasu Youna Monogatari$7$5
+Tensai Ouji no Akaji Kokka Saisei Jutsu$8$7
+Terra e...$6$1
+The Arms Peddler$1$1
+The Strongest Wizard Becomes a Countryside Guardsman After Taking an Arrow to the Knee$2$2
+The Swordsman Called the Countless Swords Sorcerer$2$1
+This Love is Strawberry Sweet$2$1
+Thou Shalt Not Die$1$1
+Tohakuden Mao reijo kara hajimeru sangokushi$1$1
+Tokyo Aliens$4$0
+Tomodachi no Imouto ga Ore ni Dake Uzai$5$4
+Toorigakari ni One Point Advice Shiteiku Type no Yankee$1$0
+Torimania$1$1
+Tripeace$1$0
+Tsuri Komachi$1$1
+Übel Blatt$3$2
+Uchi no Dorei ga Akaru Sugiru$1$1
+Uchi no Ojou-sama ga Hametsu End Shika Nai Akuyaku Reijou no You nanode, Ore ga Kyuusai Shitai to Omoimasu.$1$1
+Ura Sekai Picnic$8$8
+Urami Koi, Koi, Urami Koi.$13$10
+Vanitas no Carte$21$7
+Violinist of Hameln$11$4
+Watashi ga Motenai no wa dō Kangaetemo Omaera ga Warui!$13$12
+Watashi no Shiawase na Kekkon$2$1
+Working!!$15$11
+WWW.Working!!$6$3
+Yahari Ore no Seishun Love Comedy wa Machigatteiru.$23$16
+Yakushoku Distopiary$3$1
+Yakuza no Oooyabun ga Youjo ni Umarekawatta Hanashi$1$1
+Yandere Kanojo$7$4
+Yankee Shota to Otaku Oneesan$2$1
+Yochinouryoku Manga - Kuno Chiyo$1$1
+Yokai Rental Shop$1$0
+Yomi no Tsugai$8$4
+Yoshi no Zuikara$1$0
+Youkai Gakkou no Sensei Hajimemashita!$5$0
+Yowai 5000-nen no Soushoku Dragon, Iwarenaki Jaryuu Nintei Yada Kono Ikenie, Hito no Hanashi o Kiite Kurenai$2$1
+Yumekui Kenbun$4$1
+Yuusha Party wo Tsuihosareta Ore daga, Ore kara Sudattekureta you de Ureshii. ......nanode Dai Seijo, Omae ni Ottekorarete wa Komaru no daga?$1$1
+Zetsuen no Tempest$9$3
+Zombie-Loan$5$2
+A Little Lily Princess$8$0
+A Summer's End - Hong Kong 1986$2$0
+About a College Girl Who Gets Picked Up at a Mixer by an Older Girl$2$2
+After Hours$1$1
+After School$2$2
+Akai Ito$4$0
+Alice Sherlock: The Rubious Nebula$1$1
+Anemone wa Netsu wo Obiru$3$3
+Ano Koro no Aoi Hoshi$2$2
+Ao ga Cool Nante Dare ga Kimeta!?$2$2
+Aoi Hana$2$2
+Aru Asa Dummy Head Mic ni Natteita Ore-kun no Jinsei$2$2
+Bad Texter VS Girls Love$1$1
+Bloodroot$8$0
+Butterfly Soup$7$0
+Chasing Tails ~A Promise in the Snow~$3$0
+Choices: Stories You Play$53$0
+Contract Demon$2$0
+Cotton Candy$2$2
+Dear My Teacher$2$2
+Dekisokonai no Himegimi Tachi$4$4
+Doushitara Osananajimi ♀️ no Kanojo ni Naremasu Ka!?$2$2
+Fatal Twelve$15$0
+Female General Eldest Princess$2$2
+FictIf: Interactive Romance$6$0
+Fight! Iczer-1$1$1
+FLOWERS$3$0
+Fragtime$2$2
+Futaribeya: A Room for Two$5$5
+Futsu no KuraNata$2$2
+GAP: Pink Theory$2$2
+Girl Friends$2$2
+Hana ni Arashi$2$2
+Hana to Hoshi$2$2
+Haru to Midori$3$3
+Heart of the Woods$4$0
+HEARTBEAT$43$0
+HEARTLOVEPOWERTEMPLE$1$0
+her tears were my light$3$0
+Hide Your Tears, You Crybaby$2$2
+Highway Blossoms$6$0
+Hoshikuzu Telepath$4$4
+Kami Eshi JK to OL Fujoshi$2$2
+Kanojo ni Naritai Kimi to Boku$8$6
+Kase-san Series$3$3
+Kochira, Haha Naru Hoshi Yori$2$0
+Komori-san and Yoshizawa-san$2$2
+Kuttsukiboshi$2$2
+Kuzu Rouninsei, Jinsei ga Tsurai no de Yoru no Onee-san wo Yondemita$2$2
+Ladykiller in a Bind$5$0
+Lilycle Rainbow Stage!!!$15$0
+Lonely Wolf Treat$6$0
+Love Ribbon$2$0
+Lucy Got Problems$1$0
+Machikado Mazoku$13$12
+Mietemasu yo! Aizawa-san$2$2
+Mizuchi$3$0
+My Best Friend Who I Love Completely Fell In Love With My Vtuber Self$2$2
+Ne no Kami: Kyou no Miyako to Futari no Hime Kishi$4$0
+Negligee Love Stories$3$0
+Okujou no Yurirei-san$16$0
+Omae Gotoki ga Maou ni Kateru to Omou na$6$6
+Oshi ga Budoukan Ittekuretara Shinu$11$9
+Oshi no Love yori Koi no Love$3$0
+Prism$2$2
+Revolutionary Girl Utena$16$7
+Rin: Daughters of Mnemosyne$2$2
+Roadqueen: Eternal Roadtrip to Love$2$2
+Sakura Dungeon$6$0
+Sakura Trick$9$9
+Sayonara Rose Garden$2$2
+School Zone$11$11
+SeaBed$10$0
+Shinozaki-san Ki wo Ota Shika ni!$3$3
+Shoujo Junrei$1$1
+Shuumatsu no Izetta$3$3
+Softly, With Teeth$1$0
+Sono Hanabira ni Kuchizuke o: New Gen!$6$0
+Sougou Tovarisch$2$2
+Still Sick$2$2
+Succubus no Yuri na Hanashi$2$2
+Super Lesbian Animal RPG$1$0
+Tadokoro-san$2$2
+Teiji ni Agaretara$2$2
+The Arcana: A Mystic Romance$29$0
+The Curse of Kudan$5$0
+The Mute Girl and Her New Friend$4$4
+The Shadows of Pygmalion$2$0
+Trash.$2$2
+Tsui Yuri ~Okaa-san ni wa Naisho da yo~$3$0
+Tsukiatte Agete Mo Ii Ka Na$2$2
+Uchi no Maid ga Uzasugiru!$3$3
+Usotsuki Satsuki Shi ga Mieru$2$2
+Vampeerz$2$2
+Wasureenu Majo no Monogatari$2$2
+Yume de Furarete Hajimaru Yuri$2$2
+Yuri Kuma Arashi$11$7
+Yuri Ota ni Yuri wa Gohatto desu!?$2$2
+Yuzumori-san$2$2
+12-sai.: Chicchana Mune no Tokimeki$4$2
+20th Century Boys$20$5
+7 Seeds$8$2
+After God$5$3
+Afterschool Charisma$2$1
+Ai to Yuuki no Pig Girl Tonde Buurin$1$1
+Aishiteru Game wo Owarasetai$1$1
+Among Us (Manga)$5$5
+Ao Ashi$12$2
+Ao no Orchestra$4$1
+Area 88$4$1
+Area D$5$4
+Asadora!$5$2
+Asoko de Hataraku Musubu-san$1$1
+Atom: The Beginning$6$2
+Ayako$1$1
+Azumi$1$1
+B-Project$16$1
+Bakugan Battle Brawlers$15$5
+Bakusou Kyoudai Let's & Go$2$0
+Bakusou Kyoudai Let's & Go MAX$1$1
+Banana Fish$14$3
+Basara$3$1
+Battle B-Daman$5$1
+BE BLUES!: Ao ni Nare$5$2
+Beast Master$1$0
+Beauty Pop$4$1
+Bestiarius$1$0
+Beyblade$17$4
+Beyblade Burst$37$5
+Birdmen$5$1
+Black Bird$5$1
+Black Channel$2$1
+Black Lagoon$17$10
+Black Paradox$4$2
+Blue Giant$5$1
+Blue Submarine No. 6$2$1
+Bokkou$1$0
+Bokura ga Ita$3$1
+Bokurano$18$8
+Bomberman Jetters$2$1
+Bullet Armors$1$0
+By Spring$1$1
+Captain Earth$5$3
+Chi no Wadachi$3$2
+Chibi Devi!$5$2
+Children of the Sea$4$1
+Cop Craft$4$3
+Corrector Yui$7$6
+Crash Bandicoot: Dansu! De Jump! Na Daibouken$1$1
+Cross Game$9$5
+Dagashi Kashi$5$3
+Dai Dark$5$2
+Danball Senki$4$1
+Dance Dance Danseur$4$2
+Dead Dead Demon's Dededede Destruction$7$4
+Deatte 5 Byou de Battle$16$6
+Defense Devil$4$2
+Dengeki Daisy$2$1
+Denpa Kyoushi$4$2
+Detective Conan$86$31
+Doraemon$8$2
+Dorohedoro$37$12
+Dororo$19$8
+Double$2$0
+Duel Masters$4$1
+Duel Masters Versus$1$0
+Duel Masters Victory$7$0
+Eizouken ni wa Te wo Dasu na!$5$5
+Ergo Proxy$8$3
+F$1$0
+Female Prisoner Scorpion$1$1
+Fluffy, Fluffy Cinnamoroll$6$2
+Fool's Night$2$1
+Fourteen$1$0
+Fudatsuki no Kyoko-chan$2$2
+Fushigi Mahou Fun Fun Pharmacy$1$1
+Fushigi Yuugi: Genbu Kaiden$7$2
+Fushigiboshi no Futagohime$4$2
+Future Card Buddyfight$18$4
+Future Card Buddyfight Ace$2$0
+Fuuto Tantei$2$1
+Gaku$1$0
+Galaxy Express 999$3$1
+Gallery Fake$1$1
+Gegege no Kitarou$14$6
+Ghost Sweeper Mikami$5$5
+Giant Ojou-sama$9$6
+Giant Robo$2$0
+Gigant$1$1
+Gin no Saji$18$5
+Golgo 13$1$0
+Good Night World$5$2
+H2$7$2
+Hachimitsu ni Hatsukoi$2$1
+Hamtaro$18$6
+Hana to Alice: Satsujin Jiken$2$2
+Hanabi-chan wa Okuregachi$1$1
+Hannin no Hanzawa-san$1$0
+Happy Happy Clover$5$2
+Happy Mari: Happy Marriage?!$1$1
+Happy!$1$1
+Helck$13$8
+Helck: Völundio ~Surreal Sword Saga~$2$1
+Hengoku no Schwester$1$1
+Hiatari Ryoukou!$1$0
+Hibiki: Shousetsuka ni Naru Houhou$1$1
+Himegoto: Juukyuusai no Seifuku$3$3
+Hirayasumi$3$2
+Hitoribocchi no Chikyuu Shinryaku$3$2
+Hoankan Evans no Uso$2$1
+Homunculus$2$0
+Honey Come Honey$1$0
+Honoo no Tenkousei$2$1
+Honoo no Toukyuujo: Dodge Danko$5$5
+I Am a Hero$2$0
+I am Sherlock$1$0
+Ichi the Killer$2$0
+Ijime: Ikenie no Kyoushitsu$3$3
+Ikigami$1$0
+Imawa no Kuni no Alice$18$5
+Inazuma Eleven$94$15
+Inazuma Eleven Ares no Tenbin$36$8
+Inazuma Eleven Go!$47$5
+Inazuma Eleven Go! Chrono Stone$30$8
+Inazuma Eleven Go! Galaxy$26$9
+Inazuma Eleven Orion no Kokuin$22$4
+Iryuu: Team Medical Dragon$1$0
+It's My Life$7$4
+Itsuwaribito$3$1
+Jagaaaaaan$7$3
+Jewelpet$19$13
+Jewelpet Twinkle☆$3$3
+Jinmen$2$1
+Jinsei$5$5
+JK Shachiku wo Kau$1$1
+Joou no Hana$1$0
+Jormungand$9$7
+Juhou Kaikin!! Hyde & Closer$2$0
+Kamisama Dolls$2$2
+Karakai Jouzu no (Moto) Takagi-san$1$1
+Karakai Jouzu no Takagi-san$10$7
+Karakuri Circus$10$4
+Katsu!$2$1
+Katte ni Kaizou$5$3
+Kekkon ga Zentei no Love Comedy$1$1
+Kekkon Surutte, Hontou desu ka?: 365 Days to the Wedding$3$2
+Kengan Ashura$44$8
+Kengan Omega$19$1
+Kenyuu Densetsu Yaiba$3$1
+Kidou Keisatsu Patlabor$7$3
+Kiichi!!$1$0
+Kimi ni Koisuru Satsujinki$2$1
+Kimi to, Nami ni Noretara$3$2
+Kimi wa Houkago Insomnia$3$2
+Kimi wa Meido-sama$1$1
+Kin no Kuni Mizu no Kuni$2$1
+Kirarin☆Revolution$5$2
+Kiratto Pri☆Chan$17$17
+Koi Neko$1$1
+Koi wa Ameagari no You ni$3$1
+Koi wa Tsuzuku yo Doko Made mo$2$1
+Koisuru Harinezumi$1$1
+Kokoro ga Sakebitagatterunda.$5$3
+Komi-san wa, Comyushou desu.$36$29
+Kongou Banchou$1$0
+Konjiki no Gash Bell!!$44$14
+Koroshiya S no Yuragi$3$1
+Kotarou wa Hitorigurashi$2$0
+Kunoichi Tsubaki no Mune no Uchi$11$11
+Kyou kara Ore wa!!$6$2
+Kyou kara Zombie!$1$1
+Kyou no Asuka Show$1$1
+Kyougaku Koukou no Genjitsu$1$1
+Kyoukai no Rinne$13$6
+Kyuukyoku Choujin R$1$0
+Kyuuso wa Cheese no Yume wo Miru$1$0
+Lady Georgie$4$1
+Lady Jewelpet$2$2
+Macross II: Lovers Again$1$1
+Magi$66$26
+Magic Kaito$6$2
+Mahou no Idol Pastel Yumi$1$1
+Mahou no Princess Minky Momo$1$1
+Mahou no Star Magical Emi$1$1
+Maiko-san Chi no Makanai-san$3$2
+Maison Ikkoku$10$6
+Majo to Ryouken$2$2
+MAJOR$20$4
+Major 2nd$16$9
+Make Heroine ga Oosugiru!$3$3
+MAO$3$1
+Maoujou de Oyasumi$10$5
+MARGINAL#4$9$0
+Maris the Chojo$1$1
+Marry Grave$1$0
+Master Keaton$1$0
+Mayoiga$9$5
+Me-gumi no Daigo$1$0
+Mega Man Battle Network 1$25$9
+Mega Man Battle Network 2$11$3
+Mega Man Battle Network 3$10$2
+Mega Man Battle Network 4$9$1
+Mega Man Battle Network 5$8$2
+Mega Man Battle Network 6$9$3
+Mega Man Network Transmission$2$0
+Mega Man Star Force 1$10$4
+Mega Man Star Force 2$5$1
+Mega Man Star Force 3$3$0
+Metal Fight Beyblade$44$5
+Midori Days$5$3
+Mikadono Sanshimai wa Angai, Choroi.$3$3
+Minecraft: Sekai no Hate no Tabi$1$0
+Misoshiru de Kanpai!$1$1
+Mix Meisei Story$4$2
+Mob Psycho 100$40$9
+Moe Kare!!$1$1
+Monkey High$1$0
+Monster$25$5
+Monster Retsuden Oreca Battle$45$4
+Moonlight Act$2$1
+Moonlight Mile$2$1
+Moukin-chan$1$1
+My Wife is a Man$2$0
+Mystery to Iunakare$1$0
+Natsu e no Tunnel, Sayonara no Deguchi$1$1
+Neko mix Genkitan Toraji$1$0
+Neko no Otera no Chion-san$1$1
+Nidome no Natsu, Nidoto Aenai Kimi$1$1
+Ninja Shinobu-san no Junjou$2$2
+Ninjala$2$2
+Niwatori Fighter$1$0
+Not Simple$1$0
+Noyu Girl$1$1
+Odd Taxi$20$4
+Oishinbo$2$0
+Onna no Ko ga Daicha Dame Desuka?$3$2
+Oraa Guzura Dado$1$0
+Ore Dake ni Kamatte Maka-senpai$1$1
+Osake wa Fuufu ni Natte kara$2$1
+Osomatsu-san$37$17
+Ou no Kemono$2$1
+Oyasumi Punpun$11$4
+Pandemonium: Majutsushi no Mura$3$1
+Persona 5$39$17
+pet$4$0
+Ping Pong the Animation$7$0
+PLUTO$13$2
+Pokémon 3: The Movie$2$2
+Pokémon Adventures$49$17
+Pokémon Diamond and Pearl Adventure!$2$1
+Pokémon Heroes: Latios & Latias$3$3
+Pokémon Ranger$3$2
+Pokémon Ranger: Shadows of Almia$9$0
+Pokémon the Movie: Secrets of the Jungle$1$0
+Pokémon the Movie: The Power of Us$3$2
+Pokémon: Giratina and the Sky Warrior$2$1
+Pokémon: Lucario and the Mystery of Mew$3$1
+Pokémon: Mewtwo Returns$1$1
+Pokémon: Zoroark: Master of Illusions$2$2
+Ponkotsu no Ponko$1$1
+Pretty Rhythm: Aurora Dream$8$6
+Princess Arete$1$1
+PriPara$28$23
+Propeller Opera$1$1
+Pseudo Harem$2$1
+Puniru wa Kawaii Slime$10$7
+Puripuri Chii-chan!!$1$1
+Queen's Quality$3$1
+Rainbow: Nisha Rokubō no Shichinin$10$3
+Ranma ½$35$12
+Rec$1$1
+Red Blue$1$0
+Reimei no Arcana$5$1
+Remina$1$1
+Renjoh Desperado$1$1
+Rough$2$1
+S Rare Soubi no Niau Kanojo$2$2
+Saijou no Meii$1$0
+Saike Mata Shitemo$2$1
+Saikyou Densetsu Kurosawa$2$0
+Saishuu Heiki Kanojo$1$1
+Sakamichi no Apollon$5$2
+Sakasama no Patema$3$1
+Sanctuary$2$0
+Sanrio Danshi$8$1
+Saotome Senshu, Hitakakusu$4$3
+Saraiya Goyou$3$1
+Sasami-san@Ganbaranai$6$5
+Sayonara Sorcier$1$0
+Schrodinger no Neko Sagashi$1$1
+Sekai Oni$11$5
+Self$2$1
+Sensei wa Koi wo Oshierarenai$2$1
+Shakunetsu Kabaddi$8$0
+Shi ni Modori, Subete wo Sukuu Tame ni Saikyou e to Itaru$1$0
+Shichisei no Subaru$7$4
+Shijou Saikyou no Deshi Kenichi$27$12
+Shimanami Tasogare$6$4
+Shinigami Bocchan to Kuro Maid$8$5
+Shinya! Tensai Bakabon$1$0
+Shiotaiou no Satou-san ga Ore ni dake Amai$1$1
+Shut Hell$1$1
+Slow Motion wo Mou Ichido$1$1
+Slow Step$1$1
+Snack World$1$0
+So Cute it Hurts!!$4$2
+Soara to Mamono no Ie$1$1
+Sodachi Zakari no Oshiego ga Yakeni Emoi$1$1
+Solanin$3$1
+Souboutei Must Be Destroyed$1$0
+Soukyuu no Ariadne$4$4
+Sousou no Frieren$20$10
+Splatoon (Manga)$12$3
+Spriggan$4$1
+Subaru$1$1
+Suijin no Hanayome$2$1
+Sunny$1$0
+Sword Gai: The Animation$2$0
+Taberu Dake$1$1
+Taiyou to Tsuki no Hagane$2$1
+Takunomi.$4$4
+Tarepanda Goes on an Adventure$1$0
+Teito Hatsukoi Shinjuu$1$0
+Tekkonkinkreet$3$0
+Tenshi to Akuto!!$3$2
+Territory of a Shark Girl$1$1
+Tetsugaku Letra$2$1
+Tetsuwan Birdy$3$3
+The Cockpit$2$0
+The Electric Tale of Pikachu$1$1
+The Legend of Zelda: A Link to the Past (Himekawa)$1$1
+The Mermaid Princess's Guilty Meal$1$1
+The Tale of Outcasts$8$3
+The Violence Action$1$1
+Thomas no Shinzou$4$0
+Toaru Hikuushi e no Tsuioku$2$1
+Tokiwa Kitareri!!$7$3
+Tonikaku Kawaii$8$7
+Touch$9$2
+Trap Heroine$1$0
+Trillion Game$2$0
+True Love$2$1
+Tsuki to Laika to Nosferatu$3$2
+Ueki no Housoku$12$3
+Urusei Yatsura$31$18
+Ushio to Tora$12$6
+Uzumaki$3$2
+Waccha PriMagi!$14$11
+Wagamama☆Fairy Mirumo de Pon!$7$3
+Wedding Peach$8$6
+Wombs$1$1
+Wonderland$2$2
+Yajin$4$1
+Yami no Purple Eye$1$1
+Yamikin Ushijima-kun$1$0
+Yasuke$5$3
+Yawara!$3$1
+Yo-kai Watch$78$20
+Yofukashi no Uta$18$13
+Yomawari Sensei$1$0
+Youkaiden Nekome Kozou$1$0
+Yugami-kun ni wa Tomodachi ga Inai$5$3
+Yuureitou$1$0
+Zankoku na Kami ga Shihai Suru$2$0
+Zettai Karen Children$9$5
+Zettai Kareshi$3$1
+Zoids$8$4
+Zoids: Genesis$8$3
+Zoids: New Century$2$1
+Zoids: Wild$3$2
+Zombie 100$4$2
+22/7$12$11
+Adabana Odd Tales$2$0
+Aldnoah.Zero$7$4
+Angel Heart$1$1
+ATRI -My Dear Moments-$4$0
+Birthday Wonderland$1$0
+Blend S$9$5
+Buddy Daddies$6$2
+BUILD DIVIDE$5$3
+Cencoroll Connect$1$1
+Demashita! Powerpuff Girls Z$4$4
+Devilman Crybaby$4$1
+Doukyuusei$4$0
+Fate/EXTRA Last Encore$2$1
+Fullmetal Alchemist (2003)$8$4
+Galilei Donna$3$3
+Given$13$1
+Granblue Fantasy$311$24
+Gravitation$4$0
+Gunjou no Fanfare$3$0
+Gunslinger Stratos$1$0
+Inu-Oh$2$0
+Kanadian Families: Episode Zero$1$1
+Kiba$5$1
+Kimi no Suizou wo Tabetai$4$2
+Koutetsujou no Kabaneri$11$4
+Magia Record: Puella Magi Madoka Magica Side Story$95$16
+Mahou Shoujo Madoka★Magica$23$19
+Otome Youkai Zakuro$8$4
+Promare$15$5
+Sarazanmai$13$4
+Seikimatsu Occult Gakuin$2$1
+Senkou no Night Raid$2$0
+Sword Art Online: Progressive Movie - Hoshi Naki Yoru no Aria$1$1
+Tokyo 24-ku$7$4
+Tsuritama$6$1
+Twisted Wonderland$37$1
+UniteUp!$3$0
+Virtua Fighter$6$0
+Visual Prison$10$0
+Wonder Egg Priority$28$23
+World Ⅱ World$2$0
+Zankyou no Terror$5$2
+Arkanoid$1$0
+Balan Wonderworld$5$0
+Before Crisis: Final Fantasy VII$16$0
+Brave Fencer Musashi$3$0
+Bravely Default$18$0
+Bravely Default Fairy's Effect$1$0
+Bravely Default II$7$0
+Bravely Second: End Layer$12$0
+Chaos Rings$6$0
+Chaos Rings II$6$0
+Chaos Rings Omega$3$0
+Chocobo's Mysterious Dungeon$1$0
+Chrono Cross$15$0
+Chrono Trigger$13$0
+Crisis Core: Final Fantasy VII$4$0
+Darius$3$0
+Darius Gaiden$2$0
+Darius II$3$0
+Dariusburst$3$0
+Dawn of Mana$7$0
+Densha De GO!$1$0
+Deus Ex$4$0
+Deus Ex: Human Revolution$5$0
+Deus Ex: Mankind Divided$1$0
+Dirge of Cerberus: Final Fantasy VII$5$0
+Dragon Quest Builders$1$0
+Dragon Quest Heroes: Rocket Slime$3$0
+Dragon Quest I$3$0
+Dragon Quest II$4$0
+Dragon Quest III$3$0
+Dragon Quest IV$12$0
+Dragon Quest IX$6$0
+Dragon Quest Monsters: Joker$3$0
+Dragon Quest V$8$0
+Dragon Quest VI$6$0
+Dragon Quest VII$6$0
+Dragon Quest VIII$13$0
+Dragon Quest X$3$0
+Dragon Quest XI$18$0
+Drakengard$9$0
+Drakengard 2$6$0
+Drakengard 3$13$0
+E.V.O. Search for Eden$1$0
+Echoes of Mana$1$0
+Eggs of Steel: Charlie's Eggcellent Adventure$1$0
+Ehrgeiz$1$0
+Estab-Life: Great Escape$3$2
+Final Fantasy Adventure$6$0
+Final Fantasy Brave Exvius$13$0
+Final Fantasy Crystal Chronicles: Echoes of Time$1$0
+Final Fantasy Crystal Chronicles: Ring of Fates$3$0
+Final Fantasy Crystal Chronicles: The Crystal Bearers$4$0
+Final Fantasy Dimensions$2$0
+Final Fantasy Fables$8$0
+Final Fantasy I$9$0
+Final Fantasy II$7$0
+Final Fantasy III$14$0
+Final Fantasy IV$15$0
+Final Fantasy IV: The After Years$2$0
+Final Fantasy IX$19$0
+Final Fantasy Mystic Quest$5$0
+Final Fantasy Record Keeper$3$0
+Final Fantasy Tactics$14$0
+Final Fantasy Tactics A2: Grimoire of the Rift$6$0
+Final Fantasy Tactics Advance$12$0
+Final Fantasy Type-0$19$0
+Final Fantasy V$14$0
+Final Fantasy VI$24$0
+Final Fantasy VII$36$0
+Final Fantasy VII Remake$11$1
+Final Fantasy VII: Advent Children$4$0
+Final Fantasy VII: The First Soldier$1$0
+Final Fantasy VIII$13$0
+Final Fantasy X$16$0
+Final Fantasy X-2$7$0
+Final Fantasy XI$14$0
+Final Fantasy XII$17$0
+Final Fantasy XIII$23$0
+Final Fantasy XIII-2$6$0
+Final Fantasy XIV$191$0
+Final Fantasy XV$22$1
+Final Fantasy XVI$8$0
+Final Fantasy: Crystal Chronicles$2$0
+Final Fantasy: The 4 Heroes of Light$1$0
+Final Fantasy: The Spirits Within$1$1
+Final Fantasy: Unlimited$5$2
+Forgotton Anne$2$0
+Front Mission$3$0
+G-Darius$3$0
+Grandia$12$0
+Grandia II$7$0
+Grimms Series$23$10
+HARVESTELLA$7$0
+Hitman$22$0
+I Am Setsuna$3$0
+Infinite Undiscovery$1$0
+Just Cause$1$0
+Just Cause 3$1$0
+Kai-Ri-Sei Million Arthur$7$3
+Kaku-San-Sei Million Arthur$4$0
+Kane & Lynch: Dead Men$2$0
+Katainaka no Ossan, Kensei ni Naru: Tada no Inaka no Kenjutsu Shihan Datta noni, Taisei Shita Deshitachi ga Ore wo Hanattekurenai Ken$1$1
+King of Prism$10$0
+Kingdom Hearts$87$0
+Legend of Mana$9$0
+Life is Strange$12$0
+Life is Strange 2$8$0
+Life is Strange: True Colors$6$0
+Lightning Returns: Final Fantasy XIII$1$0
+LIVE A ƎVI⅃$12$0
+Lord of Vermilion$13$1
+Mario Hoops 3-on-3$3$0
+Marvel's Guardians of the Galaxy$1$0
+Megami Ibunroku Persona$17$0
+Million Arthur: Arcana Blood$1$0
+Mini Ninjas$1$0
+Mischief Makers$3$0
+Mobius Final Fantasy$2$0
+Murdered: Soul Suspect$2$0
+Musashi: Samurai Legend$3$0
+NEO: The World Ends with You$17$0
+NieR$17$0
+NieR Re[in]carnation$20$0
+NieR: Automata$15$8
+Octopath Traveler$19$0
+Ogre Battle: The March of the Black Queen$3$0
+Oninaki$5$0
+Parasite Eve$2$0
+PowerWash Simulator$1$0
+Project Tokyo Dolls$9$1
+Radiata Stories$5$0
+Romancing SaGa$3$0
+Romancing SaGa 2$3$0
+Romancing SaGa 3$7$0
+Romancing SaGa Re;univerSe$4$0
+SaGa Frontier$8$0
+SaGa SCARLET GRACE$1$0
+Secret of Evermore$2$0
+Secret of Mana$8$0
+SINoALICE$18$0
+Sleeping Dogs$1$0
+Star Ocean: Anamnesis$7$0
+Star Ocean: First Departure$4$0
+Star Ocean: Integrity and Faithlessness$5$0
+Star Ocean: The Divine Force$3$0
+Star Ocean: The Last Hope$7$0
+Stranger of Paradise: Final Fantasy Origin$5$0
+Super Mario RPG: Legend of the Seven Stars$7$0
+Tactics Ogre: Let Us Cling Together$5$0
+Terranigma$1$0
+The Awesome Adventures of Captain Spirit$1$0
+The Bouncer$1$0
+The DioField Chronicle$1$0
+The World Ends with You$21$0
+Thief: The Dark Project$1$0
+Threads of Fate$7$0
+Toji no Miko: Kizamishi Issen no Tomoshibi$9$1
+Tomb Raider$3$0
+Trials of Mana$7$0
+Triangle Strategy$22$0
+Vagrant Story$3$0
+Valkyrie Anatomia: The Origin$1$0
+Valkyrie Elysium$2$0
+Valkyrie Profile$12$0
+Valkyrie Profile 2: Silmeria$3$0
+Valkyrie Profile: Covenant of the Plume$5$0
+Voice of Cards: The Beasts of Burden$4$0
+Voice of Cards: The Forsaken Maiden$13$0
+Voice of Cards: The Isle Dragon Roars$10$0
+War of the Visions: Final Fantasy Brave Exvius$18$0
+World of Final Fantasy$10$0
+Xenogears$21$0
