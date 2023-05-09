@@ -448,7 +448,12 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // You can disable at most a certain number of series. (MAX_DL)
     auto* disabledSets = new size_t[MAX_DL + MAX_FREE_BUNDLES];
     size_t disabledSetsIndex = 0;
+
+    // By having DLSlotsUsed start at 1
+    // this is the same as "reserving" the last slot for any series
+    // This way, when there's one slot left, we can run the Greedy Algorithm to find what the best series would be.
     size_t DLSlotsUsed = 0;
+
     // You can disable at most a certain number of characters. (Overlap limit.)
     size_t remainingOverlap = OVERLAP_LIMIT;
     // A series cannot be disabled twice.
@@ -517,8 +522,11 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Calculate the score.
     // printf("CUDA calculating score\n");
     size_t score = 0;
+    size_t bestSeriesToAdd = 0;
+    size_t bestSeriesValueToAdd = 0;
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
+        size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
         bool applySeries = bundleOverlap(bundlesUsed, seriesBundles);
         if(!applySeries){
             // check if the series is in the DL.
@@ -531,9 +539,21 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
         if(applySeries){
             // Add this series's value to the score.
-            score += deviceSeries[(2 * seriesNum) + 1];
+            score += seriesValue;
+        }
+        else{
+            // Greedy Algorithm: Find the best series to add to this.
+            // Since this else block ensures we cannot add this series...
+            if(seriesValue > bestSeriesValueToAdd){
+                // ... inside this if-statement means that this series is better than any other series.
+                bestSeriesToAdd = seriesNum;
+                bestSeriesValueToAdd = seriesValue;
+            }
         }
     }
+    // Complete the greedy algorithm, add this series.
+    disabledSets[disabledSetsIndex] = bestSeriesToAdd;
+    disabledSetsIndex++;
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
@@ -701,7 +721,7 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    for(size_t i = 0; i < 64; i++) {
+    for(size_t i = 0; i < 1; i++) {
         findBest<<<2048, 1024>>>(numBundles, numSeries);
         cudaDeviceSynchronize();
         cudaError_t lasterror = cudaGetLastError();
@@ -729,8 +749,11 @@ int main() {
     delete[] seriesNames;
     // Free up CUDA.
     // Well they're all __device__ variables now
-    // <https://forums.developer.nvidia.com/t/will-cuda-free-the-memory-when-my-application-exit/16113/5>
+    // https://forums.developer.nvidia.com/t/will-cuda-free-the-memory-when-my-application-exit/16113/5
     // and they'll get auto-freed when application exit.
+    // UPDATE: I misunderstood how to define __device__ variables when I said that
+    // but it still applies that this is the end of the process and that it'll be auto-freed
+    // although it isn't ideal that the stuff is all allocated until the end of the program's life.
 
     return 0;
 }
