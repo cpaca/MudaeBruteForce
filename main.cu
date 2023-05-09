@@ -507,8 +507,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Calculate the score.
     // printf("CUDA calculating score\n");
     size_t score = 0;
-    size_t bestSeriesToAdd = 0;
-    size_t bestSeriesValueToAdd = 0;
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
         size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
@@ -526,19 +524,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             // Add this series's value to the score.
             score += seriesValue;
         }
-        else{
-            // Greedy Algorithm: Find the best series to add to this.
-            // Since this else block ensures we cannot add this series...
-            if(seriesValue > bestSeriesValueToAdd){
-                // ... inside this if-statement means that this series is better than any other series.
-                bestSeriesToAdd = seriesNum;
-                bestSeriesValueToAdd = seriesValue;
-            }
-        }
     }
-    // Complete the greedy algorithm, add this series.
-    disabledSets[disabledSetsIndex] = bestSeriesToAdd;
-    disabledSetsIndex++;
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
