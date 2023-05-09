@@ -9,6 +9,8 @@
 #define MAX_FREE_BUNDLES 5
 // Overlap limit, defined in Mudae
 #define OVERLAP_LIMIT 30000
+// Main will loop 2048 locks of 1024 threads each this many times.
+#define LOOP_LEN 64
 
 std::string* getLines(const std::string& fileName, size_t& arrSize){
     std::ifstream bundleFile;
@@ -441,7 +443,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     }
 
     // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
-    size_t minSize = generateRandom(seed) % 200;
+    size_t minSize = generateRandom(seed) % 1000;
 
     // Create a theoretical DL.
     // This addresses restriction 1.
@@ -481,7 +483,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
                 // I accepted the infinite loop before and it finished really quickly
                 // but now I've decided I want to continue collecting the very, very small series
                 // just in case they have useful information.
-                minSize = 0;
+                minSize >>= 1;
             }
         }
         // otherwise failed
@@ -711,7 +713,7 @@ int main() {
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
     printf("Executing FindBest. \n");
-    for(size_t i = 0; i < 1; i++) {
+    for(size_t i = 0; i < LOOP_LEN; i++) {
         findBest<<<2048, 1024>>>(numBundles, numSeries);
         cudaDeviceSynchronize();
         cudaError_t lasterror = cudaGetLastError();
