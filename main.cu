@@ -9,6 +9,8 @@
 #define MAX_FREE_BUNDLES 5
 // Overlap limit, defined in Mudae
 #define OVERLAP_LIMIT 30000
+// Main will loop 2048 locks of 1024 threads each this many times.
+#define LOOP_LEN 64
 
 std::string* getLines(const std::string& fileName, size_t& arrSize){
     std::ifstream bundleFile;
@@ -441,7 +443,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     }
 
     // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
-    size_t minSize = generateRandom(seed) % 200;
+    size_t minSize = generateRandom(seed) % 1000;
 
     // Create a theoretical DL.
     // This addresses restriction 1.
@@ -477,11 +479,11 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             remainingOverlap -= setSize;
             numFails = 0;
 
-            if(minSize < remainingOverlap){
+            while(minSize >= remainingOverlap){
                 // I accepted the infinite loop before and it finished really quickly
                 // but now I've decided I want to continue collecting the very, very small series
                 // just in case they have useful information.
-                minSize = 0;
+                minSize >>= 1;
             }
         }
         // otherwise failed
@@ -507,38 +509,36 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Calculate the score.
     // printf("CUDA calculating score\n");
     size_t score = 0;
-    size_t bestSeriesToAdd = 0;
-    size_t bestSeriesValueToAdd = 0;
+
+    // Calculate score from bundles
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
         size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
-        bool applySeries = bundleOverlap(bundlesUsed, seriesBundles);
-        if(!applySeries){
-            // check if the series is in the DL.
-            for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
-                if(disabledSets[DLIdx] == seriesNum){
-                    applySeries = true;
-                    break; // only breaks out of one for loop
-                }
-            }
-        }
-        if(applySeries){
+        bool overlapsWithBundle = bundleOverlap(bundlesUsed, seriesBundles);
+        if(overlapsWithBundle){
             // Add this series's value to the score.
             score += seriesValue;
         }
-        else{
-            // Greedy Algorithm: Find the best series to add to this.
-            // Since this else block ensures we cannot add this series...
-            if(seriesValue > bestSeriesValueToAdd){
-                // ... inside this if-statement means that this series is better than any other series.
-                bestSeriesToAdd = seriesNum;
-                bestSeriesValueToAdd = seriesValue;
-            }
-        }
     }
-    // Complete the greedy algorithm, add this series.
-    disabledSets[disabledSetsIndex] = bestSeriesToAdd;
-    disabledSetsIndex++;
+
+    // Calculate score directly from series
+    for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
+        size_t seriesNum = disabledSets[DLIdx];
+        if(seriesNum > numSeries){
+            // This is a bundle, not a series.
+            continue;
+        }
+
+        size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
+        if(bundleOverlap(bundlesUsed, seriesBundles)){
+            // Already got covered by the bundles earlier.
+            continue;
+        }
+
+        // Add this series's score.
+        size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
+        score += seriesValue;
+    }
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
@@ -713,7 +713,7 @@ int main() {
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
     printf("Executing FindBest. \n");
-    for(size_t i = 0; i < 1; i++) {
+    for(size_t i = 0; i < LOOP_LEN; i++) {
         findBest<<<2048, 1024>>>(numBundles, numSeries);
         cudaDeviceSynchronize();
         cudaError_t lasterror = cudaGetLastError();
