@@ -13,6 +13,11 @@
 #define OVERLAP_LIMIT 30000
 // Main will loop 2048 locks of 1024 threads each this many times.
 #define LOOP_LEN 1
+// "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
+// MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
+// down to remainingOverlap levels.
+// MAX_MINSIZE determines the maximum value minSize can be.
+#define MAX_MINSIZE 10
 
 /**
  * Generates a random value, then updates the seed.
@@ -228,7 +233,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     }
 
     // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
-    size_t origMinSize = generateRandom(seed) % 1000;
+    size_t origMinSize = generateRandom(seed) % MAX_MINSIZE;
     size_t minSize = origMinSize;
 
     // Create a theoretical DL.
