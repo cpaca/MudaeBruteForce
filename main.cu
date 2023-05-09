@@ -468,6 +468,9 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
     }
 
+    // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
+    size_t minSize = generateRandom(seed) % 200;
+
     // Create a theoretical DL.
     // This addresses restriction 1.
     // printf("CUDA creating theoretical DL\n");
@@ -490,6 +493,9 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             // and then setSize = setPtr[0]?
             setSize = bundleSeries[bundleIndices[setToAdd - numSeries]];
         }
+        if(setSize < minSize){
+            continue;
+        }
         // This addresses restriction 2.
         if(setSize < remainingOverlap){
             // Add this set to the DL
@@ -498,6 +504,13 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             DLSlotsUsed++;
             remainingOverlap -= setSize;
             numFails = 0;
+
+            if(minSize < remainingOverlap){
+                // I accepted the infinite loop before and it finished really quickly
+                // but now I've decided I want to continue collecting the very, very small series
+                // just in case they have useful information.
+                minSize = 0;
+            }
         }
         // otherwise failed
         // aka the numFails right at the beginning
@@ -570,10 +583,16 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             deviceStrCat(betterStr, num);
             deviceStrCat(betterStr, ", ");
         }
-        deviceStrCat(betterStr, "\n Remaining overlap: ");
+        deviceStrCat(betterStr, "\nRemaining overlap: ");
         deviceItos(num, remainingOverlap);
         deviceStrCat(betterStr, num);
+
+        deviceStrCat(betterStr, "\nMin size: ");
+        deviceItos(num, minSize);
+        deviceStrCat(betterStr, num);
+
         deviceStrCat(betterStr, "\n\n");
+
         size_t secondCheck = atomicMax(&bestScore, score);
         // If this was < instead of <=, this would never print (because bestScore either = score, from this, or > score,
         // from another thread
@@ -721,6 +740,7 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
+    printf("Executing FindBest. \n");
     for(size_t i = 0; i < 1; i++) {
         findBest<<<2048, 1024>>>(numBundles, numSeries);
         cudaDeviceSynchronize();
