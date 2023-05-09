@@ -228,7 +228,8 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     }
 
     // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
-    size_t minSize = generateRandom(seed) % 1000;
+    size_t origMinSize = generateRandom(seed) % 1000;
+    size_t minSize = origMinSize;
 
     // Create a theoretical DL.
     // This addresses restriction 1.
@@ -340,8 +341,8 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         deviceItos(num, remainingOverlap);
         deviceStrCat(betterStr, num);
 
-        deviceStrCat(betterStr, "\nMin size: ");
-        deviceItos(num, minSize);
+        deviceStrCat(betterStr, "\nOriginal minSize: ");
+        deviceItos(num, origMinSize);
         deviceStrCat(betterStr, num);
 
         deviceStrCat(betterStr, "\n\n");
