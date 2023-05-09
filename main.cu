@@ -165,6 +165,25 @@ __device__ bool bundleOverlap(const size_t* A, const size_t* B){
     return false;
 }
 
+/**
+ * If set represents the Set ID of a bundle, then bundlesUsed is modified to acknowledge that that bundle is
+ * activated.
+ * @param numSeries The total number of series there are.
+ * @param bundlesUsed MAY BE MODIFIED to acknowledge this set being added to bundlesUsed.
+ * @param setToAdd The Set ID of a bundle.
+ */
+__device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size_t set) {
+    if(set >= numSeries){
+        // setToAdd is actually a bundle to add
+        // If this bundle is being used, we need to acknowledge that in bundlesUsed
+        size_t bundleNum = set - numSeries;
+        size_t bundlesUsedWordSize = 8 * sizeof(size_t);
+        size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
+        size_t bundleOffset = bundleNum % bundlesUsedWordSize;
+        bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
+    }
+}
+
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Set up randomness
     // printf("CUDA setting up randomness\n");
@@ -189,21 +208,27 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // A series cannot be disabled twice.
     // That limitation is handled when the score is calculated.
 
+    // To address restriction 3, we need to know what bundles are used.
+    auto* bundlesUsed = new size_t[setBundlesSetSize];
+    memset(bundlesUsed, 0, sizeof(size_t) * setBundlesSetSize);
+
     // Apply the free bundles.
     // printf("CUDA applying free bundles.\n");
     for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
         if(freeBundles[bundleNum] != 0){
+            // Add bundle to disabledSets...
             disabledSets[disabledSetsIndex] = bundleNum + numSeries;
             disabledSetsIndex++;
+
+            // ... but more importantly add bundle to bundlesUsed
+            // I think the compiler will inline it and apply 0, bundlesUsed, bundleNum
+            // so I don't have to.
+            activateBundle(numSeries, bundlesUsed, bundleNum + numSeries);
         }
     }
 
     // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
     size_t minSize = generateRandom(seed) % 1000;
-
-    // To address restriction 3, we need to know what bundles are used.
-    auto* bundlesUsed = new size_t[setBundlesSetSize];
-    memset(bundlesUsed, 0, sizeof(size_t) * setBundlesSetSize);
 
     // Create a theoretical DL.
     // This addresses restriction 1.
@@ -230,6 +255,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         if(setSize < minSize){
             continue;
         }
+
         // This addresses restriction 2.
         if(setSize < remainingOverlap){
             // ADD THIS SET TO THE DL
@@ -239,15 +265,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             remainingOverlap -= setSize;
             numFails = 0;
 
-            if(setToAdd >= numSeries){
-                // setToAdd is actually a bundle to add
-                // If this bundle is being used, we need to acknowledge that in bundlesUsed
-                size_t bundleNum = setToAdd - numSeries;
-                size_t bundlesUsedWordSize = 8 * sizeof(size_t);
-                size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
-                size_t bundleOffset = bundleNum % bundlesUsedWordSize;
-                bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
-            }
+            activateBundle(numSeries, bundlesUsed, setToAdd);
 
             while(minSize > remainingOverlap){
                 // I accepted the infinite loop before and it finished really quickly
