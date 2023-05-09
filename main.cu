@@ -272,34 +272,6 @@ __device__ void deviceStrCat(char* dest, const char* src){
     dest[destIdx] = NULL;
 }
 
-/**
- * Activates a bundle located at bundleIndex.
- * Returns 0 if there is no value gained by activating the bundle.
- * @param bundleIndex The index of the bundle in bundleSeries. Therefore, bundleSeries[bundleIndex] = bundleSize.
- * @param deviceBundles 1D array of bundle data
- * @param deviceSeries 1D array of series data
- * @param activatedSets List of already-activated series
- * @return The value gained from this.
- */
-// This parameter list is long and I don't like it...
-__device__ size_t activateBundle(const size_t &bundleIndex, const size_t* deviceBundles, const size_t* deviceSeries,
-                                 bool* activatedSets){
-    size_t improvedValue = 0;
-    // there's a lot of error-checking that I'd like to do but can't without having twice as many params.
-    size_t bundleOffset = bundleIndex+1; // 0 is size which we don't care about
-    while(deviceBundles[bundleOffset] != -1){
-        size_t seriesID = deviceBundles[bundleOffset];
-        if(!activatedSets[seriesID]){
-            // series isn't activated, activate it for this bundle.
-            activatedSets[seriesID] = true;
-            // and add its value to this
-            improvedValue += deviceSeries[(2*seriesID) + 1];
-        }
-        bundleOffset++; // check next series in bundle.
-    }
-    return improvedValue;
-}
-
 bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_t numSeries, size_t** bundleData){
     if(bundleNum >= numBundles){
         return false;
