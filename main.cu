@@ -507,23 +507,35 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Calculate the score.
     // printf("CUDA calculating score\n");
     size_t score = 0;
+
+    // Calculate score from bundles
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
         size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
-        bool applySeries = bundleOverlap(bundlesUsed, seriesBundles);
-        if(!applySeries){
-            // check if the series is in the DL.
-            for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
-                if(disabledSets[DLIdx] == seriesNum){
-                    applySeries = true;
-                    break; // only breaks out of one for loop
-                }
-            }
-        }
-        if(applySeries){
+        bool overlapsWithBundle = bundleOverlap(bundlesUsed, seriesBundles);
+        if(overlapsWithBundle){
             // Add this series's value to the score.
             score += seriesValue;
         }
+    }
+
+    // Calculate score directly from series
+    for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
+        size_t seriesNum = disabledSets[DLIdx];
+        if(seriesNum > numSeries){
+            // This is a bundle, not a series.
+            continue;
+        }
+
+        size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
+        if(bundleOverlap(bundlesUsed, seriesBundles)){
+            // Already got covered by the bundles earlier.
+            continue;
+        }
+
+        // Add this series's score.
+        size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
+        score += seriesValue;
     }
 
     // printf("CUDA checking if this is the best score.\n");
