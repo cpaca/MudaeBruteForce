@@ -201,6 +201,10 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
     size_t minSize = generateRandom(seed) % 1000;
 
+    // To address restriction 3, we need to know what bundles are used.
+    auto* bundlesUsed = new size_t[setBundlesSetSize];
+    memset(bundlesUsed, 0, sizeof(size_t) * setBundlesSetSize);
+
     // Create a theoretical DL.
     // This addresses restriction 1.
     // printf("CUDA creating theoretical DL\n");
@@ -228,12 +232,22 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
         // This addresses restriction 2.
         if(setSize < remainingOverlap){
-            // Add this set to the DL
+            // ADD THIS SET TO THE DL
             disabledSets[disabledSetsIndex] = setToAdd;
             disabledSetsIndex++;
             DLSlotsUsed++;
             remainingOverlap -= setSize;
             numFails = 0;
+
+            if(setToAdd >= numSeries){
+                // setToAdd is actually a bundle to add
+                // If this bundle is being used, we need to acknowledge that in bundlesUsed
+                size_t bundleNum = setToAdd - numSeries;
+                size_t bundlesUsedWordSize = 8 * sizeof(size_t);
+                size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
+                size_t bundleOffset = bundleNum % bundlesUsedWordSize;
+                bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
+            }
 
             while(minSize > remainingOverlap){
                 // I accepted the infinite loop before and it finished really quickly
@@ -244,22 +258,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
         // otherwise failed
         // aka the numFails right at the beginning
-    }
-
-    // To address restriction 3, we need to know what bundles are used.
-    // printf("CUDA calculating used bundles\n");
-    auto* bundlesUsed = new size_t[setBundlesSetSize];
-    memset(bundlesUsed, 0, sizeof(size_t) * setBundlesSetSize);
-    for(size_t idx = 0; idx < disabledSetsIndex; idx++){
-        size_t item = disabledSets[idx];
-        if(item >= numSeries){
-            size_t bundleNum = item - numSeries;
-            size_t bundlesUsedWordSize = 8 * sizeof(size_t);
-            size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
-            size_t bundleOffset = bundleNum % bundlesUsedWordSize;
-            bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
-        }
-        // else: not a bundle so not apart of bundlesUsed
     }
 
     // Calculate the score.
