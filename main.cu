@@ -662,7 +662,7 @@ int main() {
     // So we should keep track of that.
     // This is size_t, even if it could be bool*, just for consistency.
     auto* host_freeBundles = new size_t[numBundles];
-    std::string freeBundleNames[] = {"Western", "Hentai"};
+    std::string freeBundleNames[] = {"Western", "Real Life People"};
     int numFreeBundles = sizeof(freeBundleNames)/sizeof(freeBundleNames[0]);
     int freeBundlesFound = 0;
     for(size_t i = 0; i < numBundles; i++){
