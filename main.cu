@@ -11,8 +11,9 @@
 #define MAX_FREE_BUNDLES 5
 // Overlap limit, defined in Mudae
 #define OVERLAP_LIMIT 30000
-// Main will loop 2048 locks of 1024 threads each this many times.
-#define LOOP_LEN 1
+// How many blocks to run.
+// Note that each block gets 1024 threads.
+#define NUM_BLOCKS (1 << 11)
 // "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
@@ -606,20 +607,21 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    printf("Executing FindBest. \n");
 #if PROFILE
     // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
     findBest<<<1, 1>>>(numBundles, numSeries);
 #else
-    for(size_t i = 0; i < LOOP_LEN; i++) {
-        findBest<<<2048, 1024>>>(numBundles, numSeries);
-    }
+    std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 1024 threads each.\n";
+    findBest<<<NUM_BLOCKS, 1024>>>(numBundles, numSeries);
 #endif
     cudaDeviceSynchronize();
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {
         const char *errName = cudaGetErrorName(lasterror);
         printf("%s\n", errName);
+    }
+    else{
+        printf("No CUDA errors.\n");
     }
 
     printf("FindBest finished\n");
