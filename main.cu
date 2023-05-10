@@ -261,7 +261,25 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     lastTime = currTime;
 #endif
 
+#if PROFILE
+    // Variables used to measure time spent in the while-loop
+    size_t lastLoopTime;
+    size_t currLoopTime;
+    // How many times each "continue" is called
+    size_t ptrCatches = 0;
+    size_t sizeCatches = 0;
+    size_t bundleCatches = 0;
+    size_t remainingOverlapCatches = 0;
+
+    // How much time is spent on each process.
+    size_t sizeTime = 0;
+    size_t bundleOverlapTime = 0;
+    size_t addSetTime = 0;
+#endif
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
+#if PROFILE
+        lastLoopTime = clock64();
+#endif
         numFails++;
         size_t setToAdd = generateRandom(seed) % numSets;
         // Calculate the size of this set.
@@ -269,7 +287,13 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         if(setToAdd < numSeries){
             size_t* setPtr = deviceSeries + (2*setToAdd);
             if(*(setPtr+1) == 0){
-                // also a fail, which is addressed by the numFails right at the beginning.
+                // This is also a form of "fail", but the numFails++ at the start addresses that.
+#if PROFILE
+                currLoopTime = clock64();
+                sizeTime += currLoopTime - lastLoopTime;
+                lastLoopTime = currLoopTime;
+                ptrCatches++;
+#endif
                 continue;
             }
             setSize = *setPtr;
@@ -281,8 +305,19 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
 
         if(setSize < minSize){
+#if PROFILE
+            currLoopTime = clock64();
+            sizeTime += currLoopTime - lastLoopTime;
+            lastLoopTime = currLoopTime;
+            sizeCatches++;
+#endif
             continue;
         }
+#if PROFILE
+        currLoopTime = clock64();
+        sizeTime += currLoopTime - lastLoopTime;
+        lastLoopTime = currLoopTime;
+#endif
 
         // Determine redundancy.
         // First, determine the bundles for this set:
@@ -291,8 +326,20 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         if(bundleOverlap(selfBundles, bundlesUsed)){
             // This set has already been addressed by a previous bundle.
             // In other words, this set is redundant.
+#if PROFILE
+            currLoopTime = clock64();
+            bundleOverlapTime += currLoopTime - lastLoopTime;
+            lastLoopTime = currLoopTime;
+            bundleCatches++;
+#endif
             continue;
         }
+
+#if PROFILE
+        currLoopTime = clock64();
+        bundleOverlapTime += currLoopTime - lastLoopTime;
+        lastLoopTime = currLoopTime;
+#endif
 
         // This addresses restriction 2.
         if(setSize < remainingOverlap){
@@ -312,9 +359,28 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
                 minSize >>= 1;
             }
         }
+#if PROFILE
+        else{
+            remainingOverlapCatches++;
+        }
+        currLoopTime = clock64();
+        addSetTime += currLoopTime - lastLoopTime;
+        lastLoopTime = currLoopTime;
+#endif
         // otherwise failed
         // aka the numFails right at the beginning
     }
+#if PROFILE
+    // Deep while-loop profiler info.
+    printf("Printing deep while-loop profiler information:\n");
+    devicePrintStrNum(" Profiler: 0-value series catches: ", ptrCatches);
+    devicePrintStrNum(" Profiler: Series-too-small catches: ", sizeCatches);
+    devicePrintStrNum(" Profiler: Series-in-bundle catches: ", bundleCatches);
+    devicePrintStrNum(" Profiler: Series-too-fat catches: ", remainingOverlapCatches);
+    devicePrintStrNum(" Profiler: Series size calculation time: ", sizeTime);
+    devicePrintStrNum(" Profiler: Bundle overlap calculation time: ", bundleOverlapTime);
+    devicePrintStrNum(" Profiler: Add set calculation time: ", addSetTime);
+#endif
 
 #if PROFILE
     currTime = clock64();
