@@ -21,7 +21,7 @@
 // Whether or not to run the in-code Profiler.
 // Note that the profiler is implemented in code, not using an actual profiler
 // like nvcc or nvvp
-#define PROFILE true
+#define PROFILE false
 
 /**
  * Generates a random value, then updates the seed.
