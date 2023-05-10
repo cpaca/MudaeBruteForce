@@ -283,9 +283,11 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         numFails++;
         size_t setToAdd = generateRandom(seed) % numSets;
         // Calculate the size of this set.
-        size_t setSize;
+        size_t* setPtr;
         if(setToAdd < numSeries){
-            size_t* setPtr = deviceSeries + (2*setToAdd);
+            // Format for series:
+            // [Size], [Value]
+            setPtr = deviceSeries + (2*setToAdd);
             if(*(setPtr+1) == 0){
                 // This is also a form of "fail", but the numFails++ at the start addresses that.
 #if PROFILE
@@ -296,13 +298,13 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 #endif
                 continue;
             }
-            setSize = *setPtr;
         }
         else{
-            // Perhaps I could just set setPtr = bundleSeries + (bundleIndices[setToAdd-numSeries]);
-            // and then setSize = setPtr[0]?
-            setSize = bundleSeries[bundleIndices[setToAdd - numSeries]];
+            // Format for bundles: [Size], SeriesID, SeriesID, SeriesID, ...
+            setPtr = bundleSeries + bundleIndices[setToAdd - numSeries];
         }
+        // Observe that BOTH set formats use the first value to represent the size of the set
+        size_t setSize = *setPtr;
 
         if(setSize < minSize){
 #if PROFILE
