@@ -18,6 +18,10 @@
 // down to remainingOverlap levels.
 // MAX_MINSIZE determines the maximum value minSize can be.
 #define MAX_MINSIZE 100
+// Whether or not to run the in-code Profiler.
+// Note that the profiler is implemented in code, not using an actual profiler
+// like nvcc or nvvp
+#define PROFILE true
 
 /**
  * Generates a random value, then updates the seed.
@@ -190,6 +194,11 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
 }
 
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
+#if PROFILE
+    size_t lastTime = clock64();
+    size_t currTime; // set this later when comparing
+#endif
+
     // Set up randomness
     // printf("CUDA setting up randomness\n");
     size_t numSets = numSeries + numBundles;
@@ -245,6 +254,13 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // I typically saw it complete in 4-8k loops, but if one thread in a warp needs 10k loops to complete
     // then the other 31 threads will wait 10k loops
     // giving them an effective time of 10k loops
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: While loop setup time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
+
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
         numFails++;
         size_t setToAdd = generateRandom(seed) % numSets;
@@ -300,6 +316,12 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         // aka the numFails right at the beginning
     }
 
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: While loop time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
+
     // Calculate the score.
     // printf("CUDA calculating score\n");
     size_t score = 0;
@@ -314,6 +336,12 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             score += seriesValue;
         }
     }
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: Bundle-score calculation time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
 
     // Calculate score directly from series
     for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
@@ -331,6 +359,12 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         size_t seriesValue = deviceSeries[(2 * setNum) + 1];
         score += seriesValue;
     }
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: Series-score calculation time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
@@ -505,9 +539,14 @@ int main() {
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
     printf("Executing FindBest. \n");
+#if PROFILE
+    // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
+    findBest<<<1, 1>>>(numBundles, numSeries);
+#else
     for(size_t i = 0; i < LOOP_LEN; i++) {
         findBest<<<2048, 1024>>>(numBundles, numSeries);
     }
+#endif
     cudaDeviceSynchronize();
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {

@@ -152,3 +152,36 @@ __device__ void deviceStrCat(char* dest, const char* src){
     }
     dest[destIdx] = NULL;
 }
+
+/**
+ * Prints a str and a num.
+ * Effectively equivalent to converting the num to a str, concatenating the two, etc. etc.
+ * but this does it all in one function. (This also appends a \\n afterwards, conveniently.)
+ *
+ * This function was created largely for the in-code Profiler to use.
+ */
+__device__ void devicePrintStrNum(const char* str, size_t num){
+    // add 2 just in case i messed something up somehow
+    // because i'm pretty sure I messed something up and this is easier than checking
+    size_t strlen = 2;
+    const char* strptr = str;
+    while(*strptr != NULL){
+        strptr++;
+        strlen++;
+    }
+
+    char* prntStr = new char[strlen+10];
+    prntStr[0] = '\0';
+
+    char* numStr = new char[10];
+
+    deviceItos(numStr, num);
+
+    deviceStrCat(prntStr, str);
+    deviceStrCat(prntStr, numStr);
+    printf("%s\n", prntStr);
+
+    delete[] numStr;
+    delete[] prntStr;
+
+}
