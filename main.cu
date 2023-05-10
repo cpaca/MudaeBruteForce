@@ -17,7 +17,7 @@
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
 // MAX_MINSIZE determines the maximum value minSize can be.
-#define MAX_MINSIZE 10
+#define MAX_MINSIZE 100
 
 /**
  * Generates a random value, then updates the seed.
@@ -89,7 +89,7 @@ __device__ size_t* bundleIndices = nullptr;
 // TODO: Optimization: Bundles which are entirely contained within other bundles (ex cover corp is in vtubers)
 //  could have a better setBundles value.
 __device__ size_t* setBundles = nullptr;
-__device__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
+__constant__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
 
 // Data about each series.
 // deviceSeries[2n] is the size of series n
@@ -240,6 +240,11 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // This addresses restriction 1.
     // printf("CUDA creating theoretical DL\n");
     size_t numFails = 0;
+    // Did some testing and analysis.
+    // Due to the way CUDA works, it's best to assume this takes 10k loops to complete.
+    // I typically saw it complete in 4-8k loops, but if one thread in a warp needs 10k loops to complete
+    // then the other 31 threads will wait 10k loops
+    // giving them an effective time of 10k loops
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
         numFails++;
         size_t setToAdd = generateRandom(seed) % numSets;
@@ -353,7 +358,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         deviceStrCat(betterStr, "\n\n");
 
         size_t secondCheck = atomicMax(&bestScore, score);
-        // If this was < instead of <=, this would never print (because bestScore either = score, from this, or > score,
+        // If this was < instead of <=, this would never print because bestScore either = score, from this, or > score,
         // from another thread
         if(secondCheck <= score) {
             printf("%s", betterStr);
@@ -502,14 +507,14 @@ int main() {
     printf("Executing FindBest. \n");
     for(size_t i = 0; i < LOOP_LEN; i++) {
         findBest<<<2048, 1024>>>(numBundles, numSeries);
-        cudaDeviceSynchronize();
-        cudaError_t lasterror = cudaGetLastError();
-        if (lasterror != cudaSuccess) {
-            const char *errName = cudaGetErrorName(lasterror);
-            printf("%s\n", errName);
-            break;
-        }
     }
+    cudaDeviceSynchronize();
+    cudaError_t lasterror = cudaGetLastError();
+    if (lasterror != cudaSuccess) {
+        const char *errName = cudaGetErrorName(lasterror);
+        printf("%s\n", errName);
+    }
+
     printf("FindBest finished\n");
 
     // Free up memory.
