@@ -17,7 +17,11 @@
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
 // MAX_MINSIZE determines the maximum value minSize can be.
-#define MAX_MINSIZE 10
+#define MAX_MINSIZE 100
+// Whether or not to run the in-code Profiler.
+// Note that the profiler is implemented in code, not using an actual profiler
+// like nvcc or nvvp
+#define PROFILE false
 
 /**
  * Generates a random value, then updates the seed.
@@ -89,7 +93,7 @@ __device__ size_t* bundleIndices = nullptr;
 // TODO: Optimization: Bundles which are entirely contained within other bundles (ex cover corp is in vtubers)
 //  could have a better setBundles value.
 __device__ size_t* setBundles = nullptr;
-__device__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
+__constant__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
 
 // Data about each series.
 // deviceSeries[2n] is the size of series n
@@ -190,6 +194,11 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
 }
 
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
+#if PROFILE
+    size_t lastTime = clock64();
+    size_t currTime; // set this later when comparing
+#endif
+
     // Set up randomness
     // printf("CUDA setting up randomness\n");
     size_t numSets = numSeries + numBundles;
@@ -240,28 +249,77 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // This addresses restriction 1.
     // printf("CUDA creating theoretical DL\n");
     size_t numFails = 0;
+    // Did some testing and analysis.
+    // Due to the way CUDA works, it's best to assume this takes 10k loops to complete.
+    // I typically saw it complete in 4-8k loops, but if one thread in a warp needs 10k loops to complete
+    // then the other 31 threads will wait 10k loops
+    // giving them an effective time of 10k loops
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: While loop setup time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
+
+#if PROFILE
+    // Variables used to measure time spent in the while-loop
+    size_t lastLoopTime;
+    size_t currLoopTime;
+    // How many times each "continue" is called
+    size_t ptrCatches = 0;
+    size_t sizeCatches = 0;
+    size_t bundleCatches = 0;
+    size_t remainingOverlapCatches = 0;
+
+    // How much time is spent on each process.
+    size_t sizeTime = 0;
+    size_t bundleOverlapTime = 0;
+    size_t addSetTime = 0;
+#endif
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
+#if PROFILE
+        lastLoopTime = clock64();
+#endif
         numFails++;
         size_t setToAdd = generateRandom(seed) % numSets;
         // Calculate the size of this set.
-        size_t setSize;
+        size_t* setPtr;
         if(setToAdd < numSeries){
-            size_t* setPtr = deviceSeries + (2*setToAdd);
+            // Format for series:
+            // [Size], [Value]
+            setPtr = deviceSeries + (2*setToAdd);
             if(*(setPtr+1) == 0){
-                // also a fail, which is addressed by the numFails right at the beginning.
+                // This is also a form of "fail", but the numFails++ at the start addresses that.
+#if PROFILE
+                currLoopTime = clock64();
+                sizeTime += currLoopTime - lastLoopTime;
+                lastLoopTime = currLoopTime;
+                ptrCatches++;
+#endif
                 continue;
             }
-            setSize = *setPtr;
         }
         else{
-            // Perhaps I could just set setPtr = bundleSeries + (bundleIndices[setToAdd-numSeries]);
-            // and then setSize = setPtr[0]?
-            setSize = bundleSeries[bundleIndices[setToAdd - numSeries]];
+            // Format for bundles: [Size], SeriesID, SeriesID, SeriesID, ...
+            setPtr = bundleSeries + bundleIndices[setToAdd - numSeries];
         }
+        // Observe that BOTH set formats use the first value to represent the size of the set
+        size_t setSize = *setPtr;
 
         if(setSize < minSize){
+#if PROFILE
+            currLoopTime = clock64();
+            sizeTime += currLoopTime - lastLoopTime;
+            lastLoopTime = currLoopTime;
+            sizeCatches++;
+#endif
             continue;
         }
+#if PROFILE
+        currLoopTime = clock64();
+        sizeTime += currLoopTime - lastLoopTime;
+        lastLoopTime = currLoopTime;
+#endif
 
         // Determine redundancy.
         // First, determine the bundles for this set:
@@ -270,8 +328,20 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         if(bundleOverlap(selfBundles, bundlesUsed)){
             // This set has already been addressed by a previous bundle.
             // In other words, this set is redundant.
+#if PROFILE
+            currLoopTime = clock64();
+            bundleOverlapTime += currLoopTime - lastLoopTime;
+            lastLoopTime = currLoopTime;
+            bundleCatches++;
+#endif
             continue;
         }
+
+#if PROFILE
+        currLoopTime = clock64();
+        bundleOverlapTime += currLoopTime - lastLoopTime;
+        lastLoopTime = currLoopTime;
+#endif
 
         // This addresses restriction 2.
         if(setSize < remainingOverlap){
@@ -291,9 +361,34 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
                 minSize >>= 1;
             }
         }
+#if PROFILE
+        else{
+            remainingOverlapCatches++;
+        }
+        currLoopTime = clock64();
+        addSetTime += currLoopTime - lastLoopTime;
+        lastLoopTime = currLoopTime;
+#endif
         // otherwise failed
         // aka the numFails right at the beginning
     }
+#if PROFILE
+    // Deep while-loop profiler info.
+    printf("Printing deep while-loop profiler information:\n");
+    devicePrintStrNum(" Profiler: 0-value series catches: ", ptrCatches);
+    devicePrintStrNum(" Profiler: Series-too-small catches: ", sizeCatches);
+    devicePrintStrNum(" Profiler: Series-in-bundle catches: ", bundleCatches);
+    devicePrintStrNum(" Profiler: Series-too-fat catches: ", remainingOverlapCatches);
+    devicePrintStrNum(" Profiler: Series size calculation time: ", sizeTime);
+    devicePrintStrNum(" Profiler: Bundle overlap calculation time: ", bundleOverlapTime);
+    devicePrintStrNum(" Profiler: Add set calculation time: ", addSetTime);
+#endif
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: While loop time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
 
     // Calculate the score.
     // printf("CUDA calculating score\n");
@@ -309,6 +404,12 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             score += seriesValue;
         }
     }
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: Bundle-score calculation time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
 
     // Calculate score directly from series
     for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
@@ -326,6 +427,12 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         size_t seriesValue = deviceSeries[(2 * setNum) + 1];
         score += seriesValue;
     }
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: Series-score calculation time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
@@ -353,7 +460,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         deviceStrCat(betterStr, "\n\n");
 
         size_t secondCheck = atomicMax(&bestScore, score);
-        // If this was < instead of <=, this would never print (because bestScore either = score, from this, or > score,
+        // If this was < instead of <=, this would never print because bestScore either = score, from this, or > score,
         // from another thread
         if(secondCheck <= score) {
             printf("%s", betterStr);
@@ -500,16 +607,21 @@ int main() {
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
     printf("Executing FindBest. \n");
+#if PROFILE
+    // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
+    findBest<<<1, 1>>>(numBundles, numSeries);
+#else
     for(size_t i = 0; i < LOOP_LEN; i++) {
         findBest<<<2048, 1024>>>(numBundles, numSeries);
-        cudaDeviceSynchronize();
-        cudaError_t lasterror = cudaGetLastError();
-        if (lasterror != cudaSuccess) {
-            const char *errName = cudaGetErrorName(lasterror);
-            printf("%s\n", errName);
-            break;
-        }
     }
+#endif
+    cudaDeviceSynchronize();
+    cudaError_t lasterror = cudaGetLastError();
+    if (lasterror != cudaSuccess) {
+        const char *errName = cudaGetErrorName(lasterror);
+        printf("%s\n", errName);
+    }
+
     printf("FindBest finished\n");
 
     // Free up memory.
