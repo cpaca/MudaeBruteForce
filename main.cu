@@ -266,6 +266,10 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // Variables used to measure time spent in the while-loop
     size_t lastLoopTime;
     size_t currLoopTime;
+
+    // Total while-loop executions
+    size_t whileLoopExecs = 0;
+
     // How many times each "continue" is called
     size_t ptrCatches = 0;
     size_t sizeCatches = 0;
@@ -273,6 +277,8 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     size_t remainingOverlapCatches = 0;
 
     // How much time is spent on each process.
+    size_t clock64Time = 0; // How much time is spent to run clock64() twice between each time call
+    size_t pickSetTime = 0;
     size_t sizeTime = 0;
     size_t bundleOverlapTime = 0;
     size_t addSetTime = 0;
@@ -280,9 +286,19 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
 #if PROFILE
         lastLoopTime = clock64();
+        currTime = clock64();
+        clock64Time += currTime - lastLoopTime;
+        lastLoopTime = clock64();
+
+        whileLoopExecs++;
 #endif
         numFails++;
         size_t setToAdd = generateRandom(seed) % numSets;
+#if PROFILE
+        currLoopTime = clock64();
+        pickSetTime += currLoopTime - lastLoopTime;
+        lastLoopTime = currLoopTime;
+#endif
         // Calculate the size of this set.
         size_t* setPtr;
         if(setToAdd < numSeries){
@@ -376,10 +392,13 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 #if PROFILE
     // Deep while-loop profiler info.
     printf("Printing deep while-loop profiler information:\n");
+    devicePrintStrNum(" Profiler: Total while loop executions: ", whileLoopExecs);
     devicePrintStrNum(" Profiler: 0-value series catches: ", ptrCatches);
     devicePrintStrNum(" Profiler: Series-too-small catches: ", sizeCatches);
     devicePrintStrNum(" Profiler: Series-in-bundle catches: ", bundleCatches);
     devicePrintStrNum(" Profiler: Series-too-fat catches: ", remainingOverlapCatches);
+    devicePrintStrNum(" Profiler: Time to call clock64 twice per loop: ", clock64Time);
+    devicePrintStrNum(" Profiler: Pick a set time: ", pickSetTime);
     devicePrintStrNum(" Profiler: Series size calculation time: ", sizeTime);
     devicePrintStrNum(" Profiler: Bundle overlap calculation time: ", bundleOverlapTime);
     devicePrintStrNum(" Profiler: Add set calculation time: ", addSetTime);
