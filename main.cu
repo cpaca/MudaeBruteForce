@@ -12,8 +12,8 @@
 // Overlap limit, defined in Mudae
 #define OVERLAP_LIMIT 30000
 // How many blocks to run.
-// Note that each block gets 1024 threads.
-#define NUM_BLOCKS (1 << 11)
+// Note that each block gets 512 threads.
+#define NUM_BLOCKS (1 << 12)
 // "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
@@ -630,8 +630,8 @@ int main() {
     // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
     findBest<<<1, 1>>>(numBundles, numSeries);
 #else
-    std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 1024 threads each.\n";
-    findBest<<<NUM_BLOCKS, 1024>>>(numBundles, numSeries);
+    std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
+    findBest<<<NUM_BLOCKS, 512>>>(numBundles, numSeries);
 #endif
     cudaDeviceSynchronize();
     cudaError_t lasterror = cudaGetLastError();
