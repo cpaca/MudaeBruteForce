@@ -498,7 +498,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 int main() {
     size_t numBundles;
     // first read the bundlesStr
-    std::string* bundlesStr = getLines("../bundle_data.txt", numBundles);
+    std::string* bundlesStr = getLines("../working-data/bundle_data.txt", numBundles);
     auto** bundleData = new size_t*[numBundles];
     auto* bundleNames = new std::string[numBundles];
     for(size_t i = 0; i < numBundles; i++){
@@ -522,7 +522,7 @@ int main() {
 
     // next read the seriesStr
     size_t numSeries;
-    std::string* seriesStr = getLines("../series_data.txt", numSeries);
+    std::string* seriesStr = getLines("../working-data/series_data.txt", numSeries);
     auto** seriesData = new size_t*[numSeries];
     auto* seriesNames = new std::string[numSeries];
     for(size_t i = 0; i < numSeries; i++){
