@@ -1,2 +1,5 @@
 # Project exclude paths
 /cmake-build-debug/
+
+# It's good practice not to have working data in the github repo.
+/working-data/
