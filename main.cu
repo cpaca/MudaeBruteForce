@@ -3,6 +3,7 @@
 
 #include "strUtils.cu"
 #include "hostDeviceUtils.cu"
+#include "randUtils.cu"
 
 // Maximum number of bundles/series that can be activated.
 #define MAX_DL 50
@@ -22,23 +23,7 @@
 // Whether or not to run the in-code Profiler.
 // Note that the profiler is implemented in code, not using an actual profiler
 // like nvcc or nvvp
-#define PROFILE false
-
-/**
- * Generates a random value, then updates the seed.
- * This is statistical randomness, not cryptographic randomness.
- * Also note that this method simply returns the seed; this is done because it makes some shorthand things easier
- * (i.e. you can do generateRandom(seed)%limit instead of having seed = generateRandom(seed); num = seed%limit)
- * @param seed The "seed" of the randomness.
- * @return
- */
-__device__ size_t generateRandom(size_t &seed){
-    // https://en.wikipedia.org/wiki/Linear_congruential_generator
-    // These are the values that newlib uses, and while there is a note saying that not all of the values are ideal
-    // this is one of the only ones that uses modulus 2^64
-    seed = (6364136223846793005*seed) + 1;
-    return seed;
-}
+#define PROFILE true
 
 bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_t numSeries, size_t** bundleData){
     if(bundleNum >= numBundles){
