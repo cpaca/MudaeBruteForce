@@ -24,7 +24,7 @@
 // Whether or not to run the in-code Profiler.
 // Note that the profiler is implemented in code, not using an actual profiler
 // like nvcc or nvvp
-#define PROFILE true
+#define PROFILE false
 
 bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_t numSeries, size_t** bundleData){
     if(bundleNum >= numBundles){
