@@ -1,6 +1,6 @@
 
 
-typedef std::uint16_t setSize;
+typedef std::uint16_t setSize_t;
 
 template <typename T>
 /**

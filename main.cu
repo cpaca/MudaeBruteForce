@@ -96,7 +96,7 @@ __device__ size_t* freeBundles = nullptr;
 void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData){
     // create setBundles.
     // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
-    // Explanation of +1: If there are 7 bundles, setSize should be 1, not 0.
+    // Explanation of +1: If there are 7 bundles, setSize_t should be 1, not 0.
     // host_ added because I can't write device data directly @ host level.
     const size_t host_setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
     cudaMemcpyToSymbol(setBundlesSetSize, &host_setBundlesSetSize, sizeof(size_t));
@@ -611,14 +611,16 @@ int main() {
     // https://stackoverflow.com/questions/23260074/allocating-malloc-a-double-in-cuda-device-function
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
+    size_t sharedMemoryNeeded = (numBundles + numSeries) * sizeof(setSize_t);
+
     // makeError<<<2, 512>>>(numBundles, numSeries);
     clock_t startTime = clock();
 #if PROFILE
     // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
-    findBest<<<1, 1>>>(numBundles, numSeries);
+    findBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
 #else
     std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
-    findBest<<<NUM_BLOCKS, 512>>>(numBundles, numSeries);
+    findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
 #endif
     cudaDeviceSynchronize();
     clock_t endTime = clock();
