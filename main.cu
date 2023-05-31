@@ -228,8 +228,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     }
 
     // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
-    // TODO: Remove unoptimizable modulo expression
-    size_t origMinSize = generateRandom(seed) % MAX_MINSIZE;
+    size_t origMinSize = generateRandom(seed, MAX_MINSIZE);
     size_t minSize = origMinSize;
 
     // Create a theoretical DL.
@@ -279,8 +278,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         whileLoopExecs++;
 #endif
         numFails++;
-        // TODO: Remove unoptimizable modulo expression
-        size_t setToAdd = generateRandom(seed) % numSets;
+        size_t setToAdd = generateRandom(seed, numSets);
 #if PROFILE
         currLoopTime = clock64();
         pickSetTime += currLoopTime - lastLoopTime;
