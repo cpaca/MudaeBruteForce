@@ -255,6 +255,10 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         if(setSizeToRead < numSeries){
             // set is a series
             setSize = deviceSeries[2*setSizeToRead];
+            size_t setValue = deviceSeries[(2*setSizeToRead)+1];
+            if(setValue == 0){
+                setSize = OVERLAP_LIMIT+1;
+            }
         }
         else{
             setSize = bundleSeries[bundleIndices[setSizeToRead - numSeries]];
@@ -268,6 +272,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         if(setSize > OVERLAP_LIMIT){
             // I don't think this is possible, since even the basic overlap limit is 20k.
             // But, just in case.
+            // -> Note that any catches of this are most likely from the setValue = 0 case
             setSize = OVERLAP_LIMIT+1;
         }
 
