@@ -188,7 +188,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
     // Set up randomness
     // printf("CUDA setting up randomness\n");
-    size_t numSets = numSeries + numBundles;
     size_t seed = (blockIdx.x << 10) + threadIdx.x;
     seed = generateRandom(seed) ^ clock();
     // seed = 0; // debug to get the same result every time
@@ -241,6 +240,46 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // I typically saw it complete in 4-8k loops, but if one thread in a warp needs 10k loops to complete
     // then the other 31 threads will wait 10k loops
     // giving them an effective time of 10k loops
+
+    // TODO update profiler to measure the time it takes to do the last part and the next part (up to the while loop)
+    //  Profiler will be inaccurate about it but it at least splits the last part and the next part.
+
+    extern __shared__ setSize_t setSizes[];
+    size_t numSets = numSeries + numBundles;
+    size_t setSizeToRead = threadIdx.x;
+    while(setSizeToRead < numSets){
+        size_t setSize;
+        if(setSizeToRead < numSeries){
+            // set is a series
+            setSize = deviceSeries[2*setSizeToRead];
+        }
+        else{
+            setSize = bundleSeries[bundleIndices[setSizeToRead - numSeries]];
+        }
+
+        if(setSize > ((size_t) get_unsigned_max<setSize_t>())){
+            devicePrintStrNum("ERROR: One of the sets is too fat for setSize_t: ", setSizeToRead);
+            return;
+        }
+
+        if(setSize > OVERLAP_LIMIT){
+            // I don't think this is possible, since even the basic overlap limit is 20k.
+            // But, just in case.
+            setSize = OVERLAP_LIMIT+1;
+        }
+
+        // I'm really running out of variable names.
+        size_t* selfBundles = setBundles + (setBundlesSetSize * setSizeToRead);
+        if(bundleOverlap(selfBundles, bundlesUsed)){
+            // AKA there's overlap between this and the freeBundles
+            setSize = OVERLAP_LIMIT+1;
+        }
+
+        setSizes[setSizeToRead] = setSize;
+        setSizeToRead += blockDim.x;
+    }
+
+    __syncthreads();
 
 #if PROFILE
     currTime = clock64();
