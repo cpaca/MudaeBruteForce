@@ -4,6 +4,7 @@
 #include "strUtils.cu"
 #include "hostDeviceUtils.cu"
 #include "randUtils.cu"
+#include "types.cu"
 
 // Maximum number of bundles/series that can be activated.
 #define MAX_DL 50
