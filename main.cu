@@ -241,8 +241,11 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // then the other 31 threads will wait 10k loops
     // giving them an effective time of 10k loops
 
-    // TODO update profiler to measure the time it takes to do the last part and the next part (up to the while loop)
-    //  Profiler will be inaccurate about it but it at least splits the last part and the next part.
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Shared memory setup time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
 
     extern __shared__ setSize_t setSizes[];
     size_t numSets = numSeries + numBundles;
@@ -283,7 +286,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
 #if PROFILE
     currTime = clock64();
-    devicePrintStrNum("Profiler: While loop setup time: ", currTime - lastTime);
+    devicePrintStrNum("Profiler: Shared memory calculation time: ", currTime - lastTime);
     lastTime = currTime;
 #endif
 
