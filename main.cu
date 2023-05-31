@@ -611,6 +611,7 @@ int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
+    clock_t startTime = clock();
 #if PROFILE
     // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
     findBest<<<1, 1>>>(numBundles, numSeries);
@@ -619,6 +620,9 @@ int main() {
     findBest<<<NUM_BLOCKS, 512>>>(numBundles, numSeries);
 #endif
     cudaDeviceSynchronize();
+    clock_t endTime = clock();
+    std::cout << "Time taken (seconds): " << std::to_string((endTime - startTime)/(double)CLOCKS_PER_SEC) << "\n";
+
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {
         const char *errName = cudaGetErrorName(lasterror);
