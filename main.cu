@@ -325,28 +325,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         lastLoopTime = currLoopTime;
 #endif
         // Calculate the size of this set.
-        size_t* setPtr;
-        if(setToAdd < numSeries){
-            // Format for series:
-            // [Size], [Value]
-            setPtr = deviceSeries + (2*setToAdd);
-            if(*(setPtr+1) == 0){
-                // This is also a form of "fail", but the numFails++ at the start addresses that.
-#if PROFILE
-                currLoopTime = clock64();
-                sizeTime += currLoopTime - lastLoopTime;
-                lastLoopTime = currLoopTime;
-                ptrCatches++;
-#endif
-                continue;
-            }
-        }
-        else{
-            // Format for bundles: [Size], SeriesID, SeriesID, SeriesID, ...
-            setPtr = bundleSeries + bundleIndices[setToAdd - numSeries];
-        }
-        // Observe that BOTH set formats use the first value to represent the size of the set
-        size_t setSize = *setPtr;
+        size_t setSize = setSizes[setToAdd];
 
         if(setSize < minSize){
 #if PROFILE
@@ -357,6 +336,12 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 #endif
             continue;
         }
+
+        // This addresses restriction 2.
+        if (setSize >= remainingOverlap) {
+            continue;
+        }
+
 #if PROFILE
         currLoopTime = clock64();
         sizeTime += currLoopTime - lastLoopTime;
@@ -384,24 +369,20 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         bundleOverlapTime += currLoopTime - lastLoopTime;
         lastLoopTime = currLoopTime;
 #endif
+        // ADD THIS SET TO THE DL
+        disabledSets[disabledSetsIndex] = setToAdd;
+        disabledSetsIndex++;
+        DLSlotsUsed++;
+        remainingOverlap -= setSize;
+        numFails = 0;
 
-        // This addresses restriction 2.
-        if(setSize < remainingOverlap){
-            // ADD THIS SET TO THE DL
-            disabledSets[disabledSetsIndex] = setToAdd;
-            disabledSetsIndex++;
-            DLSlotsUsed++;
-            remainingOverlap -= setSize;
-            numFails = 0;
+        activateBundle(numSeries, bundlesUsed, setToAdd);
 
-            activateBundle(numSeries, bundlesUsed, setToAdd);
-
-            while(minSize > remainingOverlap){
-                // I accepted the infinite loop before and it finished really quickly
-                // but now I've decided I want to continue collecting the very, very small series
-                // just in case they have useful information.
-                minSize >>= 1;
-            }
+        while (minSize > remainingOverlap) {
+            // I accepted the infinite loop before and it finished really quickly
+            // but now I've decided I want to continue collecting the very, very small series
+            // just in case they have useful information.
+            minSize >>= 1;
         }
 #if PROFILE
         else{
