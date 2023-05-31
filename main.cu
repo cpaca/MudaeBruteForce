@@ -392,8 +392,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         addSetTime += currLoopTime - lastLoopTime;
         lastLoopTime = currLoopTime;
 #endif
-        // otherwise failed
-        // aka the numFails right at the beginning
     }
 #if PROFILE
     // Deep while-loop profiler info.
