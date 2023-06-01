@@ -91,6 +91,11 @@ __device__ size_t* deviceSeries = nullptr;
 // If freeBundles[n] is non-zero, then bundle n is free.
 __device__ size_t* freeBundles = nullptr;
 
+// The size of each set.
+// Note that this is setSize_t, not size_t.
+// This is important because of byte limitations.
+extern __shared__ setSize_t setSizes[];
+
 // Initializes setBundles.
 // Note that this needs to be placed after the fuckton of variables because it manipulates some of them.
 void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData){
@@ -247,7 +252,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     lastTime = currTime;
 #endif
 
-    extern __shared__ setSize_t setSizes[];
     size_t numSets = numSeries + numBundles;
     size_t setSizeToRead = threadIdx.x;
     while(setSizeToRead < numSets){
