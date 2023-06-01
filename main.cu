@@ -94,6 +94,7 @@ __device__ size_t* freeBundles = nullptr;
 // The size of each set.
 // Note that this is setSize_t, not size_t.
 // This is important because of byte limitations.
+__device__ setSize_t* global_setSizes = nullptr;
 extern __shared__ setSize_t setSizes[];
 
 // Initializes setBundles.
@@ -150,6 +151,43 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
     cudaMemcpyToSymbol(setBundlesSetSize, &host_setBundlesSetSize, sizeof(host_setBundlesSetSize));
     convertArrToCuda(host_setBundles, numSets * host_setBundlesSetSize);
     cudaMemcpyToSymbol(setBundles, &host_setBundles, sizeof(host_setBundles));
+}
+
+void initializeGlobalSetSizes(size_t numSeries, size_t numBundles, size_t** seriesData, size_t** bundleData,
+                              const size_t* host_freeBundles){
+    size_t numSets = numSeries + numBundles;
+    auto* host_setSizes = new setSize_t[numSets];
+
+    for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
+        size_t seriesSize = seriesData[seriesNum][0];
+        size_t seriesValue = seriesData[seriesNum][1];
+        if(seriesValue == 0){
+            seriesSize = OVERLAP_LIMIT+1;
+        }
+        if(seriesSize > ((size_t) get_unsigned_max<setSize_t>())){
+            std::cout << "One of the sets is too fat for setSize_t: " << std::to_string(seriesNum) << "\n";
+            return;
+        }
+        if(seriesSize > OVERLAP_LIMIT){
+            seriesSize = OVERLAP_LIMIT+1;
+        }
+
+        host_setSizes[seriesNum] = seriesSize;
+    }
+    for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
+        size_t* bundlePtr = bundleData[bundleNum];
+        host_setSizes[numSeries + bundleNum] = bundlePtr[0];
+        if(host_freeBundles[bundleNum] != 0){
+            // Set this bundle's series's to OVERLAP_LIMIT+1
+            bundlePtr++;
+            while(size_t seriesNum = (*bundlePtr)){
+                host_setSizes[seriesNum] = OVERLAP_LIMIT+1;
+            }
+        }
+    }
+
+    convertArrToCuda(host_setSizes, numSets * sizeof(setSize_t));
+    cudaMemcpyToSymbol(global_setSizes, &host_setSizes, sizeof(host_setSizes));
 }
 
 /**
@@ -268,7 +306,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             setSize = bundleSeries[bundleIndices[setSizeToRead - numSeries]];
         }
 
-        if(setSize > ((size_t) get_unsigned_max<setSize_t>())){
+        if(setSize > ((size_t) get_unsigned_max<setSize_t>)){
             devicePrintStrNum("ERROR: One of the sets is too fat for setSize_t: ", setSizeToRead);
             return;
         }
@@ -603,6 +641,7 @@ int main() {
     }
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
+    initializeGlobalSetSizes(numSeries, numBundles, seriesData, bundleData, host_freeBundles);
     convertArrToCuda(host_freeBundles, numBundles);
     if(host_freeBundles == nullptr){
         std::cout << "FreeBundles not initialized correctly.";
