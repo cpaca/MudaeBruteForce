@@ -454,10 +454,25 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
     // Calculate score from bundles
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
-        size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
-        size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
-        bool overlapsWithBundle = bundleOverlap(bundlesUsed, seriesBundles);
+        setSize_t seriesSize = setSizes[seriesNum];
+
+        if(seriesSize == (OVERLAP_LIMIT+1)){
+            // Series size is 0 so don't even bother looking
+            continue;
+        }
+
+        bool overlapsWithBundle = false;
+        if(seriesSize == (OVERLAP_LIMIT+2)){
+            // Series is in the free-bundles so don't even bother checking the bundleOverlap()
+            overlapsWithBundle = true;
+        }
+        else{
+            size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
+            overlapsWithBundle = bundleOverlap(bundlesUsed, seriesBundles);
+        }
+
         if(overlapsWithBundle){
+            size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
             // Add this series's value to the score.
             score += seriesValue;
         }
