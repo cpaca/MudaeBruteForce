@@ -178,6 +178,8 @@ void initializeGlobalSetSizes(size_t numSeries, size_t numBundles, size_t** seri
         size_t* bundlePtr = bundleData[bundleNum];
         host_setSizes[numSeries + bundleNum] = bundlePtr[0];
         if(host_freeBundles[bundleNum] != 0){
+            // Set this bundle to OVERLAP_LIMIT+1 cause it's free
+            host_setSizes[numSeries + bundleNum] = OVERLAP_LIMIT+1;
             // Set this bundle's series's to OVERLAP_LIMIT+1
             bundlePtr++;
             while(true){
