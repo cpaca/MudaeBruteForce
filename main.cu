@@ -24,7 +24,7 @@
 // Whether or not to run the in-code Profiler.
 // Note that the profiler is implemented in code, not using an actual profiler
 // like nvcc or nvvp
-#define PROFILE true
+#define PROFILE false
 
 bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_t numSeries, size_t** bundleData){
     if(bundleNum >= numBundles){
@@ -300,40 +300,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     size_t numSets = numSeries + numBundles;
     size_t setSizeToRead = threadIdx.x;
     while(setSizeToRead < numSets){
-        bool debug = setSizeToRead == 10932 || setSizeToRead == 10933;
-        size_t setSize;
-        if(setSizeToRead < numSeries){
-            // set is a series
-            setSize = deviceSeries[2*setSizeToRead];
-            size_t setValue = deviceSeries[(2*setSizeToRead)+1];
-            if(setValue == 0){
-                setSize = OVERLAP_LIMIT+1;
-            }
-        }
-        else{
-            setSize = bundleSeries[bundleIndices[setSizeToRead - numSeries]];
-        }
-
-        if(setSize > ((size_t) get_unsigned_max<setSize_t>)){
-            devicePrintStrNum("ERROR: One of the sets is too fat for setSize_t: ", setSizeToRead);
-            return;
-        }
-
-        if(setSize > OVERLAP_LIMIT){
-            // I don't think this is possible, since even the basic overlap limit is 20k.
-            // But, just in case.
-            // -> Note that any catches of this are most likely from the setValue = 0 case
-            setSize = OVERLAP_LIMIT+1;
-        }
-
-        // I'm really running out of variable names.
-        size_t* selfBundles = setBundles + (setBundlesSetSize * setSizeToRead);
-        if(bundleOverlap(selfBundles, bundlesUsed)){
-            // AKA there's overlap between this and the freeBundles
-            setSize = OVERLAP_LIMIT+1;
-        }
-
-        setSizes[setSizeToRead] = setSize;
+        setSizes[setSizeToRead] = global_setSizes[setSizeToRead];
         setSizeToRead += blockDim.x;
     }
 
