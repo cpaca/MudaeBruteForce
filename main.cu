@@ -461,7 +461,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             continue;
         }
 
-        bool overlapsWithBundle = false;
+        bool overlapsWithBundle;
         if(seriesSize == (OVERLAP_LIMIT+2)){
             // Series is in the free-bundles so don't even bother checking the bundleOverlap()
             overlapsWithBundle = true;
