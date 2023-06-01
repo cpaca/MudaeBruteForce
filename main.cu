@@ -4,6 +4,7 @@
 #include "strUtils.cu"
 #include "hostDeviceUtils.cu"
 #include "randUtils.cu"
+#include "types.cu"
 
 // Maximum number of bundles/series that can be activated.
 #define MAX_DL 50
@@ -95,7 +96,7 @@ __device__ size_t* freeBundles = nullptr;
 void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData){
     // create setBundles.
     // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
-    // Explanation of +1: If there are 7 bundles, setSize should be 1, not 0.
+    // Explanation of +1: If there are 7 bundles, setSize_t should be 1, not 0.
     // host_ added because I can't write device data directly @ host level.
     const size_t host_setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
     cudaMemcpyToSymbol(setBundlesSetSize, &host_setBundlesSetSize, sizeof(size_t));
@@ -187,7 +188,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
     // Set up randomness
     // printf("CUDA setting up randomness\n");
-    size_t numSets = numSeries + numBundles;
     size_t seed = (blockIdx.x << 10) + threadIdx.x;
     seed = generateRandom(seed) ^ clock();
     // seed = 0; // debug to get the same result every time
@@ -243,7 +243,55 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
 #if PROFILE
     currTime = clock64();
-    devicePrintStrNum("Profiler: While loop setup time: ", currTime - lastTime);
+    devicePrintStrNum("Shared memory setup time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
+
+    extern __shared__ setSize_t setSizes[];
+    size_t numSets = numSeries + numBundles;
+    size_t setSizeToRead = threadIdx.x;
+    while(setSizeToRead < numSets){
+        size_t setSize;
+        if(setSizeToRead < numSeries){
+            // set is a series
+            setSize = deviceSeries[2*setSizeToRead];
+            size_t setValue = deviceSeries[(2*setSizeToRead)+1];
+            if(setValue == 0){
+                setSize = OVERLAP_LIMIT+1;
+            }
+        }
+        else{
+            setSize = bundleSeries[bundleIndices[setSizeToRead - numSeries]];
+        }
+
+        if(setSize > ((size_t) get_unsigned_max<setSize_t>())){
+            devicePrintStrNum("ERROR: One of the sets is too fat for setSize_t: ", setSizeToRead);
+            return;
+        }
+
+        if(setSize > OVERLAP_LIMIT){
+            // I don't think this is possible, since even the basic overlap limit is 20k.
+            // But, just in case.
+            // -> Note that any catches of this are most likely from the setValue = 0 case
+            setSize = OVERLAP_LIMIT+1;
+        }
+
+        // I'm really running out of variable names.
+        size_t* selfBundles = setBundles + (setBundlesSetSize * setSizeToRead);
+        if(bundleOverlap(selfBundles, bundlesUsed)){
+            // AKA there's overlap between this and the freeBundles
+            setSize = OVERLAP_LIMIT+1;
+        }
+
+        setSizes[setSizeToRead] = setSize;
+        setSizeToRead += blockDim.x;
+    }
+
+    __syncthreads();
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: Shared memory calculation time: ", currTime - lastTime);
     lastTime = currTime;
 #endif
 
@@ -252,74 +300,56 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     size_t lastLoopTime;
     size_t currLoopTime;
 
-    // Total while-loop executions
-    size_t whileLoopExecs = 0;
+    size_t numLoops = 0;
 
-    // How many times each "continue" is called
-    size_t ptrCatches = 0;
-    size_t sizeCatches = 0;
-    size_t bundleCatches = 0;
-    size_t remainingOverlapCatches = 0;
-
-    // How much time is spent on each process.
-    size_t clock64Time = 0; // How much time is spent to run clock64() twice between each time call
+    // Time to do the while loop's comparison operator.
+    // Specifically, the DLSLotsUsed < MAX_DL
+    size_t whileLoopCompareTime = 0;
     size_t pickSetTime = 0;
-    size_t sizeTime = 0;
+    size_t setSizeTime = 0;
     size_t bundleOverlapTime = 0;
     size_t addSetTime = 0;
+
+    lastLoopTime = clock64();
 #endif
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
 #if PROFILE
-        lastLoopTime = clock64();
-        currTime = clock64();
-        clock64Time += currTime - lastLoopTime;
-        lastLoopTime = clock64();
-
-        whileLoopExecs++;
+        currLoopTime = clock64();
+        whileLoopCompareTime += currLoopTime - lastLoopTime;
+        lastLoopTime = currLoopTime;
+        numLoops++;
 #endif
         numFails++;
         size_t setToAdd = generateRandom(seed, numSets);
+        // Calculate the size of this set.
+        size_t setSize = setSizes[setToAdd];
 #if PROFILE
         currLoopTime = clock64();
         pickSetTime += currLoopTime - lastLoopTime;
         lastLoopTime = currLoopTime;
 #endif
-        // Calculate the size of this set.
-        size_t* setPtr;
-        if(setToAdd < numSeries){
-            // Format for series:
-            // [Size], [Value]
-            setPtr = deviceSeries + (2*setToAdd);
-            if(*(setPtr+1) == 0){
-                // This is also a form of "fail", but the numFails++ at the start addresses that.
-#if PROFILE
-                currLoopTime = clock64();
-                sizeTime += currLoopTime - lastLoopTime;
-                lastLoopTime = currLoopTime;
-                ptrCatches++;
-#endif
-                continue;
-            }
-        }
-        else{
-            // Format for bundles: [Size], SeriesID, SeriesID, SeriesID, ...
-            setPtr = bundleSeries + bundleIndices[setToAdd - numSeries];
-        }
-        // Observe that BOTH set formats use the first value to represent the size of the set
-        size_t setSize = *setPtr;
 
         if(setSize < minSize){
 #if PROFILE
             currLoopTime = clock64();
-            sizeTime += currLoopTime - lastLoopTime;
+            setSizeTime += currLoopTime - lastLoopTime;
             lastLoopTime = currLoopTime;
-            sizeCatches++;
+#endif
+            continue;
+        }
+
+        // This addresses restriction 2.
+        if (setSize >= remainingOverlap) {
+#if PROFILE
+            currLoopTime = clock64();
+            setSizeTime += currLoopTime - lastLoopTime;
+            lastLoopTime = currLoopTime;
 #endif
             continue;
         }
 #if PROFILE
         currLoopTime = clock64();
-        sizeTime += currLoopTime - lastLoopTime;
+        setSizeTime += currLoopTime - lastLoopTime;
         lastLoopTime = currLoopTime;
 #endif
 
@@ -328,17 +358,15 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         size_t* selfBundles = setBundles + (setBundlesSetSize * setToAdd);
         // Then determine if this set is redundant:
         if(bundleOverlap(selfBundles, bundlesUsed)){
-            // This set has already been addressed by a previous bundle.
-            // In other words, this set is redundant.
 #if PROFILE
             currLoopTime = clock64();
             bundleOverlapTime += currLoopTime - lastLoopTime;
             lastLoopTime = currLoopTime;
-            bundleCatches++;
 #endif
+            // This set has already been addressed by a previous bundle.
+            // In other words, this set is redundant.
             continue;
         }
-
         // Note that "don't add a set twice" is another form of redundancy.
         // However, also note that this is, computationally, quite slow.
         bool continueLoop = false;
@@ -352,55 +380,39 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         if(continueLoop){
             continue;
         }
-
 #if PROFILE
         currLoopTime = clock64();
         bundleOverlapTime += currLoopTime - lastLoopTime;
         lastLoopTime = currLoopTime;
 #endif
+        // ADD THIS SET TO THE DL
+        disabledSets[disabledSetsIndex] = setToAdd;
+        disabledSetsIndex++;
+        DLSlotsUsed++;
+        remainingOverlap -= setSize;
+        numFails = 0;
 
-        // This addresses restriction 2.
-        if(setSize < remainingOverlap){
-            // ADD THIS SET TO THE DL
-            disabledSets[disabledSetsIndex] = setToAdd;
-            disabledSetsIndex++;
-            DLSlotsUsed++;
-            remainingOverlap -= setSize;
-            numFails = 0;
+        activateBundle(numSeries, bundlesUsed, setToAdd);
 
-            activateBundle(numSeries, bundlesUsed, setToAdd);
-
-            while(minSize > remainingOverlap){
-                // I accepted the infinite loop before and it finished really quickly
-                // but now I've decided I want to continue collecting the very, very small series
-                // just in case they have useful information.
-                minSize >>= 1;
-            }
+        while (minSize > remainingOverlap) {
+            // I accepted the infinite loop before and it finished really quickly
+            // but now I've decided I want to continue collecting the very, very small series
+            // just in case they have useful information.
+            minSize >>= 1;
         }
 #if PROFILE
-        else{
-            remainingOverlapCatches++;
-        }
         currLoopTime = clock64();
         addSetTime += currLoopTime - lastLoopTime;
         lastLoopTime = currLoopTime;
 #endif
-        // otherwise failed
-        // aka the numFails right at the beginning
     }
 #if PROFILE
-    // Deep while-loop profiler info.
-    printf("Printing deep while-loop profiler information:\n");
-    devicePrintStrNum(" Profiler: Total while loop executions: ", whileLoopExecs);
-    devicePrintStrNum(" Profiler: 0-value series catches: ", ptrCatches);
-    devicePrintStrNum(" Profiler: Series-too-small catches: ", sizeCatches);
-    devicePrintStrNum(" Profiler: Series-in-bundle catches: ", bundleCatches);
-    devicePrintStrNum(" Profiler: Series-too-fat catches: ", remainingOverlapCatches);
-    devicePrintStrNum(" Profiler: Time to call clock64 twice per loop: ", clock64Time);
-    devicePrintStrNum(" Profiler: Pick a set time: ", pickSetTime);
-    devicePrintStrNum(" Profiler: Series size calculation time: ", sizeTime);
-    devicePrintStrNum(" Profiler: Bundle overlap calculation time: ", bundleOverlapTime);
-    devicePrintStrNum(" Profiler: Add set calculation time: ", addSetTime);
+    devicePrintStrNum("While loop execs: ", numLoops);
+    devicePrintStrNum(" Time to do while loop compare (DLSLotsUsed < MAX_DL && numFails < 1000): ", whileLoopCompareTime);
+    devicePrintStrNum(" Time to pick a set: ", pickSetTime);
+    devicePrintStrNum(" Time to validate set's size: ", pickSetTime);
+    devicePrintStrNum(" Time to calculate bundle overlap: ", bundleOverlapTime);
+    devicePrintStrNum(" Time to add a set to the DL: ", addSetTime);
 #endif
 
 #if PROFILE
@@ -624,14 +636,16 @@ int main() {
     // https://stackoverflow.com/questions/23260074/allocating-malloc-a-double-in-cuda-device-function
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
 
+    size_t sharedMemoryNeeded = (numBundles + numSeries) * sizeof(setSize_t);
+
     // makeError<<<2, 512>>>(numBundles, numSeries);
     clock_t startTime = clock();
 #if PROFILE
     // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
-    findBest<<<1, 1>>>(numBundles, numSeries);
+    findBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
 #else
     std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
-    findBest<<<NUM_BLOCKS, 512>>>(numBundles, numSeries);
+    findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
 #endif
     cudaDeviceSynchronize();
     clock_t endTime = clock();
