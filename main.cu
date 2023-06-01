@@ -236,27 +236,6 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     size_t currTime; // set this later when comparing
 #endif
 
-    size_t numSets = numSeries + numBundles;
-    size_t setSizeToRead = threadIdx.x;
-    while(setSizeToRead < numSets){
-        setSizes[setSizeToRead] = global_setSizes[setSizeToRead];
-        setSizeToRead += blockDim.x;
-    }
-
-#if PROFILE
-    currTime = clock64();
-    devicePrintStrNum("Profiler: Shared memory calculation time: ", currTime - lastTime);
-    lastTime = currTime;
-#endif
-
-    __syncthreads();
-
-#if PROFILE
-    currTime = clock64();
-    devicePrintStrNum("Profiler: __syncThreads calculation time: ", currTime - lastTime);
-    lastTime = currTime;
-#endif
-
     // Set up randomness
     // printf("CUDA setting up randomness\n");
     size_t seed = (blockIdx.x << 10) + threadIdx.x;
@@ -314,7 +293,22 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
 #if PROFILE
     currTime = clock64();
-    devicePrintStrNum("While loop setup time: ", currTime - lastTime);
+    devicePrintStrNum("Shared memory setup time: ", currTime - lastTime);
+    lastTime = currTime;
+#endif
+
+    size_t numSets = numSeries + numBundles;
+    size_t setSizeToRead = threadIdx.x;
+    while(setSizeToRead < numSets){
+        setSizes[setSizeToRead] = global_setSizes[setSizeToRead];
+        setSizeToRead += blockDim.x;
+    }
+
+    __syncthreads();
+
+#if PROFILE
+    currTime = clock64();
+    devicePrintStrNum("Profiler: Shared memory calculation time: ", currTime - lastTime);
     lastTime = currTime;
 #endif
 
