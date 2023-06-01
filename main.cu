@@ -334,16 +334,10 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
 
         setSizes[setSizeToRead] = setSize;
-        if(setSizes[setSizeToRead] != global_setSizes[setSizeToRead]){
-            devicePrintStrNum("Global setsize disagrees with shared setsize on set ", setSizeToRead);
-            devicePrintStrNum("Global: ", global_setSizes[setSizeToRead]);
-            devicePrintStrNum("Local: ", setSizes[setSizeToRead]);
-        }
         setSizeToRead += blockDim.x;
     }
 
     __syncthreads();
-    printf("Done\n");
 
 #if PROFILE
     currTime = clock64();
