@@ -24,7 +24,7 @@
 // Whether or not to run the in-code Profiler.
 // Note that the profiler is implemented in code, not using an actual profiler
 // like nvcc or nvvp
-#define PROFILE false
+#define PROFILE true
 
 bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_t numSeries, size_t** bundleData){
     if(bundleNum >= numBundles){
@@ -180,8 +180,13 @@ void initializeGlobalSetSizes(size_t numSeries, size_t numBundles, size_t** seri
         if(host_freeBundles[bundleNum] != 0){
             // Set this bundle's series's to OVERLAP_LIMIT+1
             bundlePtr++;
-            while(size_t seriesNum = (*bundlePtr)){
+            while(true){
+                size_t seriesNum = *bundlePtr;
+                if(seriesNum == -1){
+                    break;
+                }
                 host_setSizes[seriesNum] = OVERLAP_LIMIT+1;
+                bundlePtr++;
             }
         }
     }
@@ -293,6 +298,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     size_t numSets = numSeries + numBundles;
     size_t setSizeToRead = threadIdx.x;
     while(setSizeToRead < numSets){
+        bool debug = setSizeToRead == 10932 || setSizeToRead == 10933;
         size_t setSize;
         if(setSizeToRead < numSeries){
             // set is a series
@@ -326,10 +332,16 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
 
         setSizes[setSizeToRead] = setSize;
+        if(setSizes[setSizeToRead] != global_setSizes[setSizeToRead]){
+            devicePrintStrNum("Global setsize disagrees with shared setsize on set ", setSizeToRead);
+            devicePrintStrNum("Global: ", global_setSizes[setSizeToRead]);
+            devicePrintStrNum("Local: ", setSizes[setSizeToRead]);
+        }
         setSizeToRead += blockDim.x;
     }
 
     __syncthreads();
+    printf("Done\n");
 
 #if PROFILE
     currTime = clock64();
