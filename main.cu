@@ -161,14 +161,13 @@ void initializeGlobalSetSizes(size_t numSeries, size_t numBundles, size_t** seri
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         size_t seriesSize = seriesData[seriesNum][0];
         size_t seriesValue = seriesData[seriesNum][1];
-        if(seriesValue == 0){
-            seriesSize = OVERLAP_LIMIT+1;
-        }
         if(seriesSize > ((size_t) get_unsigned_max<setSize_t>())){
             std::cout << "One of the sets is too fat for setSize_t: " << std::to_string(seriesNum) << "\n";
             return;
         }
-        if(seriesSize > OVERLAP_LIMIT){
+
+        // Observe that in both cases it's not worth checking if the series's value can be added
+        if(seriesValue == 0 || (seriesSize > OVERLAP_LIMIT)){
             seriesSize = OVERLAP_LIMIT+1;
         }
 
@@ -187,7 +186,12 @@ void initializeGlobalSetSizes(size_t numSeries, size_t numBundles, size_t** seri
                 if(seriesNum == -1){
                     break;
                 }
-                host_setSizes[seriesNum] = OVERLAP_LIMIT+1;
+                if(host_setSizes[seriesNum] <= OVERLAP_LIMIT){
+                    // If it's > OVERLAP_LIMIT then see the note from before (not worth looking at)
+                    // but if it's < OVERLAP_LIMIT and it's in a free bundle then it's not worth checking
+                    // if it's in bundleOverlaps, because it's definitely in bundleOverlaps.
+                    host_setSizes[seriesNum] = OVERLAP_LIMIT+2;
+                }
                 bundlePtr++;
             }
         }
