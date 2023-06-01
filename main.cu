@@ -115,7 +115,7 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
             for(size_t bundleOffset = 0; bundleOffset < (sizeof(size_t)*8); bundleOffset++){
                 size_t bundleNumToCheck = (sizeof(size_t) * i) + bundleOffset;
                 if(bundleContainsSet(setNum, bundleNumToCheck, numBundles, numSeries, bundleData)){
-                    setBundlesValue = setBundlesValue | (1 << bundleOffset);
+                    setBundlesValue = setBundlesValue | (((size_t)1) << bundleOffset);
                 }
             }
             host_setBundles[setBundlesIdx] = setBundlesValue;
@@ -176,7 +176,7 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
         size_t bundlesUsedWordSize = 8 * sizeof(size_t);
         size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
         size_t bundleOffset = bundleNum % bundlesUsedWordSize;
-        bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
+        bundlesUsed[bundlesUsedIndex] |= (((size_t)1) << bundleOffset);
     }
 }
 
@@ -365,6 +365,19 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 #endif
             // This set has already been addressed by a previous bundle.
             // In other words, this set is redundant.
+            continue;
+        }
+        // Note that "don't add a set twice" is another form of redundancy.
+        // However, also note that this is, computationally, quite slow.
+        bool continueLoop = false;
+        for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
+            size_t setNum = disabledSets[DLIdx];
+            if(setToAdd == setNum){
+                continueLoop = true;
+                break;
+            }
+        }
+        if(continueLoop){
             continue;
         }
 #if PROFILE

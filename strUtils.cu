@@ -124,19 +124,25 @@ __device__ void deviceItos(char* &str, size_t num){
         return;
     }
     // find the power of 10 bigger than this
-    size_t divBy = 1;
-    while((num/divBy) != 0){
-        divBy *= 10;
-    }
-    // num/divBy = 0, fix that:
+    size_t compare = num;
     size_t strIdx = 0;
-    while(divBy != 1){
-        // remember at first num/divBy = 0 so don't print that 0
-        divBy /= 10;
-        str[strIdx] = '0' + ((num/divBy)%10); // NOLINT(cppcoreguidelines-narrowing-conversions)
+    while(compare > 0){
+        // move over one digit
+        // and move str over by one to accomodate
+        compare /= 10;
         strIdx++;
     }
+
+    // str is now one past the last index
+    // ie the null index
     str[strIdx] = NULL;
+    strIdx--;
+
+    while(num > 0){
+        str[strIdx] = ('0' + num%10); // NOLINT(cppcoreguidelines-narrowing-conversions)
+        strIdx--;
+        num /= 10;
+    }
 }
 
 __device__ void deviceStrCat(char* dest, const char* src){
@@ -173,7 +179,7 @@ __device__ void devicePrintStrNum(const char* str, size_t num){
     char* prntStr = new char[strlen+10];
     prntStr[0] = '\0';
 
-    char* numStr = new char[10];
+    char* numStr = new char[25];
 
     deviceItos(numStr, num);
 
