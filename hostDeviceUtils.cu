@@ -5,10 +5,11 @@
  * Converts a size_t array (in host memory) to a size_t array (in device memory)
  * Also calls delete[] on the host memory version for you. You have to call cudaFree() on your own, though.
  */
-void convertArrToCuda(size_t* &arr, size_t arrSize){
-    size_t* deviceArr;
-    cudaMalloc(&deviceArr, arrSize * sizeof(size_t));
-    cudaMemcpy(deviceArr, arr, arrSize * sizeof(size_t), cudaMemcpyHostToDevice);
+template <typename T, typename = typename std::enable_if<std::is_integral<T>::value, T>>
+void convertArrToCuda(T* &arr, size_t arrSize){
+    T* deviceArr;
+    cudaMalloc(&deviceArr, arrSize * sizeof(T));
+    cudaMemcpy(deviceArr, arr, arrSize * sizeof(T), cudaMemcpyHostToDevice);
     delete[] arr;
     arr = deviceArr;
 }
