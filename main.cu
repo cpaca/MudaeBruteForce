@@ -457,7 +457,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         setSize_t seriesSize = setSizes[seriesNum];
 
         if(seriesSize == (OVERLAP_LIMIT+1)){
-            // Series size is 0 so don't even bother looking
+            // Series value is 0 so don't even bother looking
             continue;
         }
 
