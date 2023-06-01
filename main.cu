@@ -114,7 +114,7 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
             for(size_t bundleOffset = 0; bundleOffset < (sizeof(size_t)*8); bundleOffset++){
                 size_t bundleNumToCheck = (sizeof(size_t) * i) + bundleOffset;
                 if(bundleContainsSet(setNum, bundleNumToCheck, numBundles, numSeries, bundleData)){
-                    setBundlesValue = setBundlesValue | (1 << bundleOffset);
+                    setBundlesValue = setBundlesValue | (((size_t)1) << bundleOffset);
                 }
             }
             host_setBundles[setBundlesIdx] = setBundlesValue;
