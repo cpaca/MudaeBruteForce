@@ -339,6 +339,20 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             continue;
         }
 
+        // Note that "don't add a set twice" is another form of redundancy.
+        // However, also note that this is, computationally, quite slow.
+        bool continueLoop = false;
+        for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
+            size_t setNum = disabledSets[DLIdx];
+            if(setToAdd == setNum){
+                continueLoop = true;
+                break;
+            }
+        }
+        if(continueLoop){
+            continue;
+        }
+
 #if PROFILE
         currLoopTime = clock64();
         bundleOverlapTime += currLoopTime - lastLoopTime;
