@@ -175,7 +175,7 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
         size_t bundlesUsedWordSize = 8 * sizeof(size_t);
         size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
         size_t bundleOffset = bundleNum % bundlesUsedWordSize;
-        bundlesUsed[bundlesUsedIndex] |= 1 << bundleOffset;
+        bundlesUsed[bundlesUsedIndex] |= (((size_t)1) << bundleOffset);
     }
 }
 
