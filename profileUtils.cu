@@ -62,7 +62,7 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used initializing shared memory: ", sharedMemoryCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used on __syncthreads(): ", syncThreadsCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used setting up the while loop: ", whileLoopSetupCheckpoint, totalThreads);
-    printProfilingStrNum("Avg. time used executing the while loop: ", whileLoopSetupCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used executing the while loop: ", whileLoopExecutionCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used calculating bundleScore: ", bundleScoreCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used calculating seriesScore: ", seriesScoreCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used printing vals: ", printValsCheckpoint, totalThreads);
