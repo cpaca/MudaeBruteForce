@@ -75,11 +75,12 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used calculating bundleScore: ", bundleScoreCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used calculating seriesScore: ", seriesScoreCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used printing vals: ", printValsCheckpoint, totalThreads);
-
+    std::cout << std::endl;
     printProfilingStrNum("Avg. time used checking loop condition: ", loopConditionCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used picking a set: ", pickSetCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used validating set size: ", setSizeCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used validating set bundles: ", bundleOverlapCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used validating set is non-dupe: ", continueLoopCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used adding set to DL: ", addSetToDLCheckpoint, totalThreads);
+    std::cout << std::endl;
 }
