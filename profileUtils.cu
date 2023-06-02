@@ -1,6 +1,8 @@
 #define NUM_CLOCKS 4
 
-// Checkpoints.
+// Checkpoints and variables.
+
+__device__ size_t numThreads = 0;
 
 __device__ size_t sharedMemoryCheckpoint;
 
@@ -9,6 +11,8 @@ __device__ size_t sharedMemoryCheckpoint;
 __device__ size_t* clocks = nullptr;
 
 __device__ void initProfiling(){
+    atomicAdd(&numThreads, 1);
+
     clocks = new size_t[NUM_CLOCKS];
     for(size_t i = 0; i < NUM_CLOCKS; i++){
         clocks[i] = -1;
@@ -20,24 +24,28 @@ __device__ void destructProfiling(){
 }
 
 __device__ void startClock(int clockNum){
-    clocks[clockNum] = clock64();
+    clocks[clockNum] = clock();
 }
 
 __device__ void checkpoint(int clockNum, size_t& saveTo){
-    size_t endTime = clock64();
+    size_t endTime = clock();
     size_t deltaTime = endTime - clocks[clockNum];
     atomicAdd(&saveTo, deltaTime);
     // don't reset the clock with clock64()
     // because atomicAdd can take a very, very long time in bad cases
-    clocks[clockNum] = clock64();
+    clocks[clockNum] = clock();
 }
 
-__host__ void printProfilingStrNum(const std::string& str, size_t &deviceSymbol){
+__host__ void printProfilingStrNum(const std::string& str, size_t &deviceSymbol, const size_t totalThreads){
     size_t num;
     cudaMemcpyFromSymbol(&num, deviceSymbol, sizeof(size_t));
+    num /= totalThreads;
     std::cout << str << std::to_string(num) << std::endl;
 }
 
 __host__ void printProfilingData(){
-    printProfilingStrNum("Time used initializing shared memory: ", sharedMemoryCheckpoint);
+    size_t totalThreads;
+    cudaMemcpyFromSymbol(&totalThreads, numThreads, sizeof(size_t));
+    std::cout << "Threads counted: " << std::to_string(totalThreads) << "\n";
+    printProfilingStrNum("Avg. time used initializing shared memory: ", sharedMemoryCheckpoint, totalThreads);
 }
