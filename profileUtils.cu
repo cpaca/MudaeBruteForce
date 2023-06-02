@@ -1,4 +1,5 @@
 #define NUM_CLOCKS 4
+#define PROFILING_STR_WIDTH 42
 
 // Checkpoints and variables.
 
@@ -48,11 +49,19 @@ __device__ void checkpoint(size_t *clocks, int clockNum, size_t* saveTo) {
     clocks[clockNum] = clock();
 }
 
+__host__ std::string padStr(const std::string& str){
+    int missingLength = PROFILING_STR_WIDTH - str.length();
+    if(missingLength <= 0){
+        return str;
+    }
+    return str + std::string(missingLength, ' ');
+}
+
 __host__ void printProfilingStrNum(const std::string& str, size_t &deviceSymbol, const size_t totalThreads){
     size_t num;
     cudaMemcpyFromSymbol(&num, deviceSymbol, sizeof(size_t));
     num /= totalThreads;
-    std::cout << str << std::to_string(num) << std::endl;
+    std::cout << padStr(str) << std::to_string(num) << std::endl;
 }
 
 __host__ void printProfilingData(){
