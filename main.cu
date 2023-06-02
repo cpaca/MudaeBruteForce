@@ -16,7 +16,7 @@
 #define OVERLAP_LIMIT 30000
 // How many blocks to run.
 // Note that each block gets 512 threads.
-#define NUM_BLOCKS (1 << 12)
+#define NUM_BLOCKS 1
 // "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
@@ -236,8 +236,8 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
 }
 
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
-
-    // TODO initProfiling
+    initProfiling();
+    startClock(0);
 
     size_t numSets = numSeries + numBundles;
     size_t setSizeToRead = threadIdx.x;
@@ -246,7 +246,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         setSizeToRead += blockDim.x;
     }
 
-    // TODO shared memory checkpoint
+    checkpoint(0, sharedMemoryCheckpoint);
 
     __syncthreads();
 
@@ -616,6 +616,7 @@ int main() {
 #endif
     cudaDeviceSynchronize();
     clock_t endTime = clock();
+    printProfilingData();
     std::cout << "Time taken (seconds): " << std::to_string((endTime - startTime)/(double)CLOCKS_PER_SEC) << "\n";
 
     cudaError_t lasterror = cudaGetLastError();
