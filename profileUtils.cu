@@ -22,11 +22,11 @@ __device__ void destructProfiling(const size_t* clocks){
     delete[] clocks;
 }
 
-__device__ void startClock(int clockNum, size_t* clocks){
+__device__ void startClock(size_t *clocks, int clockNum) {
     clocks[clockNum] = clock();
 }
 
-__device__ void checkpoint(int clockNum, size_t& saveTo, size_t* clocks){
+__device__ void checkpoint(size_t *clocks, int clockNum, size_t &saveTo) {
     size_t endTime = clock();
     size_t deltaTime = endTime - clocks[clockNum];
     atomicAdd(&saveTo, deltaTime);
