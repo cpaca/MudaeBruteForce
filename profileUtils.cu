@@ -1,5 +1,5 @@
 #define NUM_CLOCKS 4
-#define PROFILING_STR_WIDTH 42
+#define PROFILING_STR_WIDTH 43
 
 // Checkpoints and variables.
 
