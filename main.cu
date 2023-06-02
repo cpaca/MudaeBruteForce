@@ -236,8 +236,8 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
 }
 
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
-    initProfiling();
-    startClock(0);
+    size_t* clocks = initProfiling();
+    startClock(0, clocks);
 
     size_t numSets = numSeries + numBundles;
     size_t setSizeToRead = threadIdx.x;
@@ -246,7 +246,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         setSizeToRead += blockDim.x;
     }
 
-    checkpoint(0, sharedMemoryCheckpoint);
+    checkpoint(0, sharedMemoryCheckpoint, clocks);
 
     __syncthreads();
 
@@ -468,6 +468,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // printf("CUDA findBest finished.\n");
 
     // Free up memory.
+    destructProfiling(clocks);
     delete[] bundlesUsed;
     delete[] disabledSets;
 }

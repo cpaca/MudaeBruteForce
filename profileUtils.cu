@@ -8,26 +8,25 @@ __device__ size_t sharedMemoryCheckpoint;
 
 // The actual computation functions and whatnot.
 
-__device__ size_t* clocks = nullptr;
-
-__device__ void initProfiling(){
+__device__ size_t* initProfiling(){
     atomicAdd(&numThreads, 1);
 
-    clocks = new size_t[NUM_CLOCKS];
+    auto* clocks = new size_t[NUM_CLOCKS];
     for(size_t i = 0; i < NUM_CLOCKS; i++){
         clocks[i] = -1;
     }
+    return clocks;
 }
 
-__device__ void destructProfiling(){
+__device__ void destructProfiling(const size_t* clocks){
     delete[] clocks;
 }
 
-__device__ void startClock(int clockNum){
+__device__ void startClock(int clockNum, size_t* clocks){
     clocks[clockNum] = clock();
 }
 
-__device__ void checkpoint(int clockNum, size_t& saveTo){
+__device__ void checkpoint(int clockNum, size_t& saveTo, size_t* clocks){
     size_t endTime = clock();
     size_t deltaTime = endTime - clocks[clockNum];
     atomicAdd(&saveTo, deltaTime);
