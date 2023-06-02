@@ -250,7 +250,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
 
     __syncthreads();
 
-    // TODO syncThreads checkpoint
+    checkpoint(clocks, 0, &syncThreadsCheckpoint);
 
     // Set up randomness
     // printf("CUDA setting up randomness\n");
@@ -307,39 +307,39 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // then the other 31 threads will wait 10k loops
     // giving them an effective time of 10k loops
 
-    // TODO while loop setup time checkpoint
-    // TODO start while loop clock
+    checkpoint(clocks, 0, &whileLoopSetupCheckpoint);
+    startClock(clocks, 1);
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
-        // TODO while loop condition calculation time checkpoint
+        checkpoint(clocks, 1, &loopConditionCheckpoint);
         numFails++;
         size_t setToAdd = generateRandom(seed, numSets);
         // Calculate the size of this set.
         size_t setSize = setSizes[setToAdd];
-        // TODO pickSet checkpoint
+        checkpoint(clocks, 1, &pickSetCheckpoint);
 
         if(setSize < minSize){
-            // TODO setSizeTime checkpoint
+            checkpoint(clocks, 1, &setSizeCheckpoint);
             continue;
         }
 
         // This addresses restriction 2.
         if (setSize >= remainingOverlap) {
-            // TODO setSizeTime checkpoint
+            checkpoint(clocks, 1, &setSizeCheckpoint);
             continue;
         }
-        // TODO setSizeTime checkpoint
+        checkpoint(clocks, 1, &setSizeCheckpoint);
 
         // Determine redundancy.
         // First, determine the bundles for this set:
         size_t* selfBundles = setBundles + (setBundlesSetSize * setToAdd);
         // Then determine if this set is redundant:
         if(bundleOverlap(selfBundles, bundlesUsed)){
-            // TODO bundleOverlapTime checkpoint
+            checkpoint(clocks, 1, &bundleOverlapCheckpoint);
             // This set has already been addressed by a previous bundle.
             // In other words, this set is redundant.
             continue;
         }
-        // TODO bundleOverlapTime checkpoint
+        checkpoint(clocks, 1, &bundleOverlapCheckpoint);
 
         // Note that "don't add a set twice" is another form of redundancy.
         // However, also note that this is, computationally, quite slow.
@@ -352,10 +352,10 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             }
         }
         if(continueLoop){
-            // TODO continueLoop checkpoint
+            checkpoint(clocks, 1, &continueLoopCheckpoint);
             continue;
         }
-        // TODO continueLoop checkpoint
+        checkpoint(clocks, 1, &continueLoopCheckpoint);
 
         // ADD THIS SET TO THE DL
         disabledSets[disabledSetsIndex] = setToAdd;
@@ -372,9 +372,9 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             // just in case they have useful information.
             minSize >>= 1;
         }
-        // TODO addSetToDL checkpoint
+        checkpoint(clocks, 1, &addSetToDLCheckpoint);
     }
-    // TODO while loop execution checkpoint
+    checkpoint(clocks, 0, &whileLoopExecutionCheckpoint);
 
     // Calculate the score.
     // printf("CUDA calculating score\n");
@@ -406,7 +406,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
     }
 
-    // TODO bundle-score calculation time checkpoint
+    checkpoint(clocks, 0, &bundleScoreCheckpoint);
 
     // Calculate score directly from series
     for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
@@ -425,7 +425,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         score += seriesValue;
     }
 
-    // TODO series-score calculation time checkpoint
+    checkpoint(clocks, 0, &seriesScoreCheckpoint);
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
@@ -461,9 +461,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         delete[] num;
     }
 
-    // TODO printVals checkpoint
-    //  not really necessary because over infinite time this will execute less and less often
-    //  (over infinite time this will simply stop getting called)
+    checkpoint(clocks, 0, &printValsCheckpoint);
 
     // printf("CUDA findBest finished.\n");
 
