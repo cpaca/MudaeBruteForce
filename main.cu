@@ -5,6 +5,7 @@
 #include "hostDeviceUtils.cu"
 #include "randUtils.cu"
 #include "types.cu"
+#include "profileUtils.cu"
 
 // Maximum number of bundles/series that can be activated.
 #define MAX_DL 50
@@ -235,10 +236,8 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
 }
 
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
-#if PROFILE
-    size_t lastTime = clock64();
-    size_t currTime; // set this later when comparing
-#endif
+
+    // TODO initProfiling
 
     size_t numSets = numSeries + numBundles;
     size_t setSizeToRead = threadIdx.x;
@@ -247,19 +246,11 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         setSizeToRead += blockDim.x;
     }
 
-#if PROFILE
-    currTime = clock64();
-    devicePrintStrNum("Profiler: Shared memory calculation time: ", currTime - lastTime);
-    lastTime = currTime;
-#endif
+    // TODO shared memory checkpoint
 
     __syncthreads();
 
-#if PROFILE
-    currTime = clock64();
-    devicePrintStrNum("Profiler: __syncThreads calculation time: ", currTime - lastTime);
-    lastTime = currTime;
-#endif
+    // TODO syncThreads checkpoint
 
     // Set up randomness
     // printf("CUDA setting up randomness\n");
@@ -316,84 +307,40 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     // then the other 31 threads will wait 10k loops
     // giving them an effective time of 10k loops
 
-#if PROFILE
-    currTime = clock64();
-    devicePrintStrNum("While loop setup time: ", currTime - lastTime);
-    lastTime = currTime;
-#endif
-
-#if PROFILE
-    // Variables used to measure time spent in the while-loop
-    size_t lastLoopTime;
-    size_t currLoopTime;
-
-    size_t numLoops = 0;
-
-    // Time to do the while loop's comparison operator.
-    // Specifically, the DLSLotsUsed < MAX_DL
-    size_t whileLoopCompareTime = 0;
-    size_t pickSetTime = 0;
-    size_t setSizeTime = 0;
-    size_t bundleOverlapTime = 0;
-    size_t addSetTime = 0;
-
-    lastLoopTime = clock64();
-#endif
+    // TODO while loop setup time checkpoint
+    // TODO start while loop clock
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
-#if PROFILE
-        currLoopTime = clock64();
-        whileLoopCompareTime += currLoopTime - lastLoopTime;
-        lastLoopTime = currLoopTime;
-        numLoops++;
-#endif
+        // TODO while loop condition calculation time checkpoint
         numFails++;
         size_t setToAdd = generateRandom(seed, numSets);
         // Calculate the size of this set.
         size_t setSize = setSizes[setToAdd];
-#if PROFILE
-        currLoopTime = clock64();
-        pickSetTime += currLoopTime - lastLoopTime;
-        lastLoopTime = currLoopTime;
-#endif
+        // TODO pickSet checkpoint
 
         if(setSize < minSize){
-#if PROFILE
-            currLoopTime = clock64();
-            setSizeTime += currLoopTime - lastLoopTime;
-            lastLoopTime = currLoopTime;
-#endif
+            // TODO setSizeTime checkpoint
             continue;
         }
 
         // This addresses restriction 2.
         if (setSize >= remainingOverlap) {
-#if PROFILE
-            currLoopTime = clock64();
-            setSizeTime += currLoopTime - lastLoopTime;
-            lastLoopTime = currLoopTime;
-#endif
+            // TODO setSizeTime checkpoint
             continue;
         }
-#if PROFILE
-        currLoopTime = clock64();
-        setSizeTime += currLoopTime - lastLoopTime;
-        lastLoopTime = currLoopTime;
-#endif
+        // TODO setSizeTime checkpoint
 
         // Determine redundancy.
         // First, determine the bundles for this set:
         size_t* selfBundles = setBundles + (setBundlesSetSize * setToAdd);
         // Then determine if this set is redundant:
         if(bundleOverlap(selfBundles, bundlesUsed)){
-#if PROFILE
-            currLoopTime = clock64();
-            bundleOverlapTime += currLoopTime - lastLoopTime;
-            lastLoopTime = currLoopTime;
-#endif
+            // TODO bundleOverlapTime checkpoint
             // This set has already been addressed by a previous bundle.
             // In other words, this set is redundant.
             continue;
         }
+        // TODO bundleOverlapTime checkpoint
+
         // Note that "don't add a set twice" is another form of redundancy.
         // However, also note that this is, computationally, quite slow.
         bool continueLoop = false;
@@ -405,13 +352,11 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             }
         }
         if(continueLoop){
+            // TODO continueLoop checkpoint
             continue;
         }
-#if PROFILE
-        currLoopTime = clock64();
-        bundleOverlapTime += currLoopTime - lastLoopTime;
-        lastLoopTime = currLoopTime;
-#endif
+        // TODO continueLoop checkpoint
+
         // ADD THIS SET TO THE DL
         disabledSets[disabledSetsIndex] = setToAdd;
         disabledSetsIndex++;
@@ -427,26 +372,9 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
             // just in case they have useful information.
             minSize >>= 1;
         }
-#if PROFILE
-        currLoopTime = clock64();
-        addSetTime += currLoopTime - lastLoopTime;
-        lastLoopTime = currLoopTime;
-#endif
+        // TODO addSetToDL checkpoint
     }
-#if PROFILE
-    devicePrintStrNum("While loop execs: ", numLoops);
-    devicePrintStrNum(" Time to do while loop compare (DLSLotsUsed < MAX_DL && numFails < 1000): ", whileLoopCompareTime);
-    devicePrintStrNum(" Time to pick a set: ", pickSetTime);
-    devicePrintStrNum(" Time to validate set's size: ", pickSetTime);
-    devicePrintStrNum(" Time to calculate bundle overlap: ", bundleOverlapTime);
-    devicePrintStrNum(" Time to add a set to the DL: ", addSetTime);
-#endif
-
-#if PROFILE
-    currTime = clock64();
-    devicePrintStrNum("Profiler: While loop time: ", currTime - lastTime);
-    lastTime = currTime;
-#endif
+    // TODO while loop execution checkpoint
 
     // Calculate the score.
     // printf("CUDA calculating score\n");
@@ -478,11 +406,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
     }
 
-#if PROFILE
-    currTime = clock64();
-    devicePrintStrNum("Profiler: Bundle-score calculation time: ", currTime - lastTime);
-    lastTime = currTime;
-#endif
+    // TODO bundle-score calculation time checkpoint
 
     // Calculate score directly from series
     for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
@@ -501,11 +425,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         score += seriesValue;
     }
 
-#if PROFILE
-    currTime = clock64();
-    devicePrintStrNum("Profiler: Series-score calculation time: ", currTime - lastTime);
-    lastTime = currTime;
-#endif
+    // TODO series-score calculation time checkpoint
 
     // printf("CUDA checking if this is the best score.\n");
     size_t oldBest = atomicMax(&bestScore, score);
@@ -540,6 +460,10 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
         delete[] num;
     }
+
+    // TODO printVals checkpoint
+    //  not really necessary because over infinite time this will execute less and less often
+    //  (over infinite time this will simply stop getting called)
 
     // printf("CUDA findBest finished.\n");
 
