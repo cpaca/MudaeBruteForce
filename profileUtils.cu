@@ -4,7 +4,7 @@
 
 __device__ size_t numThreads = 0;
 
-__device__ size_t sharedMemoryCheckpoint;
+__device__ size_t sharedMemoryCheckpoint = 0;
 
 // The actual computation functions and whatnot.
 
@@ -26,10 +26,10 @@ __device__ void startClock(size_t *clocks, int clockNum) {
     clocks[clockNum] = clock();
 }
 
-__device__ void checkpoint(size_t *clocks, int clockNum, size_t &saveTo) {
+__device__ void checkpoint(size_t *clocks, int clockNum, size_t* saveTo) {
     size_t endTime = clock();
     size_t deltaTime = endTime - clocks[clockNum];
-    atomicAdd(&saveTo, deltaTime);
+    atomicAdd(saveTo, deltaTime);
     // don't reset the clock with clock64()
     // because atomicAdd can take a very, very long time in bad cases
     clocks[clockNum] = clock();

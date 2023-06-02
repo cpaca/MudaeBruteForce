@@ -246,7 +246,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         setSizeToRead += blockDim.x;
     }
 
-    checkpoint(clocks, 0, sharedMemoryCheckpoint);
+    checkpoint(clocks, 0, &sharedMemoryCheckpoint);
 
     __syncthreads();
 
