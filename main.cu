@@ -23,7 +23,12 @@
 // MAX_MINSIZE determines the maximum value minSize can be.
 #define MAX_MINSIZE 100
 
-bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_t numSeries, size_t** bundleData){
+bool bundleContainsSet(size_t setNum,
+                       size_t bundleNum,
+                       size_t numBundles,
+                       size_t numSeries,
+                       size_t **bundleData,
+                       size_t **seriesData) {
     if(bundleNum >= numBundles){
         return false;
     }
@@ -43,24 +48,36 @@ bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_
 
         // 100% exploiting the fact that series_data and bundle_data are in numerical order.
         while(true){
-            size_t bigBundleVal = *bigBundlePtr;
-            size_t smallBundleVal = *smallBundlePtr;
-            if(smallBundleVal == -1) {
+            size_t bigBundleSeries = *bigBundlePtr;
+            size_t smallBundleSeries = *smallBundlePtr;
+            if(smallBundleSeries == -1) {
                 // end of the small bundle!
                 return true;
             }
-            else if(bigBundleVal < smallBundleVal){
-                // big pointer needs to keep going until it finds smallBundleVal
+            else if(bigBundleSeries < smallBundleSeries){
+                // big pointer needs to keep going until it finds smallBundleSeries
                 bigBundlePtr++;
             }
-            else if(bigBundleVal == smallBundleVal){
+            else if(bigBundleSeries == smallBundleSeries){
                 // shared series
                 bigBundlePtr++;
                 smallBundlePtr++;
             }
             else{
                 // small bundle contains a set that big bundle doesn't!
-                return false;
+                size_t* smallBundleSetPtr = seriesData[smallBundleSeries];
+                // size_t smallSetSize = smallBundleSetPtr[0]; // unused
+                size_t smallSetValue = smallBundleSetPtr[1];
+                if(smallSetValue == 0){
+                    // Don't care that it's not a sub-bundle
+                    // since it won't affect the score either way
+                    bigBundlePtr++;
+                    smallBundlePtr++;
+                }
+                else{
+                    // Small bundle contains an *important* set the big bundle doesn't!
+                    return false;
+                }
             }
         }
     }
@@ -126,7 +143,7 @@ extern __shared__ setSize_t setSizes[];
 
 // Initializes setBundles.
 // Note that this needs to be placed after the fuckton of variables because it manipulates some of them.
-void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData){
+void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData, size_t** seriesData){
     // create setBundles.
     // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
     // Explanation of +1: If there are 7 bundles, setSize_t should be 1, not 0.
@@ -147,7 +164,7 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
             // again *8 because 8 bits in a byte
             for(size_t bundleOffset = 0; bundleOffset < (sizeof(size_t)*8); bundleOffset++){
                 size_t bundleNumToCheck = (sizeof(size_t) * 8 * i) + bundleOffset;
-                if(bundleContainsSet(setNum, bundleNumToCheck, numBundles, numSeries, bundleData)){
+                if(bundleContainsSet(setNum, bundleNumToCheck, numBundles, numSeries, bundleData, seriesData)){
                     setBundlesValue = setBundlesValue | (((size_t)1) << bundleOffset);
                 }
             }
@@ -604,7 +621,7 @@ int main() {
     }
     cudaMemcpyToSymbol(freeBundles, &host_freeBundles, sizeof(host_freeBundles));
 
-    initializeSetBundles(numBundles, numSeries, bundleData);
+    initializeSetBundles(numBundles, numSeries, bundleData, seriesData);
 
     // time to do CUDA.
     // https://forums.developer.nvidia.com/t/how-to-cudamalloc-two-dimensional-array/4042
