@@ -15,7 +15,7 @@
 #define OVERLAP_LIMIT 30000
 // How many blocks to run.
 // Note that each block gets 512 threads.
-#define NUM_BLOCKS (1 << 12)
+#define NUM_BLOCKS 16
 // "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
@@ -119,7 +119,7 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
             size_t setBundlesValue = 0;
             // again *8 because 8 bits in a byte
             for(size_t bundleOffset = 0; bundleOffset < (sizeof(size_t)*8); bundleOffset++){
-                size_t bundleNumToCheck = (sizeof(size_t) * i) + bundleOffset;
+                size_t bundleNumToCheck = (sizeof(size_t) * 8 * i) + bundleOffset;
                 if(bundleContainsSet(setNum, bundleNumToCheck, numBundles, numSeries, bundleData)){
                     setBundlesValue = setBundlesValue | (((size_t)1) << bundleOffset);
                 }
@@ -135,8 +135,10 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
         std::cout << "Bundles for set " << std::to_string(setNum) << "\n";
         size_t bundleNum = 0;
         for(size_t i = 0; i < host_setBundlesSetSize; i++){
-            size_t setBundlesVal = setBundles[(host_setBundlesSetSize * setNum) + i];
-            while(setBundlesVal > 0){
+            size_t setBundlesVal = host_setBundles[(host_setBundlesSetSize * setNum) + i];
+            std::cout << "i: " << std::to_string(i) << "\n";
+            std::cout << "setBundlesVal: " << std::to_string(setBundlesVal) << std::endl;
+            for(size_t j = 0; j < (sizeof(size_t) * 8); j++){
                 if(setBundlesVal%2 != 0) {
                     std::cout << std::to_string(bundleNum) << "\n";
                 }
@@ -144,7 +146,7 @@ void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleDa
                 bundleNum++;
             }
         }
-        std::cout << "\n";
+        std::cout << std::endl;
     }
     //*/
 
