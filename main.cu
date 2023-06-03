@@ -30,7 +30,39 @@ bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_
     if(setNum >= numSeries){
         // this is a bundle, not a series
         setNum -= numSeries;
-        return setNum == bundleNum;
+        if(setNum == bundleNum){
+            return true;
+        }
+        // Now we check if bundleNum contains setNum.
+        // If it is, then bundleNum is the "big bundle" and setNum is the "small bundle"
+        size_t* bigBundlePtr = bundleData[bundleNum];
+        size_t* smallBundlePtr = bundleData[setNum];
+        // we could do a size check but honestly this is on the CPU, I don't care about performance *that* much
+        bigBundlePtr++;
+        smallBundlePtr++;
+
+        // 100% exploiting the fact that series_data and bundle_data are in numerical order.
+        while(true){
+            size_t bigBundleVal = *bigBundlePtr;
+            size_t smallBundleVal = *smallBundlePtr;
+            if(smallBundleVal == -1) {
+                // end of the small bundle!
+                return true;
+            }
+            else if(bigBundleVal < smallBundleVal){
+                // big pointer needs to keep going until it finds smallBundleVal
+                bigBundlePtr++;
+            }
+            else if(bigBundleVal == smallBundleVal){
+                // shared series
+                bigBundlePtr++;
+                smallBundlePtr++;
+            }
+            else{
+                // small bundle contains a set that big bundle doesn't!
+                return false;
+            }
+        }
     }
     // This is a series and a valid bundle number.
     // bundlePtr points to the start of the bundle.
@@ -74,8 +106,6 @@ __device__ size_t* bundleIndices = nullptr;
 //
 // Note that this is setBundles, so it needs to work for all SETS. Even Bundles.
 // Also note that for bundles, their "bitstream" is all 0s except for itself, where it is 1.
-// TODO: Optimization: Bundles which are entirely contained within other bundles (ex cover corp is in vtubers)
-//  could have a better setBundles value.
 __device__ size_t* setBundles = nullptr;
 __constant__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
 
