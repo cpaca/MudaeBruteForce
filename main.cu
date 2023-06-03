@@ -16,16 +16,12 @@
 #define OVERLAP_LIMIT 30000
 // How many blocks to run.
 // Note that each block gets 512 threads.
-#define NUM_BLOCKS 16
+#define NUM_BLOCKS (1 << 12)
 // "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
 // MAX_MINSIZE determines the maximum value minSize can be.
 #define MAX_MINSIZE 100
-// Whether or not to run the in-code Profiler.
-// Note that the profiler is implemented in code, not using an actual profiler
-// like nvcc or nvvp
-#define PROFILE false
 
 bool bundleContainsSet(size_t setNum, size_t bundleNum, size_t numBundles, size_t numSeries, size_t** bundleData){
     if(bundleNum >= numBundles){
