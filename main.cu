@@ -340,7 +340,12 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     while(DLSlotsUsed < MAX_DL && numFails < 1000){
         checkpoint(clocks, 1, &loopConditionCheckpoint);
         numFails++;
-        size_t setToAdd = generateRandom(seed, numSets);
+
+        // Apparantly the bundles-only formula is better now.
+        // Makes sense.
+        size_t setToAdd = generateRandom(seed, numBundles) + numSeries;
+        // size_t setToAdd = generateRandom(seed, numSets);
+
         // Calculate the size of this set.
         size_t setSize = setSizes[setToAdd];
         checkpoint(clocks, 1, &pickSetCheckpoint);
@@ -351,7 +356,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         }
 
         // This addresses restriction 2.
-        if (setSize >= remainingOverlap) {
+        if (setSize > remainingOverlap) {
             checkpoint(clocks, 1, &setSizeCheckpoint);
             continue;
         }
