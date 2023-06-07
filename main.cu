@@ -663,14 +663,11 @@ int main() {
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
     clock_t startTime = clock();
-#if PROFILE
-    // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
-    findBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
-#else
+    
     std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
     findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
-#endif
     cudaDeviceSynchronize();
+
     clock_t endTime = clock();
     printProfilingData();
     std::cout << "Time taken (seconds): " << std::to_string((endTime - startTime)/(double)CLOCKS_PER_SEC) << "\n";
