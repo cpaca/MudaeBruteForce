@@ -280,6 +280,42 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
     }
 }
 
+__device__ void printDL(const size_t *disabledSets, size_t disabledSetsIndex, size_t remainingOverlap, size_t origMinSize,
+             size_t score) {// printf("CUDA checking if this is the best score.\n");
+    size_t oldBest = atomicMax(&bestScore, score);
+    // if this was <= instead of < and the "best score" got achieved, it would spam out that best score nonstop
+    if(oldBest < score){
+        // Copied straight from the old implementation of findBest.
+        char betterStr[1000] = "Better DL Found, score: ";
+        char* num = new char[10];
+        deviceItos(num, score);
+        deviceStrCat(betterStr, num);
+        deviceStrCat(betterStr, ", series used, ");
+        for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
+            deviceItos(num, disabledSets[DLIdx]);
+            deviceStrCat(betterStr, num);
+            deviceStrCat(betterStr, ", ");
+        }
+        deviceStrCat(betterStr, "\nRemaining overlap: ");
+        deviceItos(num, remainingOverlap);
+        deviceStrCat(betterStr, num);
+
+        deviceStrCat(betterStr, "\nOriginal minSize: ");
+        deviceItos(num, origMinSize);
+        deviceStrCat(betterStr, num);
+
+        deviceStrCat(betterStr, "\n\n");
+
+        size_t secondCheck = atomicMax(&bestScore, score);
+        // If this was < instead of <=, this would never print because bestScore either = score, from this, or > score,
+        // from another thread
+        if(secondCheck <= score) {
+            printf("%s", betterStr);
+        }
+        delete[] num;
+    }
+}
+
 __global__ void findBest(const size_t numBundles, const size_t numSeries){
     size_t* clocks = initProfiling();
     startClock(clocks, 0);
@@ -476,40 +512,7 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     }
 
     checkpoint(clocks, 0, &seriesScoreCheckpoint);
-
-    // printf("CUDA checking if this is the best score.\n");
-    size_t oldBest = atomicMax(&bestScore, score);
-    // if this was <= instead of < and the "best score" got achieved, it would spam out that best score nonstop
-    if(oldBest < score){
-        // Copied straight from the old implementation of findBest.
-        char betterStr[1000] = "Better DL Found, score: ";
-        char* num = new char[10];
-        deviceItos(num, score);
-        deviceStrCat(betterStr, num);
-        deviceStrCat(betterStr, ", series used, ");
-        for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
-            deviceItos(num, disabledSets[DLIdx]);
-            deviceStrCat(betterStr, num);
-            deviceStrCat(betterStr, ", ");
-        }
-        deviceStrCat(betterStr, "\nRemaining overlap: ");
-        deviceItos(num, remainingOverlap);
-        deviceStrCat(betterStr, num);
-
-        deviceStrCat(betterStr, "\nOriginal minSize: ");
-        deviceItos(num, origMinSize);
-        deviceStrCat(betterStr, num);
-
-        deviceStrCat(betterStr, "\n\n");
-
-        size_t secondCheck = atomicMax(&bestScore, score);
-        // If this was < instead of <=, this would never print because bestScore either = score, from this, or > score,
-        // from another thread
-        if(secondCheck <= score) {
-            printf("%s", betterStr);
-        }
-        delete[] num;
-    }
+    printDL(disabledSets, disabledSetsIndex, remainingOverlap, origMinSize, score);
 
     checkpoint(clocks, 0, &printValsCheckpoint);
 
