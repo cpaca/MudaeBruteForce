@@ -11,7 +11,26 @@ __device__ size_t writeIdx = 0;
  * @return
  */
 __device__ Task* getTask(){
-    // TODO: Implement
+    printf("Getting task\n");
+    while(true){
+        printf("Looping getTask\n");
+        size_t expectedReadIdx = readIdx;
+        if(readIdx >= writeIdx){
+            printf("Returning nullptr\n");
+            return nullptr;
+        }
+        // Otherwise, attempt to get the read idx...
+        size_t atomicReadIdx = atomicCAS(&readIdx, expectedReadIdx, expectedReadIdx+1);
+        if(atomicReadIdx != expectedReadIdx){
+            // Some other thread got the expectedReadIdx task, so we can't.
+            continue;
+        }
+        // This thread got the expectedReadIdx.
+        size_t queueIdx = expectedReadIdx % QUEUE_SIZE;
+        Task* ret = queue[queueIdx];
+        queue[queueIdx] = nullptr;
+        return ret;
+    }
 }
 
 /**
