@@ -40,7 +40,7 @@ __device__ void putTask(Task* task){
 
 __host__ void initTaskQueue(){
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
-    auto** host_queue = new size_t*[QUEUE_SIZE];
+    auto** host_queue = new Task*[QUEUE_SIZE];
     for(size_t i = 0; i < QUEUE_SIZE; i++){
         // this should be done by default anyway, but this is safer
         host_queue[i] = nullptr;
