@@ -11,12 +11,9 @@ __device__ size_t writeIdx = 0;
  * @return
  */
 __device__ Task* getTask(){
-    printf("Getting task\n");
     while(true){
-        printf("Looping getTask\n");
         size_t expectedReadIdx = readIdx;
         if(readIdx >= writeIdx){
-            printf("Returning nullptr\n");
             return nullptr;
         }
         // Otherwise, attempt to get the read idx...
@@ -49,6 +46,6 @@ __host__ void initTaskQueue(){
         host_queue[i] = nullptr;
     }
 
-    convertArrToCuda(host_queue, QUEUE_SIZE * sizeof(size_t*));
+    convertArrToCuda(host_queue, QUEUE_SIZE);
     cudaMemcpyToSymbol(queue, &host_queue, sizeof(host_queue));
 }
