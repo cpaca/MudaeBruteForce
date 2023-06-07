@@ -526,6 +526,19 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     delete[] disabledSets;
 }
 
+__global__ void newFindBest(){
+    while(true){
+        Task* task = getTask();
+        if(task == nullptr){
+            printf("Got nullptr task\n");
+        }
+        else{
+            printf("Got a task.\n");
+        }
+        return;
+    }
+}
+
 int main() {
     size_t numBundles;
     // first read the bundlesStr
@@ -663,9 +676,10 @@ int main() {
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
     clock_t startTime = clock();
-    
-    std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
-    findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+
+    // std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
+    // findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+    newFindBest<<<1, 1, sharedMemoryNeeded>>>();
     cudaDeviceSynchronize();
 
     clock_t endTime = clock();

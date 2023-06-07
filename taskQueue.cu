@@ -2,6 +2,8 @@
 #define QUEUE_SIZE (1 << 24)
 
 __device__ Task** queue = nullptr;
+__device__ size_t readIdx = 0;
+__device__ size_t writeIdx = 0;
 
 /**
  * Gets a task from the task queue.
