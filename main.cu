@@ -6,6 +6,8 @@
 #include "randUtils.cu"
 #include "types.cu"
 #include "profileUtils.cu"
+#include "taskQueue.cu"
+#include "task.cu"
 
 // Maximum number of bundles/series that can be activated.
 #define MAX_DL 50
