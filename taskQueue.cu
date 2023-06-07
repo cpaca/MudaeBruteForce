@@ -3,7 +3,7 @@
 
 __device__ Task** queue = nullptr;
 __device__ size_t readIdx = 0;
-__device__ size_t writeIdx = 0;
+__device__ size_t writeIdx = 1; // we start with exactly 1 task
 
 /**
  * Gets a task from the task queue.
@@ -38,13 +38,30 @@ __device__ void putTask(Task* task){
     // TODO: Implement
 }
 
-__host__ void initTaskQueue(){
+__host__ void initTaskQueue(size_t disabledSetsSize, const size_t* freeBundles, size_t numSeries, size_t numBundles){
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
     auto** host_queue = new Task*[QUEUE_SIZE];
     for(size_t i = 0; i < QUEUE_SIZE; i++){
         // this should be done by default anyway, but this is safer
         host_queue[i] = nullptr;
     }
+
+    // Also create a very basic task for the very first thread.
+    Task* firstTask = new Task;
+    firstTask->disabledSets = new size_t[disabledSetsSize];
+    firstTask->disabledSetsIndex = 0;
+    for(size_t i = 0; i < numBundles; i++){
+        if(freeBundles[i] != 0){
+            // Add this free bundle to disabledSets.
+            firstTask->disabledSets[firstTask->disabledSetsIndex] = numSeries + i;
+            firstTask->disabledSetsIndex++;
+        }
+    }
+
+    convertArrToCuda(firstTask->disabledSets, disabledSetsSize);
+    // There is a very small chance that this works.
+    convertArrToCuda(firstTask, 1);
+    host_queue[0] = firstTask;
 
     convertArrToCuda(host_queue, QUEUE_SIZE);
     cudaMemcpyToSymbol(queue, &host_queue, sizeof(host_queue));

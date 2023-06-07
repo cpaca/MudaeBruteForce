@@ -534,6 +534,10 @@ __global__ void newFindBest(){
         }
         else{
             printf("Got a task.\n");
+            devicePrintStrNum("Task disabledSetsIndex ", task->disabledSetsIndex);
+            for(size_t i = 0; i < task->disabledSetsIndex; i++){
+                devicePrintStrNum("Task disabledSet ", task->disabledSets[i]);
+            }
         }
         return;
     }
@@ -633,6 +637,7 @@ int main() {
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
     initializeGlobalSetSizes(numSeries, numBundles, seriesData, bundleData, host_freeBundles);
+    initTaskQueue(MAX_DL + MAX_FREE_BUNDLES, host_freeBundles, numSeries, numBundles);
     convertArrToCuda(host_freeBundles, numBundles);
     if(host_freeBundles == nullptr){
         std::cout << "FreeBundles not initialized correctly.";
@@ -663,8 +668,6 @@ int main() {
         throw std::logic_error("Device series did not get overwritten properly.");
     }
     cudaMemcpyToSymbol(deviceSeries, &host_deviceSeries, sizeof(host_deviceSeries));
-
-    initTaskQueue();
 
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     // Section 3.2.2 uses "int N" in both host and device memory.
