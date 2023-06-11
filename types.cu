@@ -1,5 +1,5 @@
-
-
+#ifndef MUDAEBRUTEFORCE_TYPES
+#define MUDAEBRUTEFORCE_TYPES
 typedef std::uint16_t setSize_t;
 
 template <typename T>
@@ -9,3 +9,4 @@ template <typename T>
 __host__ __device__ T get_unsigned_max(){
     return ~(static_cast<T>(0));
 }
+#endif
