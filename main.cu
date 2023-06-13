@@ -577,7 +577,7 @@ int main() {
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
     initializeGlobalSetSizes(numSeries, numBundles, seriesData, bundleData, host_freeBundles);
-    initTaskQueue(MAX_DL + MAX_FREE_BUNDLES, host_freeBundles, bundleData, seriesData, numSeries, numBundles);
+    initTaskQueue(host_freeBundles, bundleData, seriesData, numSeries, numBundles);
     convertArrToCuda(host_freeBundles, numBundles);
     if(host_freeBundles == nullptr){
         std::cout << "FreeBundles not initialized correctly.";

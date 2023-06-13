@@ -39,12 +39,12 @@ __device__ void putTask(Task* task){
     // TODO: Implement
 }
 
-__host__ void initTaskQueue(size_t disabledSetsSize,
-                            const size_t* host_freeBundles,
+__host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t** host_bundleData,
                             size_t** host_seriesData,
                             size_t numSeries,
                             size_t numBundles){
+    size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
     size_t numSets = numSeries + numBundles;
 
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
