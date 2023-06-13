@@ -275,6 +275,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         devicePrintStrNum("Task setDeleteIndex ", task->setDeleteIndex);
         devicePrintStrNum("Task shouldDeleteNext ", task->shouldDeleteNext);
         devicePrintStrNum("Task score ", task->score);
+        printf("\n");
         break;
     }
 }
