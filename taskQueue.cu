@@ -106,6 +106,9 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     // And take it to CUDA
     cudaMemcpyToSymbol(setDeleteOrder, &host_setDeleteOrder, sizeof(host_setDeleteOrder));
 
+    // Initialize setDeleteInformation
+    firstTask->setDeleteIndex = 0;
+
     convertArrToCuda(firstTask->disabledSets, disabledSetsSize);
     // There is a very small chance that this works.
     convertArrToCuda(firstTask, 1);
