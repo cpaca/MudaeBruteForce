@@ -4,7 +4,7 @@
 
 __device__ Task** queue = nullptr;
 __device__ size_t readIdx = 0;
-__device__ size_t writeIdx = 1; // we start with exactly 1 task
+__device__ size_t writeIdx = 2; // we start with exactly 1 task
 
 /**
  * Gets a task from the task queue.
@@ -109,10 +109,18 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     // Initialize setDeleteInformation
     firstTask->setDeleteIndex = 0;
 
+    // Finally, create the second item in the queue:
+    Task* secondTask = copyTask(firstTask);
+    firstTask->shouldDeleteNext = true;
+    secondTask->shouldDeleteNext = false;
+
+    // Convert everything into CUDA form:
     convertArrToCuda(firstTask->disabledSets, disabledSetsSize);
-    // There is a very small chance that this works.
+    convertArrToCuda(secondTask->disabledSets, disabledSetsSize);
     convertArrToCuda(firstTask, 1);
+    convertArrToCuda(secondTask, 1);
     host_queue[0] = firstTask;
+    host_queue[1] = secondTask;
 
     convertArrToCuda(host_queue, QUEUE_SIZE);
     cudaMemcpyToSymbol(queue, &host_queue, sizeof(host_queue));
