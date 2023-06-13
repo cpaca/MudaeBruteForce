@@ -488,14 +488,12 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     while(true){
         Task* task = getTask();
         if(task == nullptr){
-            printf("Got nullptr task\n");
+            continue;
         }
-        else{
-            printf("Got a task.\n");
-            devicePrintStrNum("Task disabledSetsIndex ", task->disabledSetsIndex);
-            for(size_t i = 0; i < task->disabledSetsIndex; i++){
-                devicePrintStrNum("Task disabledSet ", task->disabledSets[i]);
-            }
+        printf("Got a task.\n");
+        devicePrintStrNum("Task disabledSetsIndex ", task->disabledSetsIndex);
+        for(size_t i = 0; i < task->disabledSetsIndex; i++){
+            devicePrintStrNum("Task disabledSet ", task->disabledSets[i]);
         }
         break;
     }
