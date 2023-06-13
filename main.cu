@@ -271,6 +271,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         for(size_t i = 0; i < task->disabledSetsIndex; i++){
             devicePrintStrNum("Task disabledSet ", task->disabledSets[i]);
         }
+
+        devicePrintStrNum("Task setDeleteIndex ", task->setDeleteIndex);
+        devicePrintStrNum("Task shouldDeleteNext ", task->shouldDeleteNext);
+        devicePrintStrNum("Task score ", task->score);
         break;
     }
 }
