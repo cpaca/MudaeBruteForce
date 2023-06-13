@@ -50,12 +50,12 @@ __device__ size_t* setDeleteOrder = nullptr;
 
 // Turns out if I do this and #include this file, it works fine.
 // Maximum number of bundles/series that can be activated.
-#define MAX_DL 50
+const std::uint32_t MAX_DL = 50;
 // Maximum number of free bundles.
 // Can be changed whenever, but keep it low or CUDA will demand much more memory than necessary.
-#define MAX_FREE_BUNDLES 5
+const std::uint32_t MAX_FREE_BUNDLES = 5;
 // Overlap limit, defined in Mudae
-#define OVERLAP_LIMIT 30000
+const std::uint32_t OVERLAP_LIMIT = 30000;
 // How many blocks to run.
 // Note that each block gets 512 threads.
 #define NUM_BLOCKS (1 << 12)
@@ -63,6 +63,6 @@ __device__ size_t* setDeleteOrder = nullptr;
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
 // MAX_MINSIZE determines the maximum value minSize can be.
-#define MAX_MINSIZE 100
+const std::uint32_t MAX_MINSIZE = 100;
 
 #endif
