@@ -58,7 +58,7 @@ const std::uint32_t MAX_FREE_BUNDLES = 5;
 const std::uint32_t OVERLAP_LIMIT = 30000;
 // How many blocks to run.
 // Note that each block gets 512 threads.
-#define NUM_BLOCKS (1 << 12)
+const std::uint64_t NUM_BLOCKS = (1 << 12);
 // "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
 // MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
 // down to remainingOverlap levels.
