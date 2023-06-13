@@ -109,7 +109,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     // Initialize setDeleteInformation
     firstTask->setDeleteIndex = 0;
 
-    // Finally, create the second item in the queue:
+    // VERY LAST THING TO DO: Create the second item in the queue:
     Task* secondTask = copyTask(firstTask);
     firstTask->shouldDeleteNext = true;
     secondTask->shouldDeleteNext = false;
