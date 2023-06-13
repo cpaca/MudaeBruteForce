@@ -1,4 +1,5 @@
 #include "task.cu"
+#include <thrust/sort.h>
 #define QUEUE_SIZE (1 << 24)
 
 __device__ Task** queue = nullptr;
@@ -38,7 +39,14 @@ __device__ void putTask(Task* task){
     // TODO: Implement
 }
 
-__host__ void initTaskQueue(size_t disabledSetsSize, const size_t* freeBundles, size_t numSeries, size_t numBundles){
+__host__ void initTaskQueue(size_t disabledSetsSize,
+                            const size_t* host_freeBundles,
+                            size_t** host_bundleData,
+                            size_t** host_seriesData,
+                            size_t numSeries,
+                            size_t numBundles){
+    size_t numSets = numSeries + numBundles;
+
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
     auto** host_queue = new Task*[QUEUE_SIZE];
     for(size_t i = 0; i < QUEUE_SIZE; i++){
@@ -51,12 +59,45 @@ __host__ void initTaskQueue(size_t disabledSetsSize, const size_t* freeBundles, 
     firstTask->disabledSets = new size_t[disabledSetsSize];
     firstTask->disabledSetsIndex = 0;
     for(size_t i = 0; i < numBundles; i++){
-        if(freeBundles[i] != 0){
+        if(host_freeBundles[i] != 0){
             // Add this free bundle to disabledSets.
             firstTask->disabledSets[firstTask->disabledSetsIndex] = numSeries + i;
             firstTask->disabledSetsIndex++;
         }
     }
+
+    // since I can assign a "value" to each set, it's easier to use that to compare
+    // than define a compare() function
+    auto* host_setDeleteOrder = new size_t[numSets];
+    auto* host_setDeleteValue = new size_t[numSets];
+    for(size_t i = 0; i < numSets; i++){
+        size_t setNum = i;
+        size_t setValue;
+        size_t setSize;
+        if(setNum < numSeries){
+            setSize = host_seriesData[setNum][0];
+        }
+        else{
+            setSize = host_bundleData[setNum - numSeries][0];
+        }
+        // Just for now.
+        setValue = setSize;
+
+        host_setDeleteOrder[i] = setNum;
+        host_setDeleteValue[i] = setValue;
+    }
+    // From the example:
+    // The first array input will be sorted
+    // and the second array input will be whatever
+    // We want the value to be in sorted order, decreasing order.
+    thrust::sort_by_key(host_setDeleteValue,
+                        host_setDeleteValue+numSets,
+                        host_setDeleteOrder,
+                        thrust::greater<size_t>());
+    // Convert to CUDA form...
+    convertArrToCuda(host_setDeleteOrder, numSets);
+    // And take it to CUDA
+    cudaMemcpyToSymbol(setDeleteOrder, &host_setDeleteOrder, sizeof(host_setDeleteOrder));
 
     convertArrToCuda(firstTask->disabledSets, disabledSetsSize);
     // There is a very small chance that this works.

@@ -483,7 +483,8 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
     delete[] disabledSets;
 }
 
-__global__ void newFindBest(){
+__global__ void newFindBest(const size_t numBundles, const size_t numSeries){
+    size_t numSets = numBundles + numSeries;
     while(true){
         Task* task = getTask();
         if(task == nullptr){
@@ -496,7 +497,12 @@ __global__ void newFindBest(){
                 devicePrintStrNum("Task disabledSet ", task->disabledSets[i]);
             }
         }
-        return;
+        break;
+    }
+
+    for(size_t i = 0; i < numSets; i++){
+        devicePrintStrNum("Set delete index: ", i);
+        devicePrintStrNum("Set delete number: ", setDeleteOrder[i]);
     }
 }
 
@@ -594,7 +600,7 @@ int main() {
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
     initializeGlobalSetSizes(numSeries, numBundles, seriesData, bundleData, host_freeBundles);
-    initTaskQueue(MAX_DL + MAX_FREE_BUNDLES, host_freeBundles, numSeries, numBundles);
+    initTaskQueue(MAX_DL + MAX_FREE_BUNDLES, host_freeBundles, bundleData, seriesData, numSeries, numBundles);
     convertArrToCuda(host_freeBundles, numBundles);
     if(host_freeBundles == nullptr){
         std::cout << "FreeBundles not initialized correctly.";
@@ -639,7 +645,7 @@ int main() {
 
     // std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
     // findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
-    newFindBest<<<1, 1, sharedMemoryNeeded>>>();
+    newFindBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
 
     clock_t endTime = clock();

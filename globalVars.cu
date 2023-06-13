@@ -45,4 +45,7 @@ __device__ size_t* freeBundles = nullptr;
 __device__ setSize_t* global_setSizes = nullptr;
 extern __shared__ setSize_t setSizes[];
 
+// The order to delete each set in.
+__device__ size_t* setDeleteOrder = nullptr;
+
 #endif
