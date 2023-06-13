@@ -65,11 +65,19 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     Task* firstTask = new Task;
     firstTask->disabledSets = new size_t[disabledSetsSize];
     firstTask->disabledSetsIndex = 0;
+    // Will need the free bundle pointers for score calculations.
+    auto** freeBundlePtrs = new size_t*[numBundles];
+    size_t numFreeBundles = 0;
     for(size_t i = 0; i < numBundles; i++){
         if(host_freeBundles[i] != 0){
             // Add this free bundle to disabledSets.
             firstTask->disabledSets[firstTask->disabledSetsIndex] = numSeries + i;
             firstTask->disabledSetsIndex++;
+
+            // Note free bundle in pointers:
+            // And skip the size value.
+            freeBundlePtrs[numFreeBundles] = (host_bundleData[i])+1;
+            numFreeBundles++;
         }
     }
 
@@ -109,6 +117,22 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     // Initialize setDeleteInformation
     firstTask->setDeleteIndex = 0;
 
+    // Initialize score
+    size_t score = 0;
+    for(size_t i = 0; i < numSeries; i++){
+        bool addSeries = false;
+        for(size_t j = 0; j < numFreeBundles; j++){
+            if((*(freeBundlePtrs[j])) == i){
+                freeBundlePtrs[j]++;
+                addSeries = true;
+            }
+        }
+        if(addSeries){
+            score += host_seriesData[i][1];
+        }
+    }
+    firstTask->score = score;
+
     // VERY LAST THING TO DO: Create the second item in the queue:
     Task* secondTask = copyTask(firstTask);
     firstTask->shouldDeleteNext = true;
@@ -124,4 +148,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
 
     convertArrToCuda(host_queue, QUEUE_SIZE);
     cudaMemcpyToSymbol(queue, &host_queue, sizeof(host_queue));
+    // Clean up memory
+    // Looks like this is the only one which doesn't get sent to CUDA.
+    delete[] freeBundlePtrs;
 }
