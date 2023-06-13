@@ -10,22 +10,6 @@
 #include "taskQueue.cu"
 #include "task.cu"
 
-// Maximum number of bundles/series that can be activated.
-#define MAX_DL 50
-// Maximum number of free bundles.
-// Can be changed whenever, but keep it low or CUDA will demand much more memory than necessary.
-#define MAX_FREE_BUNDLES 5
-// Overlap limit, defined in Mudae
-#define OVERLAP_LIMIT 30000
-// How many blocks to run.
-// Note that each block gets 512 threads.
-#define NUM_BLOCKS (1 << 12)
-// "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
-// MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
-// down to remainingOverlap levels.
-// MAX_MINSIZE determines the maximum value minSize can be.
-#define MAX_MINSIZE 100
-
 bool bundleContainsSet(size_t setNum,
                        size_t bundleNum,
                        size_t numBundles,
