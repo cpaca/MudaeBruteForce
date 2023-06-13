@@ -26,6 +26,10 @@ __device__ Task* getTask(){
         // This thread got the expectedReadIdx.
         size_t queueIdx = expectedReadIdx % QUEUE_SIZE;
         Task* ret = queue[queueIdx];
+        while(ret == nullptr){
+            // Apparantly the writeIdx got incremented but putTask wasn't ready.
+            ret = queue[queueIdx];
+        }
         queue[queueIdx] = nullptr;
         return ret;
     }
@@ -33,10 +37,13 @@ __device__ Task* getTask(){
 
 /**
  * Puts a task into the task queue.
- * @param task
+ * WARNING: USING OR TOUCHING THE TASK AFTER CALLING PUTTASK() IS **UNDEFINED BEHAVIOR**
+ * (Because getTask could do something with it in another thread)
  */
 __device__ void putTask(Task* task){
-    // TODO: Implement
+    size_t putIdx = atomicAdd(&writeIdx, 1);
+    size_t queueIdx = putIdx % QUEUE_SIZE;
+    queue[queueIdx] = task;
 }
 
 __host__ void initTaskQueue(const size_t* host_freeBundles,
