@@ -28,7 +28,7 @@ __host__ __device__ Task* copyTask(Task* task){
     newTask->disabledSets = new size_t[disabledSetsSize];
     newTask->disabledSetsIndex = task->disabledSetsIndex;
     for(size_t i = 0; i < newTask->disabledSetsIndex; i++){
-        newTask[i] = task[i];
+        newTask->disabledSets[i] = task->disabledSets[i];
     }
 
     newTask->setDeleteIndex = task->setDeleteIndex;
