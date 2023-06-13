@@ -499,11 +499,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         }
         break;
     }
-
-    for(size_t i = 0; i < numSets; i++){
-        devicePrintStrNum("Set delete index: ", i);
-        devicePrintStrNum("Set delete number: ", setDeleteOrder[i]);
-    }
 }
 
 int main() {
