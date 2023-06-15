@@ -266,16 +266,16 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         if(task == nullptr){
             continue;
         }
-        printf("Got a task.\n");
-        devicePrintStrNum("Task disabledSetsIndex ", task->disabledSetsIndex);
-        for(size_t i = 0; i < task->disabledSetsIndex; i++){
-            devicePrintStrNum("Task disabledSet ", task->disabledSets[i]);
-        }
-
-        devicePrintStrNum("Task setDeleteIndex ", task->setDeleteIndex);
-        devicePrintStrNum("Task shouldDeleteNext ", task->shouldDeleteNext);
-        devicePrintStrNum("Task score ", task->score);
-        printf("\n");
+//        printf("Got a task.\n");
+//        devicePrintStrNum("Task disabledSetsIndex ", task->disabledSetsIndex);
+//        for(size_t i = 0; i < task->disabledSetsIndex; i++){
+//            devicePrintStrNum("Task disabledSet ", task->disabledSets[i]);
+//        }
+//
+//        devicePrintStrNum("Task setDeleteIndex ", task->setDeleteIndex);
+//        devicePrintStrNum("Task shouldDeleteNext ", task->shouldDeleteNext);
+//        devicePrintStrNum("Task score ", task->score);
+//        printf("\n");
         break;
     }
 }
