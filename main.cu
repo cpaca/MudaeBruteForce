@@ -277,9 +277,27 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 //        devicePrintStrNum("Task shouldDeleteNext ", task->shouldDeleteNext);
 //        devicePrintStrNum("Task score ", task->score);
 //        printf("\n");
+        // TODO Check if DL can fit or if it's at the series limit
+
         Task* newTask = copyTask(task);
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
+        size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
+        if(setToDelete < numSeries){
+            // TODO implement check for if series is in Task
+            //  For now it's actually fine if it doesn't exist since all of the bundles are done first
+            //  (since it's in size order)
+
+            // TODO Check if DL has enough overlap limit
+
+            // TODO Add series to DL
+        }
+        else{
+            setToDelete -= numSeries;
+            // TODO Check if DL has enough overlap limit
+
+            // TODO Add bundle to DL
+        }
 
         // Increment setDeleteIndex on both tasks...
         // (Compiler probably optimizes this to the very front for like 1 or 2 machine operations faster)
