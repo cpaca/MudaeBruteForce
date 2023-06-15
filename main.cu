@@ -88,10 +88,6 @@ bool bundleContainsSet(size_t setNum,
 // Note that this needs to be placed after the fuckton of variables because it manipulates some of them.
 void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData, size_t** seriesData){
     // create setBundles.
-    // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
-    // Explanation of +1: If there are 7 bundles, setSize_t should be 1, not 0.
-    // host_ added because I can't write device data directly @ host level.
-    const size_t host_setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
     cudaMemcpyToSymbol(setBundlesSetSize, &host_setBundlesSetSize, sizeof(size_t));
     size_t numSets = numBundles + numSeries;
 
@@ -381,6 +377,13 @@ int main() {
             return 2;
         }
     }
+
+    // Initialize host_setBundlesSetSize since it's needed several times before setBundles actually gets initialized.
+    // (Notably, the taskQueue needs it)
+    // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
+    // Explanation of +1: If there are 7 bundles, setSize_t should be 1, not 0.
+    // host_ added because I can't write device data directly @ host level.
+    host_setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
 
     // There are certain bundles which are free. Namely, Western and Real Life People, if you have togglewestern and toggleirl
     // There's also togglehentai on some servers.
