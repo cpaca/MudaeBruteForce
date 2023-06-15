@@ -223,7 +223,7 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
     }
 }
 
-__device__ void printDL(Task* task, size_t remainingOverlap, size_t origMinSize) {
+__device__ void printDL(Task* task, size_t remainingOverlap) {
     size_t* disabledSets = task->disabledSets;
     size_t disabledSetsIndex = task->disabledSetsIndex;
     size_t score = task->score;
@@ -244,10 +244,6 @@ __device__ void printDL(Task* task, size_t remainingOverlap, size_t origMinSize)
         }
         deviceStrCat(betterStr, "\nRemaining overlap: ");
         deviceItos(num, remainingOverlap);
-        deviceStrCat(betterStr, num);
-
-        deviceStrCat(betterStr, "\nOriginal minSize: ");
-        deviceItos(num, origMinSize);
         deviceStrCat(betterStr, num);
 
         deviceStrCat(betterStr, "\n\n");
