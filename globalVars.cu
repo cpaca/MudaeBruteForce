@@ -29,6 +29,7 @@ __device__ size_t* bundleIndices = nullptr;
 // Also note that for bundles, their "bitstream" is all 0s except for itself, where it is 1.
 __device__ size_t* setBundles = nullptr;
 __constant__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
+size_t host_setBundlesSetSize;
 
 // Data about each series.
 // deviceSeries[2n] is the size of series n
