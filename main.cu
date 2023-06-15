@@ -223,8 +223,11 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
     }
 }
 
-__device__ void printDL(const size_t *disabledSets, size_t disabledSetsIndex, size_t remainingOverlap, size_t origMinSize,
-             size_t score) {// printf("CUDA checking if this is the best score.\n");
+__device__ void printDL(Task* task, size_t remainingOverlap, size_t origMinSize) {
+    size_t* disabledSets = task->disabledSets;
+    size_t disabledSetsIndex = task->disabledSetsIndex;
+    size_t score = task->score;
+
     size_t oldBest = atomicMax(&bestScore, score);
     // if this was <= instead of < and the "best score" got achieved, it would spam out that best score nonstop
     if(oldBest < score){
