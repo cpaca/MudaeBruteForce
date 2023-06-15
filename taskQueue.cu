@@ -133,6 +133,9 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     }
     firstTask->score = score;
 
+    // Initialize remainingOverlap
+    firstTask->remainingOverlap = OVERLAP_LIMIT;
+
     // VERY LAST THING TO DO: Create the second item in the queue:
     Task* secondTask = copyTask(firstTask);
     firstTask->shouldDeleteNext = true;

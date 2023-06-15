@@ -13,6 +13,9 @@ typedef struct {
 
     // What the score was the last time it was calculated for this Task
     size_t score;
+
+    // How much OVERLAP_LIMIT is remaining in this task
+    size_t remainingOverlap;
 } Task;
 
 /**
