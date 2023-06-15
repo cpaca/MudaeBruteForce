@@ -133,8 +133,9 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     }
     firstTask->score = score;
 
-    // Initialize remainingOverlap
+    // Initialize constant variables
     firstTask->remainingOverlap = OVERLAP_LIMIT;
+    firstTask->DLSlotsRemn = MAX_DL;
 
     // Convert everything into CUDA form:
     convertArrToCuda(firstTask->disabledSets, disabledSetsSize);

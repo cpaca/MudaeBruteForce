@@ -278,6 +278,11 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 //        devicePrintStrNum("Task score ", task->score);
 //        printf("\n");
         // TODO Check if DL can fit or if it's at the series limit
+        if(task->DLSlotsRemn <= 0){
+            // Nope! Stop. Done. Nothing to do on this task.
+            deleteTask(task);
+            continue;
+        }
 
         Task* newTask = copyTask(task);
 

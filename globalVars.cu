@@ -50,7 +50,7 @@ __device__ size_t* setDeleteOrder = nullptr;
 
 // Turns out if I do this and #include this file, it works fine.
 // Maximum number of bundles/series that can be activated.
-const std::uint32_t MAX_DL = 50;
+const std::uint32_t MAX_DL = 3;
 // Maximum number of free bundles.
 // Can be changed whenever, but keep it low or CUDA will demand much more memory than necessary.
 const std::uint32_t MAX_FREE_BUNDLES = 5;

@@ -12,8 +12,11 @@ typedef struct {
     // What the score was the last time it was calculated for this Task
     size_t score;
 
-    // How much OVERLAP_LIMIT is remaining in this task
+    // How much OVERLAP_LIMIT is remaining in this Task
     size_t remainingOverlap;
+
+    // How many series/bundles (aka sets) can still be disabled din this Task
+    size_t DLSlotsRemn;
 } Task;
 
 /**
@@ -36,5 +39,14 @@ __host__ __device__ Task* copyTask(Task* task){
     newTask->score = task->score;
 
     return newTask;
+}
+
+/**
+ * Deletes a task.
+ * Treat this like you would a destructor; if you call this then DON'T TOUCH THE TASK FOR ANY REASON
+ * Unless you want a segfault.
+ */
+__device__ void deleteTask(Task* task){
+    // TODO implement
 }
 #endif
