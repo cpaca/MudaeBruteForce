@@ -17,6 +17,9 @@ typedef struct {
 
     // How many series/bundles (aka sets) can still be disabled din this Task
     size_t DLSlotsRemn;
+
+    // setBundles compatibility
+    size_t* bundlesUsed;
 } Task;
 
 /**

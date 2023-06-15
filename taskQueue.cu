@@ -133,6 +133,10 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     }
     firstTask->score = score;
 
+    // Initialize setBundles
+    firstTask->bundlesUsed = new size_t[host_setBundlesSetSize];
+    convertArrToCuda(firstTask->bundlesUsed, host_setBundlesSetSize);
+
     // Initialize constant variables
     firstTask->remainingOverlap = OVERLAP_LIMIT;
     firstTask->DLSlotsRemn = MAX_DL;
