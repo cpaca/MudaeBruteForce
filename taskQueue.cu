@@ -136,18 +136,10 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     // Initialize remainingOverlap
     firstTask->remainingOverlap = OVERLAP_LIMIT;
 
-    // VERY LAST THING TO DO: Create the second item in the queue:
-    Task* secondTask = copyTask(firstTask);
-    firstTask->shouldDeleteNext = true;
-    secondTask->shouldDeleteNext = false;
-
     // Convert everything into CUDA form:
     convertArrToCuda(firstTask->disabledSets, disabledSetsSize);
-    convertArrToCuda(secondTask->disabledSets, disabledSetsSize);
     convertArrToCuda(firstTask, 1);
-    convertArrToCuda(secondTask, 1);
     host_queue[0] = firstTask;
-    host_queue[1] = secondTask;
 
     convertArrToCuda(host_queue, QUEUE_SIZE);
     cudaMemcpyToSymbol(queue, &host_queue, sizeof(host_queue));

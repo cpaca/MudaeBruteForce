@@ -264,7 +264,8 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     while(true){
         Task* task = getTask();
         if(task == nullptr){
-            continue;
+            // For debug reasons.
+            break;
         }
 //        printf("Got a task.\n");
 //        devicePrintStrNum("Task disabledSetsIndex ", task->disabledSetsIndex);
@@ -276,7 +277,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 //        devicePrintStrNum("Task shouldDeleteNext ", task->shouldDeleteNext);
 //        devicePrintStrNum("Task score ", task->score);
 //        printf("\n");
-        break;
     }
 }
 
