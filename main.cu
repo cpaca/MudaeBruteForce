@@ -277,6 +277,18 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 //        devicePrintStrNum("Task shouldDeleteNext ", task->shouldDeleteNext);
 //        devicePrintStrNum("Task score ", task->score);
 //        printf("\n");
+        Task* newTask = copyTask(task);
+
+        // Delete the setDeleteIndex on task, leave it alone on newTask
+
+        // Increment setDeleteIndex on both tasks...
+        // (Compiler probably optimizes this to the very front for like 1 or 2 machine operations faster)
+        task->setDeleteIndex++;
+        newTask->setDeleteIndex++;
+
+        // And put both tasks to the front.
+        putTask(task);
+        putTask(newTask);
     }
 }
 
