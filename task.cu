@@ -33,7 +33,6 @@ __host__ __device__ Task* copyTask(Task* task){
     }
 
     newTask->setDeleteIndex = task->setDeleteIndex;
-    newTask->shouldDeleteNext = task->shouldDeleteNext;
     newTask->score = task->score;
 
     return newTask;
