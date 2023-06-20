@@ -255,8 +255,18 @@ __device__ void printDL(Task* task) {
     }
 }
 
+__device__ size_t getSetSize(const size_t &numSeries, const size_t &setNum){
+    if(setNum < numSeries){
+        return deviceSeries[2 * setNum];
+    }
+    else{
+        size_t bundleNum = setNum - numSeries;
+        return bundleSeries[bundleIndices[bundleNum]];
+    }
+}
+
 __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
-    size_t numSets = numBundles + numSeries;
+    // size_t numSets = numBundles + numSeries;
     while(true){
         Task* task = getTask();
         if(task == nullptr){
@@ -284,25 +294,33 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
-        if(setToDelete < numSeries){
-            // TODO implement check for if series is in Task
-            //  For now it's actually fine if it doesn't exist since all of the bundles are done first
-            //  (since it's in size order)
 
-            // TODO Check if DL has enough overlap limit
-
-            // TODO Add series to DL
+        // TODO Check if DL has enough overlap limit
+        size_t setSize = getSetSize(numSeries, setToDelete);
+        if(setSize > task->remainingOverlap){
+            deleteTask(task);
+            task = nullptr;
         }
-        else{
-            setToDelete -= numSeries;
-            // TODO Check if DL has enough overlap limit
+        else {
+            task->remainingOverlap -= setSize;
+            if (setToDelete < numSeries) {
+                // TODO implement check for if series is in Task
+                //  For now it's actually fine if it doesn't exist since all of the bundles are done first
+                //  (since it's in size order)
+                //  Note: This could be implemented as part of AddSeriesToTask()
 
-            // TODO Add bundle to DL
+                // TODO Add series to DL
+            } else {
+                setToDelete -= numSeries;
+                // TODO Add bundle to DL
+            }
         }
 
         // Increment setDeleteIndex on both tasks...
         // (Compiler probably optimizes this to the very front for like 1 or 2 machine operations faster)
-        task->setDeleteIndex++;
+        if(task != nullptr) {
+            task->setDeleteIndex++;
+        }
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
