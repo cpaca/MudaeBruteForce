@@ -324,7 +324,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
-//        if(newTask->setDeleteIndex > 3){
+//        if(newTask->setDeleteIndex > 1){
 //            continue;
 //        }
         putTask(task);
