@@ -117,7 +117,7 @@ size_t* getLineData(std::string line, std::string& name){
  * Int-to-string. (I-to-S)
  * Assumes str is large enough, and just overrides str.
  */
-__device__ void deviceItos(char* &str, size_t num){
+__device__ void deviceItos(char* &str, size_t num, const size_t base = 10, size_t minLen = 0){
     if(num == 0){
         str[0] = '0';
         str[1] = NULL;
@@ -129,7 +129,7 @@ __device__ void deviceItos(char* &str, size_t num){
     while(compare > 0){
         // move over one digit
         // and move str over by one to accomodate
-        compare /= 10;
+        compare /= base;
         strIdx++;
     }
 
@@ -138,10 +138,23 @@ __device__ void deviceItos(char* &str, size_t num){
     str[strIdx] = NULL;
     strIdx--;
 
+    if(strIdx < minLen){
+        strIdx = minLen;
+    }
+
     while(num > 0){
-        str[strIdx] = ('0' + num%10); // NOLINT(cppcoreguidelines-narrowing-conversions)
+        str[strIdx] = ('0' + num%base); // NOLINT(cppcoreguidelines-narrowing-conversions)
         strIdx--;
-        num /= 10;
+        num /= base;
+    }
+
+    // note that if strIdx == 0 then it needs to write to strIdx = 0
+    // but if strIdx = -1 it has written to strIdx = 0
+    while(strIdx != (-1)){
+        // pad the left side with 0s
+        // great for binary comparing
+        str[strIdx] = '0';
+        strIdx--;
     }
 }
 
@@ -166,7 +179,7 @@ __device__ void deviceStrCat(char* dest, const char* src){
  *
  * This function was created largely for the in-code Profiler to use.
  */
-__device__ void devicePrintStrNum(const char* str, size_t num){
+__device__ void devicePrintStrNum(const char* str, size_t num, size_t base = 10, size_t minLen = 0){
     // add 2 just in case i messed something up somehow
     // because i'm pretty sure I messed something up and this is easier than checking
     size_t strlen = 2;
@@ -179,9 +192,10 @@ __device__ void devicePrintStrNum(const char* str, size_t num){
     char* prntStr = new char[strlen+10];
     prntStr[0] = '\0';
 
-    char* numStr = new char[25];
+    // Increased to 70 because the base-2 would need 64 chars at worst
+    char* numStr = new char[70];
 
-    deviceItos(numStr, num);
+    deviceItos(numStr, num, base);
 
     deviceStrCat(prntStr, str);
     deviceStrCat(prntStr, numStr);

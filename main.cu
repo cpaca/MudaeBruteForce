@@ -257,6 +257,8 @@ __device__ size_t getSetSize(const size_t &numSeries, const size_t &setNum){
 __device__ void activateSeries(Task* task, size_t seriesNum){
     size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
     size_t* taskBundles = task->bundlesUsed;
+    devicePrintStrNum("seriesBundles[0] ", seriesBundles[0], 2, 64);
+    devicePrintStrNum("taskBundles[0] ", taskBundles[0], 2, 64);
     if(bundleOverlap(taskBundles, seriesBundles)){
         // This series has already been added to the Task.
         return;
@@ -284,6 +286,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
+        devicePrintStrNum("SetToDelete ", setToDelete);
         task->disabledSets[task->disabledSetsIndex] = setToDelete;
         task->disabledSetsIndex++;
         task->DLSlotsRemn--;
@@ -302,10 +305,12 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
                 size_t* bundlePtr = bundleSeries + bundleIndices[bundleToDelete];
                 bundlePtr++; // Get past the size value...
+                devicePrintStrNum("Old score ", task->score);
                 while((*bundlePtr) != -1){
                     activateSeries(task, *bundlePtr);
                     bundlePtr++;
                 }
+                devicePrintStrNum("New score ", task->score);
                 activateBundle(numSeries, task, setToDelete);
             }
         }
@@ -324,6 +329,9 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
+        if(newTask->setDeleteIndex > 3){
+            continue;
+        }
         putTask(task);
         putTask(newTask);
     }
@@ -476,7 +484,9 @@ int main() {
     // std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
     // findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
-    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+    // reminder to self: 40 blocks of 512 threads each
+    // for some reason 1024 threads per block throws some sort of error
+    newFindBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
 
     clock_t endTime = clock();
