@@ -284,7 +284,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
-        devicePrintStrNum("SetToDelete ", setToDelete);
         task->disabledSets[task->disabledSetsIndex] = setToDelete;
         task->disabledSetsIndex++;
         task->DLSlotsRemn--;
