@@ -275,8 +275,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     while(true){
         Task* task = getTask();
         if(task == nullptr){
-            // For debug reasons.
-            break;
+            continue;
         }
         if(task->DLSlotsRemn <= 0){
             // Nope! Stop. Done. Nothing to do on this task.
