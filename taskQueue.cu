@@ -12,9 +12,12 @@ __device__ size_t writeIdx = 1; // we start with exactly 1 task
  * @return
  */
 __device__ Task* getTask(){
+    size_t offset = (threadIdx.x % 32) + 1;
     while(true){
-        size_t expectedReadIdx = readIdx;
-        if(readIdx >= writeIdx){
+        offset = min(offset, offset-1);
+
+        size_t expectedReadIdx = readIdx + offset;
+        if(expectedReadIdx >= writeIdx){
             return nullptr;
         }
 

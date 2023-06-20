@@ -275,7 +275,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     size_t* clocks = initProfiling();
     while(true){
         // Use this so the program stops and you can profile shit
-        if(writeIdx > 8192){
+        if(writeIdx > (1 << 18)){
             break;
         }
         startClock(clocks, 0);
