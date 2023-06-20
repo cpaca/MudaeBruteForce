@@ -265,6 +265,26 @@ __device__ size_t getSetSize(const size_t &numSeries, const size_t &setNum){
     }
 }
 
+/**
+ * Activates a series for a given task.
+ * This does NOT read or write to remainingOverlap
+ * This increments Score if necessary
+ * This assumes seriesNum is a series and NOT A BUNDLE
+ * This reads from (does not write to) task->bundlesUsed
+ * If a bundle for this series has already been used, this does nothing.
+ */
+__device__ void activateSeries(Task* task, size_t seriesNum){
+    size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
+    size_t* taskBundles = task->bundlesUsed;
+    if(bundleOverlap(taskBundles, seriesBundles)){
+        // This series has already been added to the Task.
+        return;
+    }
+
+    size_t seriesValue = deviceSeries[(2*seriesNum) + 1];
+    task->score += seriesValue;
+}
+
 __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     // size_t numSets = numBundles + numSeries;
     while(true){
@@ -307,10 +327,16 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
                 //  (since it's in size order)
                 //  Note: This could be implemented as part of AddSeriesToTask()
 
-                // TODO Add series to DL
+                activateSeries(task, setToDelete);
             } else {
-                setToDelete -= numSeries;
-                // TODO Add bundle to DL
+                size_t bundleToDelete = setToDelete - numSeries;
+
+                size_t* bundlePtr = bundleSeries + bundleIndices[bundleToDelete];
+                bundlePtr++; // Get past the size value...
+                while((*bundlePtr) != -1){
+                    activateSeries(task, *bundlePtr);
+                }
+                activateBundle(numSeries, task, setToDelete);
             }
         }
 
