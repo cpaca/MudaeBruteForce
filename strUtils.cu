@@ -195,7 +195,7 @@ __device__ void devicePrintStrNum(const char* str, size_t num, size_t base = 10,
     // Increased to 70 because the base-2 would need 64 chars at worst
     char* numStr = new char[70];
 
-    deviceItos(numStr, num, base);
+    deviceItos(numStr, num, base, minLen);
 
     deviceStrCat(prntStr, str);
     deviceStrCat(prntStr, numStr);

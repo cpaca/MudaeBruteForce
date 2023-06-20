@@ -138,6 +138,10 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
 
     // Initialize setBundles
     firstTask->bundlesUsed = new size_t[host_setBundlesSetSize];
+    for(size_t i = 0; i < host_setBundlesSetSize; i++){
+        // otherwise it's filled with random 1s and 0s and there are problems
+        firstTask->bundlesUsed[0] = 0;
+    }
     for(size_t i = 0; i < firstTask->disabledSetsIndex; i++){
         activateBundle(numSeries, firstTask, firstTask->disabledSets[i]);
     }
