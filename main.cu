@@ -335,6 +335,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             }
         }
 
+        // Is the new DL good?
+        printDL(task);
+        // newTask is unchanged so no print
+
         // Increment setDeleteIndex on both tasks...
         // (Compiler probably optimizes this to the very front for like 1 or 2 machine operations faster)
         if(task != nullptr) {
