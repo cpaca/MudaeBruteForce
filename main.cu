@@ -224,6 +224,10 @@ __device__ void printDL(Task* task) {
         deviceItos(num, remainingOverlap);
         deviceStrCat(betterStr, num);
 
+        deviceStrCat(betterStr, "\nWriteIdx: ");
+        deviceItos(num, writeIdx);
+        deviceStrCat(betterStr, num);
+
         deviceStrCat(betterStr, "\n\n");
 
         size_t secondCheck = atomicMax(&bestScore, score);
@@ -481,7 +485,7 @@ int main() {
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
-    newFindBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
+    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
 
     clock_t endTime = clock();
