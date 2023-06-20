@@ -289,7 +289,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     // size_t numSets = numBundles + numSeries;
     while(true){
         Task* task = getTask();
-        printf("CUDA Flag A\n");
         if(task == nullptr){
             // For debug reasons.
             break;
@@ -316,20 +315,15 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
 
         size_t setSize = getSetSize(numSeries, setToDelete);
-        printf("CUDA Flag B1\n");
         if(setSize > task->remainingOverlap){
-            printf("CUDA Flag B2\n");
             deleteTask(task);
             task = nullptr;
         }
         else {
-            printf("CUDA Flag B3\n");
             task->remainingOverlap -= setSize;
             if (setToDelete < numSeries) {
-                printf("CUDA Flag B4\n");
                 activateSeries(task, setToDelete);
             } else {
-                printf("CUDA Flag B5\n");
                 size_t bundleToDelete = setToDelete - numSeries;
 
                 size_t* bundlePtr = bundleSeries + bundleIndices[bundleToDelete];
@@ -354,7 +348,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             task->setDeleteIndex++;
         }
         newTask->setDeleteIndex++;
-        printf("CUDA Flag C\n");
 
         // And put both tasks to the front.
         if(newTask->setDeleteIndex < 5) {
@@ -362,7 +355,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             putTask(task);
             putTask(newTask);
         }
-        printf("CUDA Flag D\n");
     }
 }
 
