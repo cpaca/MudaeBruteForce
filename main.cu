@@ -207,7 +207,7 @@ __device__ bool bundleOverlap(const size_t* A, const size_t* B){
  * @param bundlesUsed MAY BE MODIFIED to acknowledge this set being added to bundlesUsed.
  * @param setToAdd The Set ID of a bundle.
  */
-__device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size_t set) {
+__device__ void activateBundle(const size_t numSeries, Task* task, size_t set) {
     if(set >= numSeries){
         // setToAdd is actually a bundle to add
         // If this bundle is being used, we need to acknowledge that in bundlesUsed
@@ -215,7 +215,7 @@ __device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size
         size_t bundlesUsedWordSize = 8 * sizeof(size_t);
         size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
         size_t bundleOffset = bundleNum % bundlesUsedWordSize;
-        bundlesUsed[bundlesUsedIndex] |= (((size_t)1) << bundleOffset);
+        task->bundlesUsed[bundlesUsedIndex] |= (((size_t)1) << bundleOffset);
     }
 }
 
