@@ -476,7 +476,7 @@ int main() {
     // std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
     // findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
-    newFindBest<<<128, 1024, sharedMemoryNeeded>>>(numBundles, numSeries);
+    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
 
     clock_t endTime = clock();
@@ -487,6 +487,8 @@ int main() {
     if (lasterror != cudaSuccess) {
         const char *errName = cudaGetErrorName(lasterror);
         printf("%s\n", errName);
+        const char *errStr = cudaGetErrorString(lasterror);
+        printf("%s\n", errStr);
     }
     else{
         printf("No CUDA errors.\n");
