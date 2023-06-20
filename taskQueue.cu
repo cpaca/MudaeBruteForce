@@ -26,7 +26,6 @@ __device__ Task* getTask(){
         // This thread got the expectedReadIdx.
         size_t queueIdx = expectedReadIdx % QUEUE_SIZE;
         Task* ret = queue[queueIdx];
-        devicePrintStrNum("Task read ", (size_t) ret);
         while(ret == nullptr){
             // Apparantly the writeIdx got incremented but putTask wasn't ready.
             ret = queue[queueIdx];
@@ -48,8 +47,6 @@ __device__ void putTask(Task* task){
     size_t putIdx = atomicAdd(&writeIdx, 1);
     size_t queueIdx = putIdx % QUEUE_SIZE;
     queue[queueIdx] = task;
-    devicePrintStrNum("putTask ", (size_t) task);
-    devicePrintStrNum("putTask queueIDX ", (size_t) queueIdx);
 }
 
 __host__ void initTaskQueue(const size_t* host_freeBundles,
