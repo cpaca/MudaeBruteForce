@@ -6,9 +6,9 @@ __device__ size_t bestScore = 0;
 
 // For each bundle, what series are in it?
 // (Index 0 is also the bundle's size.)
-__device__ size_t* bundleSeries = nullptr;
+__constant__ size_t* bundleSeries = nullptr;
 // Index of each bundle in bundleSeries. So bundleSeries[bundleIndices[n]] is the first index of a bundle in bundleSeries.
-__device__ size_t* bundleIndices = nullptr;
+__constant__ size_t* bundleIndices = nullptr;
 
 // For each set, what bundles contain it?
 // The format is... kind of a long description.
@@ -27,27 +27,27 @@ __device__ size_t* bundleIndices = nullptr;
 //
 // Note that this is setBundles, so it needs to work for all SETS. Even Bundles.
 // Also note that for bundles, their "bitstream" is all 0s except for itself, where it is 1.
-__device__ size_t* setBundles = nullptr;
+__constant__ size_t* setBundles = nullptr;
 __constant__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
 size_t host_setBundlesSetSize;
 
 // Data about each series.
 // deviceSeries[2n] is the size of series n
 // deviceSeries[2n+1] is the value of series n
-__device__ size_t* deviceSeries = nullptr;
+__constant__ size_t* deviceSeries = nullptr;
 
 // Free bundles.
 // If freeBundles[n] is non-zero, then bundle n is free.
-__device__ size_t* freeBundles = nullptr;
+__constant__ size_t* freeBundles = nullptr;
 
 // The size of each set.
 // Note that this is setSize_t, not size_t.
 // This is important because of byte limitations.
-__device__ setSize_t* global_setSizes = nullptr;
+__constant__ setSize_t* global_setSizes = nullptr;
 extern __shared__ setSize_t setSizes[];
 
 // The order to delete each set in.
-__device__ size_t* setDeleteOrder = nullptr;
+__constant__ size_t* setDeleteOrder = nullptr;
 
 // Turns out if I do this and #include this file, it works fine.
 // Maximum number of bundles/series that can be activated.
