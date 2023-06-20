@@ -475,7 +475,8 @@ int main() {
 
     // std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
     // findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
-    newFindBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
+    std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
+    newFindBest<<<128, 1024, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
 
     clock_t endTime = clock();
