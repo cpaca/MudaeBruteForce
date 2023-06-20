@@ -356,6 +356,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             putTask(task);
             putTask(newTask);
         }
+        printf("CUDA Flag D");
     }
 }
 

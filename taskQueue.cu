@@ -41,6 +41,9 @@ __device__ Task* getTask(){
  * (Because getTask could do something with it in another thread)
  */
 __device__ void putTask(Task* task){
+    if(task == nullptr){
+        return;
+    }
     size_t putIdx = atomicAdd(&writeIdx, 1);
     size_t queueIdx = putIdx % QUEUE_SIZE;
     queue[queueIdx] = task;
