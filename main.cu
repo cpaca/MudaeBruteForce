@@ -322,11 +322,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         else {
             task->remainingOverlap -= setSize;
             if (setToDelete < numSeries) {
-                // TODO implement check for if series is in Task
-                //  For now it's actually fine if it doesn't exist since all of the bundles are done first
-                //  (since it's in size order)
-                //  Note: This could be implemented as part of AddSeriesToTask()
-
                 activateSeries(task, setToDelete);
             } else {
                 size_t bundleToDelete = setToDelete - numSeries;
