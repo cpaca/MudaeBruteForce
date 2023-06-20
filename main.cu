@@ -286,6 +286,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
         task->disabledSets[task->disabledSetsIndex] = setToDelete;
         task->disabledSetsIndex++;
+        task->DLSlotsRemn--;
 
         size_t setSize = getSetSize(numSeries, setToDelete);
         if(setSize > task->remainingOverlap){
