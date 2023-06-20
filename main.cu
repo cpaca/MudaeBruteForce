@@ -257,8 +257,6 @@ __device__ size_t getSetSize(const size_t &numSeries, const size_t &setNum){
 __device__ void activateSeries(Task* task, size_t seriesNum){
     size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
     size_t* taskBundles = task->bundlesUsed;
-    devicePrintStrNum("seriesBundles[0] ", seriesBundles[0], 2, 64);
-    devicePrintStrNum("taskBundles[0] ", taskBundles[0], 2, 64);
     if(bundleOverlap(taskBundles, seriesBundles)){
         // This series has already been added to the Task.
         return;
@@ -305,12 +303,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
                 size_t* bundlePtr = bundleSeries + bundleIndices[bundleToDelete];
                 bundlePtr++; // Get past the size value...
-                devicePrintStrNum("Old score ", task->score);
                 while((*bundlePtr) != -1){
                     activateSeries(task, *bundlePtr);
                     bundlePtr++;
                 }
-                devicePrintStrNum("New score ", task->score);
                 activateBundle(numSeries, task, setToDelete);
             }
         }
@@ -329,9 +325,9 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
-        if(newTask->setDeleteIndex > 3){
-            continue;
-        }
+//        if(newTask->setDeleteIndex > 3){
+//            continue;
+//        }
         putTask(task);
         putTask(newTask);
     }
