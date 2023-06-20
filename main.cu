@@ -300,6 +300,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         if(setSize > task->remainingOverlap){
             deleteTask(task);
             task = nullptr;
+            checkpoint(clocks, 0, &fullTaskCheckpoint);
         }
         else {
             task->remainingOverlap -= setSize;
@@ -310,11 +311,13 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
                 size_t* bundlePtr = bundleSeries + bundleIndices[bundleToDelete];
                 bundlePtr++; // Get past the size value...
+                checkpoint(clocks, 0, &bundlePtrCheckpoint);
                 while((*bundlePtr) != -1){
                     activateSeries(task, *bundlePtr);
                     bundlePtr++;
                 }
                 activateBundle(numSeries, task, setToDelete);
+                checkpoint(clocks, 0, &activateBundleCheckpoint);
             }
         }
         checkpoint(clocks, 0, &deleteSetCheckpoint);

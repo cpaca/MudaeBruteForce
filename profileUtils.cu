@@ -1,5 +1,5 @@
 #define NUM_CLOCKS 4
-#define PROFILING_STR_WIDTH 43
+#define PROFILING_STR_WIDTH 44
 
 // If this is set to false, then no profiling is done
 // and you can treat all of the functions in this file like they are empty.
@@ -14,6 +14,9 @@ __device__ size_t numThreads = 0;
 __device__ size_t getTaskCheckpoint = 0;
 __device__ size_t validTaskCheckpoint = 0;
 __device__ size_t makeNewTaskCheckpoint = 0;
+__device__ size_t fullTaskCheckpoint = 0;
+__device__ size_t bundlePtrCheckpoint = 0;
+__device__ size_t activateBundleCheckpoint = 0;
 __device__ size_t deleteSetCheckpoint = 0;
 __device__ size_t finishLoopCheckpoint = 0;
 
@@ -83,7 +86,10 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used getting the task: ", getTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used validating the task: ", validTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used creating a new task: ", makeNewTaskCheckpoint, totalThreads);
-    printProfilingStrNum("Avg. time used deleting the set: ", deleteSetCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used deleting an overfilled set: ", fullTaskCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used getting the bundle ptr: ", bundlePtrCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used deleting the bundle's series: ", activateBundleCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used finishing deleteSet: ", deleteSetCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used postprocessing: ", finishLoopCheckpoint, totalThreads);
     std::cout << std::endl;
 #endif
