@@ -350,7 +350,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
-        devicePrintStrNum("NewTask SDI ", newTask->setDeleteIndex);
         putTask(task);
         putTask(newTask);
     }

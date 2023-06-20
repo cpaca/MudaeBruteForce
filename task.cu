@@ -26,7 +26,7 @@ typedef struct {
  * Returns a new Task that is identical to the given Task
  * Basically, a copy constructor.
  */
-__host__ __device__ Task* copyTask(Task* task){
+__device__ Task* copyTask(Task* task){
     if(task == nullptr){
         return nullptr;
     }
@@ -40,6 +40,13 @@ __host__ __device__ Task* copyTask(Task* task){
 
     newTask->setDeleteIndex = task->setDeleteIndex;
     newTask->score = task->score;
+    newTask->remainingOverlap = task->remainingOverlap;
+    newTask->DLSlotsRemn = task->DLSlotsRemn;
+
+    newTask->bundlesUsed = new size_t[setBundlesSetSize];
+    for(size_t i = 0; i < setBundlesSetSize; i++){
+        newTask->bundlesUsed[i] = task->bundlesUsed[i];
+    }
 
     return newTask;
 }
