@@ -274,6 +274,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     // size_t numSets = numBundles + numSeries;
     size_t* clocks = initProfiling();
     while(true){
+        // Use this so the program stops and you can profile shit
+        if(writeIdx > 8192){
+            break;
+        }
         startClock(clocks, 0);
         Task* task = getTask();
         checkpoint(clocks, 0, &getTaskCheckpoint);
@@ -336,9 +340,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
-        if(newTask->setDeleteIndex > 8){
-            break;
-        }
         putTask(task);
         putTask(newTask);
         checkpoint(clocks, 0, &finishLoopCheckpoint);
@@ -495,7 +496,7 @@ int main() {
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
-    newFindBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
+    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
 
     clock_t endTime = clock();

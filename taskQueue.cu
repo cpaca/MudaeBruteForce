@@ -17,18 +17,20 @@ __device__ Task* getTask(){
         if(readIdx >= writeIdx){
             return nullptr;
         }
+
+        size_t queueIdx = expectedReadIdx % QUEUE_SIZE;
+        Task* ret = queue[queueIdx];
+        if(ret == nullptr){
+            // putTask is in the process of putting the task in.
+            // So pick it up next time.
+            return nullptr;
+        }
+
         // Otherwise, attempt to get the read idx...
         size_t atomicReadIdx = atomicCAS(&readIdx, expectedReadIdx, expectedReadIdx+1);
         if(atomicReadIdx != expectedReadIdx){
             // Some other thread got the expectedReadIdx task, so we can't.
             continue;
-        }
-        // This thread got the expectedReadIdx.
-        size_t queueIdx = expectedReadIdx % QUEUE_SIZE;
-        Task* ret = queue[queueIdx];
-        while(ret == nullptr){
-            // Apparantly the writeIdx got incremented but putTask wasn't ready.
-            ret = queue[queueIdx];
         }
         queue[queueIdx] = nullptr;
         return ret;
