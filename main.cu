@@ -272,8 +272,11 @@ __device__ void activateSeries(Task* task, size_t seriesNum){
 
 __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     // size_t numSets = numBundles + numSeries;
+    size_t* clocks = initProfiling();
     while(true){
+        startClock(clocks, 0);
         Task* task = getTask();
+        checkpoint(clocks, 0, &getTaskCheckpoint);
         if(task == nullptr){
             continue;
         }
@@ -282,6 +285,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             deleteTask(task);
             continue;
         }
+        checkpoint(clocks, 0, &validTaskCheckpoint);
 
         Task* newTask = copyTask(task);
 
@@ -292,6 +296,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         task->DLSlotsRemn--;
 
         size_t setSize = getSetSize(numSeries, setToDelete);
+        checkpoint(clocks, 0, &makeNewTaskCheckpoint);
         if(setSize > task->remainingOverlap){
             deleteTask(task);
             task = nullptr;
@@ -312,6 +317,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
                 activateBundle(numSeries, task, setToDelete);
             }
         }
+        checkpoint(clocks, 0, &deleteSetCheckpoint);
 
         // Is the new DL good?
         if(task != nullptr) {
@@ -327,12 +333,14 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
-//        if(newTask->setDeleteIndex > 1){
-//            continue;
-//        }
+        if(newTask->setDeleteIndex > 8){
+            break;
+        }
         putTask(task);
         putTask(newTask);
+        checkpoint(clocks, 0, &finishLoopCheckpoint);
     }
+    destructProfiling(clocks);
 }
 
 int main() {
@@ -484,7 +492,7 @@ int main() {
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
-    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+    newFindBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaDeviceSynchronize();
 
     clock_t endTime = clock();
