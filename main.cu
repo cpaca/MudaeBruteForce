@@ -283,7 +283,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 //        devicePrintStrNum("Task shouldDeleteNext ", task->shouldDeleteNext);
 //        devicePrintStrNum("Task score ", task->score);
 //        printf("\n");
-        // TODO Check if DL can fit or if it's at the series limit
         if(task->DLSlotsRemn <= 0){
             // Nope! Stop. Done. Nothing to do on this task.
             deleteTask(task);
@@ -295,7 +294,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
 
-        // TODO Check if DL has enough overlap limit
         size_t setSize = getSetSize(numSeries, setToDelete);
         if(setSize > task->remainingOverlap){
             deleteTask(task);
