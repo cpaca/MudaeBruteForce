@@ -316,16 +316,20 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
 
         size_t setSize = getSetSize(numSeries, setToDelete);
-        printf("CUDA Flag B\n");
+        printf("CUDA Flag B1\n");
         if(setSize > task->remainingOverlap){
+            printf("CUDA Flag B2\n");
             deleteTask(task);
             task = nullptr;
         }
         else {
+            printf("CUDA Flag B3\n");
             task->remainingOverlap -= setSize;
             if (setToDelete < numSeries) {
+                printf("CUDA Flag B4\n");
                 activateSeries(task, setToDelete);
             } else {
+                printf("CUDA Flag B5\n");
                 size_t bundleToDelete = setToDelete - numSeries;
 
                 size_t* bundlePtr = bundleSeries + bundleIndices[bundleToDelete];
@@ -339,7 +343,9 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         }
 
         // Is the new DL good?
-        printDL(task);
+        if(task != nullptr) {
+            printDL(task);
+        }
         // newTask is unchanged so no print
 
         // Increment setDeleteIndex on both tasks...
