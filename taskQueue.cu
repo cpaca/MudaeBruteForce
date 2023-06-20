@@ -138,6 +138,9 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
 
     // Initialize setBundles
     firstTask->bundlesUsed = new size_t[host_setBundlesSetSize];
+    for(size_t i = 0; i < firstTask->disabledSetsIndex; i++){
+        activateBundle(numSeries, firstTask, firstTask->disabledSets[i]);
+    }
     convertArrToCuda(firstTask->bundlesUsed, host_setBundlesSetSize);
 
     // Initialize constant variables
