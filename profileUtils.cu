@@ -1,5 +1,5 @@
 #define NUM_CLOCKS 4
-#define PROFILING_STR_WIDTH 44
+#define PROFILING_STR_WIDTH 45
 
 // If this is set to false, then no profiling is done
 // and you can treat all of the functions in this file like they are empty.
