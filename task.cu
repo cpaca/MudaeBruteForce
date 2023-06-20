@@ -50,6 +50,8 @@ __host__ __device__ Task* copyTask(Task* task){
  * Unless you want a segfault.
  */
 __device__ void deleteTask(Task* task){
-    // TODO implement
+    delete[] task->disabledSets;
+
+    delete task;
 }
 #endif
