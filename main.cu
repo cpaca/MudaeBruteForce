@@ -330,6 +330,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
                 bundlePtr++; // Get past the size value...
                 while((*bundlePtr) != -1){
                     activateSeries(task, *bundlePtr);
+                    bundlePtr++;
                 }
                 activateBundle(numSeries, task, setToDelete);
             }
@@ -347,8 +348,11 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
-        putTask(task);
-        putTask(newTask);
+        if(newTask->setDeleteIndex < 5) {
+            devicePrintStrNum("NewTask SDI", newTask->setDeleteIndex);
+            putTask(task);
+            putTask(newTask);
+        }
     }
 }
 
