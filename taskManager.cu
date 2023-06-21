@@ -74,8 +74,10 @@ __device__ Task* copyTask(Task* task){
         return nullptr;
     }
     size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
-    // TODO use deadTaskQueue
-    Task* newTask = createTask();
+    Task* newTask = getTask(deadTaskQueue);
+    if(newTask == nullptr) {
+        newTask = createTask();
+    }
 
     memcpy(newTask, task, sizeof(Task) - (2 * sizeof(size_t*)));
     memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * disabledSetsSize);
@@ -91,8 +93,15 @@ __device__ Task* copyTask(Task* task){
  * Renamed to killTask because when it's killed, it goes into the dead task queue ("dead". "kill".)
  */
 __device__ void killTask(Task* task){
-    // TODO use deadTaskQueue
-    destructTask(task);
+    size_t queueFullness = deadTaskQueue.writeIdx - deadTaskQueue.readIdx;
+    if(queueFullness > 8000){
+        // Too many dead tasks, just really truly kill this one
+        destructTask(task);
+    }
+    else{
+        // Kill this one for resurrection later.
+        putTask(deadTaskQueue, task);
+    }
 }
 
 __host__ void initTaskQueue(const size_t* host_freeBundles,
