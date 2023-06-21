@@ -1,10 +1,13 @@
 #include "task.cu"
 #include <thrust/sort.h>
-#define LIVE_QUEUE_SIZE (1 << 24)
+#define LIVE_QUEUE_SIZE 24
 
 typedef struct {
     Task** queue;
 
+    // The length of the queue is 2 to the power of size
+    // so if size is 24, then the length of the queue is (1 << 24)
+    std::uint8_t size;
     size_t readIdx;
     size_t writeIdx;
 } TaskQueue;
@@ -27,7 +30,7 @@ __device__ Task* getTask(TaskQueue &tasks){
             return nullptr;
         }
 
-        size_t queueIdx = expectedReadIdx % LIVE_QUEUE_SIZE;
+        size_t queueIdx = expectedReadIdx % (1 << tasks.size);
         Task* ret = tasks.queue[queueIdx];
         if(ret == nullptr){
             // putTask is in the process of putting the task in.
@@ -56,7 +59,7 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
         return;
     }
     size_t putIdx = atomicAdd(&(tasks.writeIdx), 1);
-    size_t queueIdx = putIdx % LIVE_QUEUE_SIZE;
+    size_t queueIdx = putIdx % (1 << tasks.size);
     tasks.queue[queueIdx] = task;
 }
 
@@ -198,7 +201,8 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     convertArrToCuda(firstTask, 1);
     host_liveTaskQueue.queue[0] = firstTask;
 
-    convertArrToCuda(host_liveTaskQueue.queue, LIVE_QUEUE_SIZE);
+    convertArrToCuda(host_liveTaskQueue.queue, (1 << LIVE_QUEUE_SIZE));
+    host_liveTaskQueue.size = LIVE_QUEUE_SIZE;
     host_liveTaskQueue.readIdx = 0;
     host_liveTaskQueue.writeIdx = 1;
     cudaMemcpyToSymbol(liveTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));
