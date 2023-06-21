@@ -21,6 +21,9 @@ __device__ size_t activateBundleCheckpoint = 0;
 __device__ size_t deleteSetCheckpoint = 0;
 __device__ size_t finishLoopCheckpoint = 0;
 
+__device__ size_t tasksCreated = 0;
+__device__ size_t tasksRezzed = 0;
+
 // The actual computation functions and whatnot.
 
 __device__ size_t* initProfiling(){
@@ -65,6 +68,17 @@ __device__ void checkpoint(size_t *clocks, int clockNum, size_t* saveTo) {
 #endif
 }
 
+/**
+ * Increments a certain value, if the profiler is running.
+ * This is helpful for saying how many times certain things happened
+ * but this is also a profiler thing so it self-disables when you stop profiling
+ */
+__device__ void profileIncrement(size_t* saveTo){
+#if PROFILE
+    atomicAdd(saveTo, 1);
+#endif
+}
+
 __host__ std::string padStr(const std::string& str){
 #if PROFILE
     int missingLength = PROFILING_STR_WIDTH - str.length();
@@ -77,11 +91,13 @@ __host__ std::string padStr(const std::string& str){
 #endif
 }
 
-__host__ void printProfilingStrNum(const std::string& str, size_t &deviceSymbol, const size_t totalThreads){
+__host__ void printProfilingStrNum(const std::string& str, size_t &deviceSymbol, const size_t totalThreads = 0){
 #if PROFILE
     size_t num;
     cudaMemcpyFromSymbol(&num, deviceSymbol, sizeof(size_t));
-    num /= totalThreads;
+    if(totalThreads != 0) {
+        num /= totalThreads;
+    }
     std::cout << padStr(str) << std::to_string(num) << std::endl;
 #endif
 }
@@ -100,6 +116,10 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used deleting the bundle's series: ", activateBundleCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used finishing deleteSet: ", deleteSetCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used postprocessing: ", finishLoopCheckpoint, totalThreads);
+    std::cout << "\n";
+    printProfilingStrNum("Number of tasks created: ", tasksCreated);
+    printProfilingStrNum("Number of tasks resurrected: ", tasksRezzed);
+
     std::cout << std::endl;
 #endif
 }

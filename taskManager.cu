@@ -77,6 +77,10 @@ __device__ Task* copyTask(Task* task){
     Task* newTask = getTask(deadTaskQueue);
     if(newTask == nullptr) {
         newTask = createTask();
+        profileIncrement(&tasksCreated);
+    }
+    else{
+        profileIncrement(&tasksRezzed);
     }
 
     memcpy(newTask, task, sizeof(Task) - (2 * sizeof(size_t*)));
