@@ -23,6 +23,8 @@ __device__ void destructTask(Task* task){
     delete[] task->bundlesUsed;
 
     delete task;
+
+    profileIncrement(&tasksDestructed);
 }
 
 // Moved to here since it's needed in both Main and TaskQueue

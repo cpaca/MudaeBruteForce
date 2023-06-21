@@ -23,6 +23,7 @@ __device__ size_t finishLoopCheckpoint = 0;
 
 __device__ size_t tasksCreated = 0;
 __device__ size_t tasksRezzed = 0;
+__device__ size_t tasksDestructed = 0;
 
 // The actual computation functions and whatnot.
 
@@ -119,6 +120,7 @@ __host__ void printProfilingData(){
     std::cout << "\n";
     printProfilingStrNum("Number of tasks created: ", tasksCreated);
     printProfilingStrNum("Number of tasks resurrected: ", tasksRezzed);
+    printProfilingStrNum("Number of tasks destructed: ", tasksRezzed);
     std::cout << "\n";
 
     TaskQueue host_deadTaskQueue;
