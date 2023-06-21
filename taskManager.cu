@@ -17,18 +17,18 @@ __device__ TaskQueue liveTaskQueue;
  * If there are no tasks available, returns nullptr.
  * @return
  */
-__device__ Task* getTask(){
+__device__ Task* getTask(TaskQueue &tasks){
     size_t offset = (threadIdx.x % 32) + 1;
     while(true){
         offset = min(offset, offset-1);
 
-        size_t expectedReadIdx = liveTaskQueue.readIdx + offset;
-        if(expectedReadIdx >= liveTaskQueue.writeIdx){
+        size_t expectedReadIdx = tasks.readIdx + offset;
+        if(expectedReadIdx >= tasks.writeIdx){
             return nullptr;
         }
 
         size_t queueIdx = expectedReadIdx % QUEUE_SIZE;
-        Task* ret = liveTaskQueue.queue[queueIdx];
+        Task* ret = tasks.queue[queueIdx];
         if(ret == nullptr){
             // putTask is in the process of putting the task in.
             // So pick it up next time.
@@ -36,12 +36,12 @@ __device__ Task* getTask(){
         }
 
         // Otherwise, attempt to get the read idx...
-        size_t atomicReadIdx = atomicCAS(&(liveTaskQueue.readIdx), expectedReadIdx, expectedReadIdx+1);
+        size_t atomicReadIdx = atomicCAS(&(tasks.readIdx), expectedReadIdx, expectedReadIdx+1);
         if(atomicReadIdx != expectedReadIdx){
             // Some other thread got the expectedReadIdx task, so we can't.
             continue;
         }
-        liveTaskQueue.queue[queueIdx] = nullptr;
+        tasks.queue[queueIdx] = nullptr;
         return ret;
     }
 }
@@ -51,13 +51,13 @@ __device__ Task* getTask(){
  * WARNING: USING OR TOUCHING THE TASK AFTER CALLING PUTTASK() IS **UNDEFINED BEHAVIOR**
  * (Because getTask could do something with it in another thread)
  */
-__device__ void putTask(Task* task){
+__device__ void putTask(TaskQueue &tasks, Task* task){
     if(task == nullptr){
         return;
     }
-    size_t putIdx = atomicAdd(&(liveTaskQueue.writeIdx), 1);
+    size_t putIdx = atomicAdd(&(tasks.writeIdx), 1);
     size_t queueIdx = putIdx % QUEUE_SIZE;
-    liveTaskQueue.queue[queueIdx] = task;
+    tasks.queue[queueIdx] = task;
 }
 
 __host__ void initTaskQueue(const size_t* host_freeBundles,

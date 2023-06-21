@@ -282,7 +282,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             break;
         }
         startClock(clocks, 0);
-        Task* task = getTask();
+        Task* task = getTask(liveTaskQueue);
         checkpoint(clocks, 0, &getTaskCheckpoint);
         if(task == nullptr){
             continue;
@@ -344,8 +344,8 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
-        putTask(task);
-        putTask(newTask);
+        putTask(liveTaskQueue, task);
+        putTask(liveTaskQueue, newTask);
         checkpoint(clocks, 0, &finishLoopCheckpoint);
     }
     destructProfiling(clocks);
