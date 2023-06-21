@@ -29,7 +29,9 @@ __device__ size_t* initProfiling(){
 
     auto* clocks = new size_t[NUM_CLOCKS];
     for(size_t i = 0; i < NUM_CLOCKS; i++){
-        clocks[i] = -1;
+        // effectively -1
+        // but way easier to detect (or ignore?) problems with
+        clocks[i] = ~0;
     }
     return clocks;
 #endif
@@ -51,7 +53,12 @@ __device__ void checkpoint(size_t *clocks, int clockNum, size_t* saveTo) {
 #if PROFILE
     size_t endTime = clock();
     size_t deltaTime = endTime - clocks[clockNum];
-    atomicAdd(saveTo, deltaTime);
+    // was getting some errors with profiling giving VERY wrong numbers
+    // and it turns out doing this fixes it!
+    // Note: 2.5 seconds of computation is less than 10B, so >2Trillion is a really shitty step taking a very long time
+    if(deltaTime < 2000000000000L){
+        atomicAdd(saveTo, deltaTime);
+    }
     // don't reset the clock with clock64()
     // because atomicAdd can take a very, very long time in bad cases
     clocks[clockNum] = clock();
