@@ -5,7 +5,7 @@
 // and you can treat all of the functions in this file like they are empty.
 // However, the function signatures are not removed so that you don't have to comment out the functions
 // on other files.
-#define PROFILE false
+#define PROFILE true
 
 // Checkpoints and variables.
 
@@ -118,6 +118,7 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used finishing deleteSet: ", deleteSetCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used postprocessing: ", finishLoopCheckpoint, totalThreads);
     std::cout << "\n";
+    std::cout << "Note that the below number does not account for the very first task, the one created by host";
     printProfilingStrNum("Number of tasks created: ", tasksCreated);
     printProfilingStrNum("Number of tasks resurrected: ", tasksRezzed);
     printProfilingStrNum("Number of tasks destructed: ", tasksDestructed);
@@ -127,6 +128,11 @@ __host__ void printProfilingData(){
     cudaMemcpyFromSymbol(&host_deadTaskQueue, deadTaskQueue, sizeof(TaskQueue));
     std::cout << "Dead queue fullness: " << std::to_string(host_deadTaskQueue.writeIdx - host_deadTaskQueue.readIdx) << "\n";
     std::cout << "Dead queue writeIdx: " << std::to_string(host_deadTaskQueue.writeIdx) << "\n";
+
+    TaskQueue host_liveTaskQueue;
+    cudaMemcpyFromSymbol(&host_liveTaskQueue, liveTaskQueue, sizeof(TaskQueue));
+    std::cout << "Live queue fullness: " << std::to_string(host_liveTaskQueue.writeIdx - host_liveTaskQueue.readIdx) << "\n";
+    std::cout << "Live queue writeIdx: " << std::to_string(host_liveTaskQueue.writeIdx) << "\n";
 
 
     std::cout << std::endl;
