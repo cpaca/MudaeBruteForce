@@ -225,7 +225,7 @@ __device__ void printDL(Task* task) {
         deviceStrCat(betterStr, num);
 
         deviceStrCat(betterStr, "\nWriteIdx: ");
-        deviceItos(num, writeIdx);
+        deviceItos(num, liveTaskQueue.writeIdx);
         deviceStrCat(betterStr, num);
 
         deviceStrCat(betterStr, "\n\n");
@@ -275,7 +275,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     size_t* clocks = initProfiling();
     while(true){
         // Use this so the program stops and you can profile shit
-        if(writeIdx > (1 << 18)){
+        if(liveTaskQueue.writeIdx > (1 << 18)){
             break;
         }
         startClock(clocks, 0);
