@@ -1,6 +1,7 @@
 #include "task.cu"
 #include <thrust/sort.h>
 #define LIVE_QUEUE_SIZE 24
+#define DEAD_QUEUE_SIZE 12
 
 typedef struct {
     Task** queue;
@@ -14,6 +15,7 @@ typedef struct {
 
 // Queue for live tasks
 __device__ TaskQueue liveTaskQueue;
+__device__ TaskQueue deadTaskQueue;
 
 /**
  * Gets a task from the task queue.
@@ -103,8 +105,8 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
 
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
     TaskQueue host_liveTaskQueue;
-    host_liveTaskQueue.queue = new Task*[LIVE_QUEUE_SIZE];
-    for(size_t i = 0; i < LIVE_QUEUE_SIZE; i++){
+    host_liveTaskQueue.queue = new Task*[1 << LIVE_QUEUE_SIZE];
+    for(size_t i = 0; i < (1 << LIVE_QUEUE_SIZE); i++){
         // this should be done by default anyway, but this is safer
         host_liveTaskQueue.queue[i] = nullptr;
     }
@@ -206,6 +208,19 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     host_liveTaskQueue.readIdx = 0;
     host_liveTaskQueue.writeIdx = 1;
     cudaMemcpyToSymbol(liveTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));
+
+    TaskQueue host_deadTaskQueue;
+    host_deadTaskQueue.queue = new Task*[1 << DEAD_QUEUE_SIZE];
+    for(size_t i = 0; i < (1 << DEAD_QUEUE_SIZE); i++){
+        // this should be done by default anyway, but this is safer
+        host_deadTaskQueue.queue[i] = nullptr;
+    }
+    convertArrToCuda(host_deadTaskQueue.queue, (1 << DEAD_QUEUE_SIZE));
+    host_deadTaskQueue.size = DEAD_QUEUE_SIZE;
+    host_deadTaskQueue.readIdx = 0;
+    host_deadTaskQueue.writeIdx = 0;
+    cudaMemcpyToSymbol(deadTaskQueue, &host_deadTaskQueue, sizeof(TaskQueue));
+
     // Clean up memory
     // Looks like this is the only one which doesn't get sent to CUDA.
     delete[] freeBundlePtrs;
