@@ -32,16 +32,13 @@ __device__ Task* copyTask(Task* task){
     }
     size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
     Task* newTask = new Task;
+    memcpy(newTask, task, sizeof(Task));
+
     newTask->disabledSets = new size_t[disabledSetsSize];
     newTask->disabledSetsIndex = task->disabledSetsIndex;
     for(size_t i = 0; i < newTask->disabledSetsIndex; i++){
         newTask->disabledSets[i] = task->disabledSets[i];
     }
-
-    newTask->setDeleteIndex = task->setDeleteIndex;
-    newTask->score = task->score;
-    newTask->remainingOverlap = task->remainingOverlap;
-    newTask->DLSlotsRemn = task->DLSlotsRemn;
 
     newTask->bundlesUsed = new size_t[setBundlesSetSize];
     for(size_t i = 0; i < setBundlesSetSize; i++){
@@ -58,6 +55,7 @@ __device__ Task* copyTask(Task* task){
  */
 __device__ void deleteTask(Task* task){
     delete[] task->disabledSets;
+    delete[] task->bundlesUsed;
 
     delete task;
 }
