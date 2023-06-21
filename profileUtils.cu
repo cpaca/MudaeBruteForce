@@ -13,6 +13,7 @@ __device__ size_t numThreads = 0;
 
 __device__ size_t getTaskCheckpoint = 0;
 __device__ size_t validTaskCheckpoint = 0;
+__device__ size_t copyTaskCheckpoint = 0;
 __device__ size_t makeNewTaskCheckpoint = 0;
 __device__ size_t fullTaskCheckpoint = 0;
 __device__ size_t bundlePtrCheckpoint = 0;
@@ -85,7 +86,8 @@ __host__ void printProfilingData(){
     std::cout << "Threads counted: " << std::to_string(totalThreads) << "\n";
     printProfilingStrNum("Avg. time used getting the task: ", getTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used validating the task: ", validTaskCheckpoint, totalThreads);
-    printProfilingStrNum("Avg. time used creating a new task: ", makeNewTaskCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used copying new task: ", copyTaskCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used initializing new task: ", makeNewTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used deleting an overfilled set: ", fullTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used getting the bundle ptr: ", bundlePtrCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used deleting the bundle's series: ", activateBundleCheckpoint, totalThreads);

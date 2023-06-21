@@ -292,6 +292,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &validTaskCheckpoint);
 
         Task* newTask = copyTask(task);
+        checkpoint(clocks, 0, &copyTaskCheckpoint);
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
