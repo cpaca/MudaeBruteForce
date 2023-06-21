@@ -210,8 +210,11 @@ __device__ void printDL(Task* task) {
     // if this was <= instead of < and the "best score" got achieved, it would spam out that best score nonstop
     if(oldBest < score){
         // Copied straight from the old implementation of findBest.
-        char betterStr[1000] = "Better DL Found, score: ";
+        char* betterStr = new char[1000];
+        betterStr[0] = '\0';
         char* num = new char[10];
+
+        deviceStrCat(betterStr, "Better DL Found, score: ");
         deviceItos(num, score);
         deviceStrCat(betterStr, num);
         deviceStrCat(betterStr, ", series used, ");
@@ -240,6 +243,7 @@ __device__ void printDL(Task* task) {
             __nanosleep(10000000);
         }
         delete[] num;
+        delete[] betterStr;
     }
 }
 
