@@ -1,6 +1,6 @@
 #include "task.cu"
 #include <thrust/sort.h>
-#define QUEUE_SIZE (1 << 24)
+#define LIVE_QUEUE_SIZE (1 << 24)
 
 typedef struct {
     Task** queue;
@@ -27,7 +27,7 @@ __device__ Task* getTask(TaskQueue &tasks){
             return nullptr;
         }
 
-        size_t queueIdx = expectedReadIdx % QUEUE_SIZE;
+        size_t queueIdx = expectedReadIdx % LIVE_QUEUE_SIZE;
         Task* ret = tasks.queue[queueIdx];
         if(ret == nullptr){
             // putTask is in the process of putting the task in.
@@ -56,7 +56,7 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
         return;
     }
     size_t putIdx = atomicAdd(&(tasks.writeIdx), 1);
-    size_t queueIdx = putIdx % QUEUE_SIZE;
+    size_t queueIdx = putIdx % LIVE_QUEUE_SIZE;
     tasks.queue[queueIdx] = task;
 }
 
@@ -70,8 +70,8 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
 
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
     TaskQueue host_liveTaskQueue;
-    host_liveTaskQueue.queue = new Task*[QUEUE_SIZE];
-    for(size_t i = 0; i < QUEUE_SIZE; i++){
+    host_liveTaskQueue.queue = new Task*[LIVE_QUEUE_SIZE];
+    for(size_t i = 0; i < LIVE_QUEUE_SIZE; i++){
         // this should be done by default anyway, but this is safer
         host_liveTaskQueue.queue[i] = nullptr;
     }
@@ -168,7 +168,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     convertArrToCuda(firstTask, 1);
     host_liveTaskQueue.queue[0] = firstTask;
 
-    convertArrToCuda(host_liveTaskQueue.queue, QUEUE_SIZE);
+    convertArrToCuda(host_liveTaskQueue.queue, LIVE_QUEUE_SIZE);
     host_liveTaskQueue.readIdx = 0;
     host_liveTaskQueue.writeIdx = 1;
     cudaMemcpyToSymbol(liveTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));
