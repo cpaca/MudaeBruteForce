@@ -49,6 +49,10 @@ extern __shared__ setSize_t setSizes[];
 // The order to delete each set in.
 __constant__ size_t* setDeleteOrder = nullptr;
 
+// Queues
+__device__ TaskQueue liveTaskQueue;
+__device__ TaskQueue deadTaskQueue;
+
 // Turns out if I do this and #include this file, it works fine.
 // Maximum number of bundles/series that can be activated.
 const std::uint32_t MAX_DL = 50;

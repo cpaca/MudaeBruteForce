@@ -1,28 +1,5 @@
 #ifndef MUDAEBRUTEFORCE_TASK
 #define MUDAEBRUTEFORCE_TASK
-typedef struct {
-    // Next index in the setDeleteOrder to attempt deleting
-    size_t setDeleteIndex;
-
-    // What the score was the last time it was calculated for this Task
-    size_t score;
-
-    // How much OVERLAP_LIMIT is remaining in this Task
-    size_t remainingOverlap;
-
-    // How many series/bundles (aka sets) can still be disabled din this Task
-    size_t DLSlotsRemn;
-
-    // List of disabled sets
-    // disabledSets[0] to disabledSets[index-1] are defined
-    // and disabledSets[index] onwards are undefined
-    size_t disabledSetsIndex;
-    // disabledSets is at the end so that all of the pointers can be together at the end
-    size_t* disabledSets;
-
-    // setBundles compatibility
-    size_t* bundlesUsed;
-} Task;
 
 /**
  * Creates a blank task.

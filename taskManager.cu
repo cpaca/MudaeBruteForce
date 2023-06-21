@@ -3,20 +3,6 @@
 #define LIVE_QUEUE_SIZE 24
 #define DEAD_QUEUE_SIZE 15
 
-typedef struct {
-    Task** queue;
-
-    // The length of the queue is 2 to the power of size
-    // so if size is 24, then the length of the queue is (1 << 24)
-    std::uint8_t size;
-    size_t readIdx;
-    size_t writeIdx;
-} TaskQueue;
-
-// Queue for live tasks
-__device__ TaskQueue liveTaskQueue;
-__device__ TaskQueue deadTaskQueue;
-
 /**
  * Gets a task from the task queue.
  * If there are no tasks available, returns nullptr.
