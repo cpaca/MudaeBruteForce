@@ -501,21 +501,33 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
-    cudaDeviceSynchronize();
+    cudaError_t syncError = cudaDeviceSynchronize();
 
     clock_t endTime = clock();
     printProfilingData();
     std::cout << "Time taken (seconds): " << std::to_string((endTime - startTime)/(double)CLOCKS_PER_SEC) << "\n";
 
+    if (syncError != cudaSuccess) {
+        std::cout << "cudaDeviceSync   invoked a CUDA error" << std::endl;
+        const char *errName = cudaGetErrorName(syncError);
+        printf("%s\n", errName);
+        const char *errStr = cudaGetErrorString(syncError);
+        printf("%s\n", errStr);
+    }
+    else{
+        std::cout << "cudaDeviceSync   did not invoke a CUDA error" << std::endl;
+    }
+
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {
+        std::cout << "cudaGetLastError found a CUDA error" << std::endl;
         const char *errName = cudaGetErrorName(lasterror);
         printf("%s\n", errName);
         const char *errStr = cudaGetErrorString(lasterror);
         printf("%s\n", errStr);
     }
     else{
-        printf("No CUDA errors.\n");
+        std::cout << "cudaGetLastError did not find a CUDA error" << std::endl;
     }
 
     printf("FindBest finished\n");

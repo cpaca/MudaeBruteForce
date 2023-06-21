@@ -5,7 +5,7 @@
 // and you can treat all of the functions in this file like they are empty.
 // However, the function signatures are not removed so that you don't have to comment out the functions
 // on other files.
-#define PROFILE true
+#define PROFILE false
 
 // Checkpoints and variables.
 
