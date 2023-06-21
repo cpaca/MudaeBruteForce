@@ -60,6 +60,39 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
     tasks.queue[queueIdx] = task;
 }
 
+/**
+ * Returns a new Task that is identical to the given Task
+ * Basically, a copy constructor.
+ */
+__device__ Task* copyTask(Task* task){
+    if(task == nullptr){
+        return nullptr;
+    }
+    size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
+    Task* newTask = new Task;
+    memcpy(newTask, task, sizeof(Task));
+
+    newTask->disabledSets = new size_t[disabledSetsSize];
+    memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * disabledSetsSize);
+
+    newTask->bundlesUsed = new size_t[setBundlesSetSize];
+    memcpy(newTask->bundlesUsed, task->bundlesUsed, sizeof(size_t) * setBundlesSetSize);
+
+    return newTask;
+}
+
+/**
+ * Deletes a task.
+ * Treat this like you would a destructor; if you call this then DON'T TOUCH THE TASK FOR ANY REASON
+ * Unless you want a segfault.
+ */
+__device__ void deleteTask(Task* task){
+    delete[] task->disabledSets;
+    delete[] task->bundlesUsed;
+
+    delete task;
+}
+
 __host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t** host_bundleData,
                             size_t** host_seriesData,
