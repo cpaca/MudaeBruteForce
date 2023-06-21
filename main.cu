@@ -235,6 +235,9 @@ __device__ void printDL(Task* task) {
         // from another thread
         if(secondCheck <= score) {
             printf("%s", betterStr);
+            // sleep for 10 ms to MAKE SURE the output works
+            // had a weird bug where sometimes it wouldnt output
+            __nanosleep(10000000);
         }
         delete[] num;
     }
