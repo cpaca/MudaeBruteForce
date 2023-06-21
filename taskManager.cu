@@ -1,7 +1,7 @@
 #include "task.cu"
 #include <thrust/sort.h>
 #define LIVE_QUEUE_SIZE 24
-#define DEAD_QUEUE_SIZE 12
+#define DEAD_QUEUE_SIZE 15
 
 typedef struct {
     Task** queue;
@@ -98,7 +98,7 @@ __device__ Task* copyTask(Task* task){
  */
 __device__ void killTask(Task* task){
     size_t queueFullness = deadTaskQueue.writeIdx - deadTaskQueue.readIdx;
-    if(queueFullness > 8000){
+    if(queueFullness >= (1 << DEAD_QUEUE_SIZE)){
         // Too many dead tasks, just really truly kill this one
         destructTask(task);
     }
