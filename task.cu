@@ -35,15 +35,10 @@ __device__ Task* copyTask(Task* task){
     memcpy(newTask, task, sizeof(Task));
 
     newTask->disabledSets = new size_t[disabledSetsSize];
-    newTask->disabledSetsIndex = task->disabledSetsIndex;
-    for(size_t i = 0; i < newTask->disabledSetsIndex; i++){
-        newTask->disabledSets[i] = task->disabledSets[i];
-    }
+    memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * disabledSetsSize);
 
     newTask->bundlesUsed = new size_t[setBundlesSetSize];
-    for(size_t i = 0; i < setBundlesSetSize; i++){
-        newTask->bundlesUsed[i] = task->bundlesUsed[i];
-    }
+    memcpy(newTask->bundlesUsed, task->bundlesUsed, sizeof(size_t) * setBundlesSetSize);
 
     return newTask;
 }
