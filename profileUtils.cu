@@ -120,7 +120,7 @@ __host__ void printProfilingData(){
     std::cout << "\n";
     printProfilingStrNum("Number of tasks created: ", tasksCreated);
     printProfilingStrNum("Number of tasks resurrected: ", tasksRezzed);
-    printProfilingStrNum("Number of tasks destructed: ", tasksDestructed );
+    printProfilingStrNum("Number of tasks destructed: ", tasksDestructed);
     std::cout << "\n";
 
     TaskQueue host_deadTaskQueue;
