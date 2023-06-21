@@ -7,7 +7,7 @@
 #include "randUtils.cu"
 #include "types.cu"
 #include "profileUtils.cu"
-#include "taskQueue.cu"
+#include "taskManager.cu"
 #include "task.cu"
 
 bool bundleContainsSet(size_t setNum,
