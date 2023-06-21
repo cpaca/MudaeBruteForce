@@ -1,11 +1,6 @@
 #ifndef MUDAEBRUTEFORCE_TASK
 #define MUDAEBRUTEFORCE_TASK
 typedef struct {
-    size_t* disabledSets; // List of disabled sets
-    // disabledSets[0] to disabledSets[index-1] are defined
-    // and disabledSets[index] onwards are undefined
-    size_t disabledSetsIndex;
-
     // Next index in the setDeleteOrder to attempt deleting
     size_t setDeleteIndex;
 
@@ -18,9 +13,40 @@ typedef struct {
     // How many series/bundles (aka sets) can still be disabled din this Task
     size_t DLSlotsRemn;
 
+    // List of disabled sets
+    // disabledSets[0] to disabledSets[index-1] are defined
+    // and disabledSets[index] onwards are undefined
+    size_t disabledSetsIndex;
+    // disabledSets is at the end so that all of the pointers can be together at the end
+    size_t* disabledSets;
+
     // setBundles compatibility
     size_t* bundlesUsed;
 } Task;
+
+/**
+ * Creates a blank task.
+ * The contents of the task are unspecified
+ */
+__device__ Task* createTask(){
+    size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
+
+    Task* ret = new Task;
+    ret->disabledSets = new size_t[disabledSetsSize];
+    ret->bundlesUsed = new size_t[setBundlesSetSize];
+
+    return ret;
+}
+
+/**
+ * Destructs task. WILL cause a segfault if you use the pointer after destruction.
+ */
+__device__ void destructTask(Task* task){
+    delete[] task->disabledSets;
+    delete[] task->bundlesUsed;
+
+    delete task;
+}
 
 // Moved to here since it's needed in both Main and TaskQueue
 // Moved it here instead of its own file because I couldn't think of a good filename.

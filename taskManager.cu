@@ -69,13 +69,11 @@ __device__ Task* copyTask(Task* task){
         return nullptr;
     }
     size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
-    Task* newTask = new Task;
-    memcpy(newTask, task, sizeof(Task));
+    // TODO use deadTaskQueue
+    Task* newTask = createTask();
 
-    newTask->disabledSets = new size_t[disabledSetsSize];
+    memcpy(newTask, task, sizeof(Task) - (2 * sizeof(size_t*)));
     memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * disabledSetsSize);
-
-    newTask->bundlesUsed = new size_t[setBundlesSetSize];
     memcpy(newTask->bundlesUsed, task->bundlesUsed, sizeof(size_t) * setBundlesSetSize);
 
     return newTask;
@@ -85,12 +83,11 @@ __device__ Task* copyTask(Task* task){
  * Deletes a task.
  * Treat this like you would a destructor; if you call this then DON'T TOUCH THE TASK FOR ANY REASON
  * Unless you want a segfault.
+ * Renamed to killTask because when it's killed, it goes into the dead task queue ("dead". "kill".)
  */
-__device__ void deleteTask(Task* task){
-    delete[] task->disabledSets;
-    delete[] task->bundlesUsed;
-
-    delete task;
+__device__ void killTask(Task* task){
+    // TODO use deadTaskQueue
+    destructTask(task);
 }
 
 __host__ void initTaskQueue(const size_t* host_freeBundles,
