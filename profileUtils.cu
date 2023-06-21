@@ -118,7 +118,7 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used finishing deleteSet: ", deleteSetCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used postprocessing: ", finishLoopCheckpoint, totalThreads);
     std::cout << "\n";
-    std::cout << "Note that the below number does not account for the very first task, the one created by host";
+    std::cout << "Note that the below number does not account for the very first task, the one created by host\n";
     printProfilingStrNum("Number of tasks created: ", tasksCreated);
     printProfilingStrNum("Number of tasks resurrected: ", tasksRezzed);
     printProfilingStrNum("Number of tasks destructed: ", tasksDestructed);
