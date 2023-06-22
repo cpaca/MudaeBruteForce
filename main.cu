@@ -10,6 +10,7 @@
 #include "profileUtils.cu"
 #include "taskManager.cu"
 #include "task.cu"
+#include "killUtils.cu"
 
 bool bundleContainsSet(size_t setNum,
                        size_t bundleNum,
@@ -278,15 +279,6 @@ __device__ void activateSeries(Task* task, size_t seriesNum){
     task->score += seriesValue;
 }
 
-__device__ bool isEfficient(const size_t &scoreGained, const size_t &overlapUsed){
-     // Current decision:
-     // A bundle needs an efficiency of at least 20% to be efficient.
-     // That means (score gained) > (20% * overlapUsed)
-     // Or (score gained) > (overlapUsed / 5)
-     size_t scoreReq = overlapUsed/5;
-     return scoreGained > scoreReq;
-}
-
 __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     // size_t numSets = numBundles + numSeries;
     size_t* clocks = initProfiling();
@@ -345,15 +337,8 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &deleteSetCheckpoint);
 
         if(task != nullptr){
-            if(task->score == newTask->score) { // NOLINT(bugprone-branch-clone)
-                // Performing this Task didn't add any value...
-                // So we shouldn't continue it
-                killTask(task);
-                task = nullptr;
-            }
-            else if (!isEfficient(task->score - newTask->score, newTask->remainingOverlap - task->remainingOverlap)){
-                // Is NOT efficient
-                // Kill!
+            if(shouldKill(newTask, task)){
+                // We should kill this task, so we will.
                 killTask(task);
                 task = nullptr;
             }
