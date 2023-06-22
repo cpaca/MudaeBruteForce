@@ -48,6 +48,9 @@ extern __shared__ setSize_t setSizes[];
 
 // The order to delete each set in.
 __constant__ size_t* setDeleteOrder = nullptr;
+size_t* host_setDeleteOrder;
+__constant__ size_t expectedSetDeleteIndex = 0;
+__constant__ size_t expectedSetToDelete = 0;
 
 // Queues
 __device__ TaskQueue inTaskQueue;

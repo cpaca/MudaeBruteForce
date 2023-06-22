@@ -310,6 +310,12 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         task->disabledSetsIndex++;
         task->DLSlotsRemn--;
 
+        // This is the only way to get it to shut up about assert being a host function.
+#ifdef __CUDA_ARCH__
+        assert(task->setDeleteIndex == expectedSetDeleteIndex);
+        assert(setToDelete == expectedSetToDelete);
+#endif
+
         size_t setSize = getSetSize(numSeries, setToDelete);
         checkpoint(clocks, 0, &makeNewTaskCheckpoint);
         if(setSize > task->remainingOverlap){
@@ -519,7 +525,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError;
-    for(size_t i = 0; i < 10; i++) {
+    for(size_t i = 0; i < 22; i++) {
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();
         if(syncError != cudaSuccess){

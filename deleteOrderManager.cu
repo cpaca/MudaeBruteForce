@@ -36,7 +36,7 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
     size_t numSets = numSeries + numBundles;
     // since I can assign a "value" to each set, it's easier to use that to compare
     // than define a compare() function
-    auto* host_setDeleteOrder = new size_t[numSets];
+    host_setDeleteOrder = new size_t[numSets];
     auto* host_setDeleteValue = new size_t[numSets];
     // Score gained from deleting a set.
     // Accounts for freeBundles, but is otherwise naive.
@@ -126,9 +126,12 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
                         host_setDeleteOrder,
                         thrust::greater<size_t>());
     // Convert to CUDA form...
-    convertArrToCuda(host_setDeleteOrder, numSets);
+    auto* dev_setDeleteOrder = new size_t[numSets];
+    memcpy(dev_setDeleteOrder, host_setDeleteOrder, sizeof(size_t) * numSets);
+    convertArrToCuda(dev_setDeleteOrder, numSets);
     // And take it to CUDA
-    cudaMemcpyToSymbol(setDeleteOrder, &host_setDeleteOrder, sizeof(host_setDeleteOrder));
+    cudaMemcpyToSymbol(setDeleteOrder, &dev_setDeleteOrder, sizeof(dev_setDeleteOrder));
+    cudaMemcpyToSymbol(expectedSetToDelete, &host_setDeleteOrder[0], sizeof(size_t));
 }
 
 // TODO solve the 0-1 knapsack problem
