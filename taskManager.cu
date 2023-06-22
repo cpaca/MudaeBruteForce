@@ -69,7 +69,9 @@ __device__ Task* copyTask(Task* task){
     }
 
     memcpy(newTask, task, sizeof(Task) - (2 * sizeof(size_t*)));
-    memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * DISABLED_SETS_SIZE);
+    // Absolutely GENIUS optimization
+    // We don't care about anything from disabledSetsIndex onward so we don't have to copy it
+    memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * task->disabledSetsIndex);
     memcpy(newTask->bundlesUsed, task->bundlesUsed, sizeof(size_t) * setBundlesSetSize);
 
     return newTask;
