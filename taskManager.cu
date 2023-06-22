@@ -128,11 +128,8 @@ __host__ void reloadTaskQueue(){
     cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
     // Update the expected setDeleteIndex
-    size_t host_expectedSetDeleteIndex;
-    cudaMemcpyFromSymbol(&host_expectedSetDeleteIndex, expectedSetDeleteIndex, sizeof(size_t));
-    host_expectedSetDeleteIndex++;
-    cudaMemcpyToSymbol(expectedSetDeleteIndex, &host_expectedSetDeleteIndex, sizeof(size_t));
-    size_t host_expectedSetToDelete = host_setDeleteOrder[host_expectedSetDeleteIndex];
+    setDeleteIndex++;
+    size_t host_expectedSetToDelete = host_setDeleteOrder[setDeleteIndex];
     cudaMemcpyToSymbol(expectedSetToDelete, &host_expectedSetToDelete, sizeof(size_t));
 }
 
