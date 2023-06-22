@@ -1,7 +1,8 @@
 #ifndef MUDAEBRUTEFORCE_KNAPSACK
 #define MUDAEBRUTEFORCE_KNAPSACK
 
-__host__ void initSetDeleteOrder(size_t** host_bundleData,
+__host__ void initSetDeleteOrder(const size_t* host_freeBundles,
+                                 size_t** host_bundleData,
                                  size_t** host_seriesData,
                                  size_t numSeries,
                                  size_t numBundles){
