@@ -95,41 +95,11 @@ __device__ void killTask(Task* task){
     }
 }
 
-__host__ void initTaskQueue(const size_t* host_freeBundles,
-                            size_t** host_bundleData,
-                            size_t** host_seriesData,
-                            size_t numSeries,
-                            size_t numBundles){
+__host__ void initSetDeleteOrder(size_t** host_bundleData,
+                                   size_t** host_seriesData,
+                                   size_t numSeries,
+                                   size_t numBundles){
     size_t numSets = numSeries + numBundles;
-
-    // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
-    TaskQueue host_liveTaskQueue;
-    host_liveTaskQueue.queue = new Task*[1 << LIVE_QUEUE_SIZE];
-    for(size_t i = 0; i < (1 << LIVE_QUEUE_SIZE); i++){
-        // this should be done by default anyway, but this is safer
-        host_liveTaskQueue.queue[i] = nullptr;
-    }
-
-    // Also create a very basic task for the very first thread.
-    Task* firstTask = new Task;
-    firstTask->disabledSets = new size_t[DISABLED_SETS_SIZE];
-    firstTask->disabledSetsIndex = 0;
-    // Will need the free bundle pointers for score calculations.
-    auto** freeBundlePtrs = new size_t*[numBundles];
-    size_t numFreeBundles = 0;
-    for(size_t i = 0; i < numBundles; i++){
-        if(host_freeBundles[i] != 0){
-            // Add this free bundle to disabledSets.
-            firstTask->disabledSets[firstTask->disabledSetsIndex] = numSeries + i;
-            firstTask->disabledSetsIndex++;
-
-            // Note free bundle in pointers:
-            // And skip the size value.
-            freeBundlePtrs[numFreeBundles] = (host_bundleData[i])+1;
-            numFreeBundles++;
-        }
-    }
-
     // since I can assign a "value" to each set, it's easier to use that to compare
     // than define a compare() function
     auto* host_setDeleteOrder = new size_t[numSets];
@@ -162,6 +132,42 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     convertArrToCuda(host_setDeleteOrder, numSets);
     // And take it to CUDA
     cudaMemcpyToSymbol(setDeleteOrder, &host_setDeleteOrder, sizeof(host_setDeleteOrder));
+}
+
+__host__ void initTaskQueue(const size_t* host_freeBundles,
+                            size_t** host_bundleData,
+                            size_t** host_seriesData,
+                            size_t numSeries,
+                            size_t numBundles){
+    // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
+    TaskQueue host_liveTaskQueue;
+    host_liveTaskQueue.queue = new Task*[1 << LIVE_QUEUE_SIZE];
+    for(size_t i = 0; i < (1 << LIVE_QUEUE_SIZE); i++){
+        // this should be done by default anyway, but this is safer
+        host_liveTaskQueue.queue[i] = nullptr;
+    }
+
+    // Also create a very basic task for the very first thread.
+    Task* firstTask = new Task;
+    firstTask->disabledSets = new size_t[DISABLED_SETS_SIZE];
+    firstTask->disabledSetsIndex = 0;
+    // Will need the free bundle pointers for score calculations.
+    auto** freeBundlePtrs = new size_t*[numBundles];
+    size_t numFreeBundles = 0;
+    for(size_t i = 0; i < numBundles; i++){
+        if(host_freeBundles[i] != 0){
+            // Add this free bundle to disabledSets.
+            firstTask->disabledSets[firstTask->disabledSetsIndex] = numSeries + i;
+            firstTask->disabledSetsIndex++;
+
+            // Note free bundle in pointers:
+            // And skip the size value.
+            freeBundlePtrs[numFreeBundles] = (host_bundleData[i])+1;
+            numFreeBundles++;
+        }
+    }
+
+    initSetDeleteOrder(host_bundleData, host_seriesData, numSeries, numBundles);
 
     // Initialize setDeleteInformation
     firstTask->setDeleteIndex = 0;
