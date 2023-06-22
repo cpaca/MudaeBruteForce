@@ -50,7 +50,8 @@ extern __shared__ setSize_t setSizes[];
 __constant__ size_t* setDeleteOrder = nullptr;
 
 // Queues
-__device__ TaskQueue liveTaskQueue;
+__device__ TaskQueue inTaskQueue;
+__device__ TaskQueue outTaskQueue;
 __device__ TaskQueue deadTaskQueue;
 
 #endif

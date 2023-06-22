@@ -231,7 +231,7 @@ __device__ void printDL(Task* task) {
         deviceStrCat(betterStr, num);
 
         deviceStrCat(betterStr, "\nWriteIdx: ");
-        deviceItos(num, liveTaskQueue.writeIdx);
+        deviceItos(num, inTaskQueue.writeIdx);
         deviceStrCat(betterStr, num);
 
         deviceStrCat(betterStr, "\n\n");
@@ -285,13 +285,13 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
     size_t* clocks = initProfiling();
     while(true){
         // Use this so the program stops and you can profile shit
-        if(liveTaskQueue.writeIdx > (1 << 18)){
-            break;
-        }
         startClock(clocks, 0);
-        Task* task = getTask(liveTaskQueue);
+        Task* task = getTask(inTaskQueue);
         checkpoint(clocks, 0, &getTaskCheckpoint);
         if(task == nullptr){
+            if(inTaskQueue.readIdx == inTaskQueue.writeIdx){
+                break;
+            }
             continue;
         }
         if(task->DLSlotsRemn <= 0){
@@ -361,8 +361,8 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
-        putTask(liveTaskQueue, task);
-        putTask(liveTaskQueue, newTask);
+        putTask(outTaskQueue, task);
+        putTask(outTaskQueue, newTask);
         checkpoint(clocks, 0, &finishLoopCheckpoint);
     }
     destructProfiling(clocks);
@@ -518,8 +518,15 @@ int main() {
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
-    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
-    cudaError_t syncError = cudaDeviceSynchronize();
+    cudaError_t syncError;
+    for(size_t i = 0; i < 10; i++) {
+        newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+        syncError = cudaDeviceSynchronize();
+        if(syncError != cudaSuccess){
+            break;
+        }
+        reloadTaskQueue();
+    }
 
     clock_t endTime = clock();
     printProfilingData();

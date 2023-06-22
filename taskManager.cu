@@ -109,6 +109,26 @@ __host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
     return ret;
 }
 
+/**
+ * Copies the outTaskQueue to the inTaskQueue
+ */
+__host__ void reloadTaskQueue(){
+    // First free the inTaskQueue
+    TaskQueue host_inTaskQueue;
+    cudaMemcpyFromSymbol(&host_inTaskQueue, inTaskQueue, sizeof(TaskQueue));
+    cudaFree(host_inTaskQueue.queue);
+
+    // Then copy the outTaskQueue to the inTaskQueue
+    TaskQueue host_outTaskQueue;
+    cudaMemcpyFromSymbol(&host_outTaskQueue, outTaskQueue, sizeof(TaskQueue));
+    cudaMemcpyToSymbol(inTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
+
+    // Then make a new outTaskQueue
+    host_outTaskQueue = makeBlankTaskQueue(LIVE_QUEUE_SIZE);
+    cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
+
+}
+
 __host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t** host_bundleData,
                             size_t** host_seriesData,
@@ -185,10 +205,13 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     host_liveTaskQueue.size = LIVE_QUEUE_SIZE;
     host_liveTaskQueue.readIdx = 0;
     host_liveTaskQueue.writeIdx = 1;
-    cudaMemcpyToSymbol(liveTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));
+    cudaMemcpyToSymbol(inTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));
 
     TaskQueue host_deadTaskQueue = makeBlankTaskQueue(DEAD_QUEUE_SIZE);
     cudaMemcpyToSymbol(deadTaskQueue, &host_deadTaskQueue, sizeof(TaskQueue));
+
+    TaskQueue host_outTaskQueue = makeBlankTaskQueue(LIVE_QUEUE_SIZE);
+    cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
     // Clean up memory
     // Looks like this is the only one which doesn't get sent to CUDA.

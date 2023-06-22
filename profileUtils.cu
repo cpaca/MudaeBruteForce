@@ -132,7 +132,7 @@ __host__ void printProfilingData(){
     std::cout << "Dead queue writeIdx: " << std::to_string(host_deadTaskQueue.writeIdx) << "\n";
 
     TaskQueue host_liveTaskQueue;
-    cudaMemcpyFromSymbol(&host_liveTaskQueue, liveTaskQueue, sizeof(TaskQueue));
+    cudaMemcpyFromSymbol(&host_liveTaskQueue, inTaskQueue, sizeof(TaskQueue));
     std::cout << "Live queue fullness: " << std::to_string(host_liveTaskQueue.writeIdx - host_liveTaskQueue.readIdx) << "\n";
     std::cout << "Live queue writeIdx: " << std::to_string(host_liveTaskQueue.writeIdx) << "\n";
 
