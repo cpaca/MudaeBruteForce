@@ -469,7 +469,7 @@ int main() {
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
     initializeGlobalSetSizes(numSeries, numBundles, seriesData, bundleData, host_freeBundles);
-    initSetDeleteOrder(bundleData, seriesData, numSeries, numBundles);
+    initSetDeleteOrder(host_freeBundles, bundleData, seriesData, numSeries, numBundles);
     initTaskQueue(host_freeBundles, bundleData, seriesData, numSeries, numBundles);
     convertArrToCuda(host_freeBundles, numBundles);
     if(host_freeBundles == nullptr){
@@ -518,7 +518,7 @@ int main() {
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
-    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+//    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaError_t syncError = cudaDeviceSynchronize();
 
     clock_t endTime = clock();

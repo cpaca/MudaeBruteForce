@@ -1,6 +1,33 @@
 #ifndef MUDAEBRUTEFORCE_KNAPSACK
 #define MUDAEBRUTEFORCE_KNAPSACK
 
+__host__ size_t** getFreeBundlePtrs(const size_t* host_freeBundles,
+                                size_t** host_bundleData,
+                                size_t numBundles,
+                                size_t &numFreeBundles,
+                                bool passSizes = false){
+    auto** ret = new size_t*[numBundles];
+    numFreeBundles = 0;
+
+    for(size_t i = 0; i < numBundles; i++){
+        if(host_freeBundles[i] != 0){
+            // This one is a free bundle.
+            ret[numFreeBundles] = host_bundleData[i];
+            numFreeBundles++;
+        }
+    }
+    ret[numFreeBundles] = nullptr;
+
+    if(passSizes){
+        // get past the sizes
+        for(size_t i = 0; i < numFreeBundles; i++){
+            ret[i]++;
+        }
+    }
+
+    return ret;
+}
+
 __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
                                  size_t** host_bundleData,
                                  size_t** host_seriesData,
@@ -11,8 +38,10 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
     // than define a compare() function
     auto* host_setDeleteOrder = new size_t[numSets];
     auto* host_setDeleteValue = new size_t[numSets];
-    for(size_t i = 0; i < numSets; i++){
-        size_t setNum = i;
+    // Score gained from deleting a set.
+    // Accounts for freeBundles, but is otherwise naive.
+    auto* host_setDeleteScore = new size_t[numSets];
+    for(size_t setNum = 0; setNum < numSets; setNum++){
         size_t setValue;
         size_t setSize;
         if(setNum < numSeries){
@@ -21,11 +50,57 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
         else{
             setSize = host_bundleData[setNum - numSeries][0];
         }
+
+        // Calculate the score gained from deleting this set.
+        size_t numFreeBundles;
+        size_t** freeBundlePtrs = getFreeBundlePtrs(host_freeBundles, host_bundleData, numBundles, numFreeBundles, true);
+        size_t setDeleteScore;
+        if(setNum < numSeries){
+            setDeleteScore = host_seriesData[setNum][1];
+            for(size_t freeBundleNum = 0; freeBundleNum < numFreeBundles; freeBundleNum++){
+                size_t* freeBundlePtr = freeBundlePtrs[freeBundleNum];
+                while(*freeBundlePtr < setNum){
+                    // Before the set in question, just ignore
+                    // note that since it's unsigned type, the -1 value will also stop this loop
+                    freeBundlePtr++;
+                }
+                if((*freeBundlePtr) == setNum){
+                    setDeleteScore = 0;
+                    // we know the score is 0 so this for loop is done
+                    break;
+                }
+            }
+        }
+        else{
+            // Is a bundle.
+            size_t bundleNum = setNum - numSeries;
+            size_t* bundlePtr = host_bundleData[bundleNum];
+            bundlePtr++;
+            setDeleteScore = 0;
+            while((*bundlePtr) != -1){
+                size_t seriesNum = *bundlePtr;
+                bool addSeriesScore = true;
+
+                for(size_t freeBundleNum = 0; freeBundleNum < numFreeBundles; freeBundleNum++){
+                    while((*freeBundlePtrs[freeBundleNum]) < seriesNum){
+                        freeBundlePtrs[freeBundleNum]++;
+                    }
+                    if((*freeBundlePtrs[freeBundleNum]) == seriesNum){
+                        addSeriesScore = false;
+                    }
+                }
+
+                // And next series.
+                bundlePtr++;
+            }
+        }
+
         // Just for now.
         setValue = setSize;
 
-        host_setDeleteOrder[i] = setNum;
-        host_setDeleteValue[i] = setValue;
+        host_setDeleteOrder[setNum] = setNum;
+        host_setDeleteValue[setNum] = setValue;
+        host_setDeleteScore[setNum] = setDeleteScore;
     }
     // From the example:
     // The first array input will be sorted
