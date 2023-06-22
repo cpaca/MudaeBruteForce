@@ -11,6 +11,7 @@
 #include "taskManager.cu"
 #include "task.cu"
 #include "killUtils.cu"
+#include "knapsack.cu"
 
 bool bundleContainsSet(size_t setNum,
                        size_t bundleNum,
@@ -468,6 +469,7 @@ int main() {
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
     initializeGlobalSetSizes(numSeries, numBundles, seriesData, bundleData, host_freeBundles);
+    initSetDeleteOrder(bundleData, seriesData, numSeries, numBundles);
     initTaskQueue(host_freeBundles, bundleData, seriesData, numSeries, numBundles);
     convertArrToCuda(host_freeBundles, numBundles);
     if(host_freeBundles == nullptr){
