@@ -9,7 +9,7 @@
 
 // Checkpoints and variables.
 
-__device__ size_t numThreads = 0;
+__device__ size_t numThreads = 40*512;
 
 __device__ size_t getTaskCheckpoint = 0;
 __device__ size_t validTaskCheckpoint = 0;
@@ -30,7 +30,7 @@ __device__ size_t tasksDestructed = 0;
 
 __device__ size_t* initProfiling(){
 #if PROFILE
-    atomicAdd(&numThreads, 1);
+//    atomicAdd(&numThreads, 1);
 
     auto* clocks = new size_t[NUM_CLOCKS];
     for(size_t i = 0; i < NUM_CLOCKS; i++){
