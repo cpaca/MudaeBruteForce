@@ -133,6 +133,8 @@ __host__ void reloadTaskQueue(){
     size_t host_expectedSetToDelete = host_setDeleteOrder[setDeleteIndex];
     cudaMemcpyToSymbol(expectedSetToDelete, &host_expectedSetToDelete, sizeof(size_t));
 
+    knapsackReload();
+
     // Print some stuff for debug reasons
     std::cout << "With a setDeleteIndex of " << std::to_string(setDeleteIndex) << ",\n";
     std::cout << "the inTaskQueue has " << std::to_string(numTasks) << " tasks" << std::endl;

@@ -8,6 +8,7 @@
 #include "randUtils.cu"
 #include "types.cu"
 #include "profileUtils.cu"
+#include "knapsack.cu"
 #include "taskManager.cu"
 #include "task.cu"
 #include "killUtils.cu"
@@ -348,6 +349,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &tryKillTaskCheckpoint);
 
         // Is the new DL good?
+        knapsackWriteTask(task);
         if(task != nullptr) {
             printDL(task);
         }
@@ -359,6 +361,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &finishLoopCheckpoint);
     }
     destructProfiling(clocks);
+
+    if(threadIdx.x == 1 && blockIdx.x == 1){
+        devicePrintStrNum("Best score in knapsack: ", knapsackReadBestScore(MAX_DL, OVERLAP_LIMIT));
+    }
 }
 
 int main() {
@@ -494,6 +500,8 @@ int main() {
         throw std::logic_error("Device series did not get overwritten properly.");
     }
     cudaMemcpyToSymbol(deviceSeries, &host_deviceSeries, sizeof(host_deviceSeries));
+
+    knapsackInit();
 
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     // Section 3.2.2 uses "int N" in both host and device memory.
