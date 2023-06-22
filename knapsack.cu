@@ -101,6 +101,17 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
 
         // Delete sets based on their rewarded score.
         setValue = setDeleteScore;
+        setValue *= 32768;
+        // With a size of 1 this adds a value of:
+        //  32768 - min(1, 32767)
+        //  32768 - 1
+        //  32767
+        // With a size of infinity this adds a value of:
+        //  32768 - min(inf, 32767)
+        //  32768 - 32767
+        //  1
+        // So this makes smaller sets SLIGHTLY better than bigger ones.
+        setValue += 32768 - std::min(setSize, (size_t) 32767);
 
         host_setDeleteOrder[setNum] = setNum;
         host_setDeleteValue[setNum] = setValue;
