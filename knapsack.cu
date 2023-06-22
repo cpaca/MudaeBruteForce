@@ -42,7 +42,7 @@ __host__ void knapsackReload(){
     free(temp);
 }
 
-__device__ size_t knapsackReadBestScore(size_t rowNum, size_t colNum){
+__device__ size_t knapsackGetBestScore(size_t rowNum = MAX_DL, size_t colNum = OVERLAP_LIMIT){
     char* rowAddress = bestScores + (rowNum * bestScoresPitch);
     auto* row = (size_t*) rowAddress;
     size_t* col = row + colNum;
@@ -57,7 +57,7 @@ __device__ bool knapsackIsTaskGood(Task* task){
     size_t remainingOverlap = task->remainingOverlap;
     size_t overlapUsed = OVERLAP_LIMIT - remainingOverlap;
 
-    size_t oldBestScore = knapsackReadBestScore(DLSlotsUsed, overlapUsed);
+    size_t oldBestScore = knapsackGetBestScore(DLSlotsUsed, overlapUsed);
 
     return true;
 }

@@ -1,9 +1,6 @@
 #ifndef MUDAEBRUTEFORCE_GLOBALVARS
 #define MUDAEBRUTEFORCE_GLOBALVARS
 #include "types.cu"
-// Score to beat.
-__device__ size_t bestScore = 0;
-
 // For each bundle, what series are in it?
 // (Index 0 is also the bundle's size.)
 __constant__ size_t* bundleSeries = nullptr;

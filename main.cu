@@ -210,7 +210,7 @@ __device__ void printDL(Task* task) {
     size_t score = task->score;
     size_t remainingOverlap = task->remainingOverlap;
 
-    size_t oldBest = atomicMax(&bestScore, score);
+    size_t oldBest = knapsackGetBestScore();
     // if this was <= instead of < and the "best score" got achieved, it would spam out that best score nonstop
     if(oldBest < score){
         // Copied straight from the old implementation of findBest.
@@ -237,15 +237,10 @@ __device__ void printDL(Task* task) {
 
         deviceStrCat(betterStr, "\n\n");
 
-        size_t secondCheck = atomicMax(&bestScore, score);
-        // If this was < instead of <=, this would never print because bestScore either = score, from this, or > score,
-        // from another thread
-        if(secondCheck <= score) {
-            printf("%s", betterStr);
-            // sleep for 10 ms to MAKE SURE the output works
-            // had a weird bug where sometimes it wouldnt output
-            __nanosleep(10000000);
-        }
+        printf("%s", betterStr);
+        // sleep for 10 ms to MAKE SURE the output works
+        // had a weird bug where sometimes it wouldnt output
+        __nanosleep(10000000);
         delete[] num;
         delete[] betterStr;
     }
@@ -282,6 +277,10 @@ __device__ void activateSeries(Task* task, size_t seriesNum){
 }
 
 __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
+    if(threadIdx.x == 1 && blockIdx.x == 1){
+        devicePrintStrNum("Best score in knapsack: ", knapsackGetBestScore(MAX_DL, OVERLAP_LIMIT));
+    }
+
     // size_t numSets = numBundles + numSeries;
     size_t* clocks = initProfiling();
     while(true){
@@ -361,10 +360,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &finishLoopCheckpoint);
     }
     destructProfiling(clocks);
-
-    if(threadIdx.x == 1 && blockIdx.x == 1){
-        devicePrintStrNum("Best score in knapsack: ", knapsackReadBestScore(MAX_DL, OVERLAP_LIMIT));
-    }
 }
 
 int main() {
