@@ -6,10 +6,8 @@
  * The contents of the task are unspecified
  */
 __device__ Task* createTask(){
-    size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
-
     Task* ret = new Task;
-    ret->disabledSets = new size_t[disabledSetsSize];
+    ret->disabledSets = new size_t[DISABLED_SETS_SIZE];
     ret->bundlesUsed = new size_t[setBundlesSetSize];
 
     return ret;

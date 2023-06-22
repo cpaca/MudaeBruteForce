@@ -59,7 +59,6 @@ __device__ Task* copyTask(Task* task){
     if(task == nullptr){
         return nullptr;
     }
-    size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
     Task* newTask = getTask(deadTaskQueue);
     if(newTask == nullptr) {
         newTask = createTask();
@@ -70,7 +69,7 @@ __device__ Task* copyTask(Task* task){
     }
 
     memcpy(newTask, task, sizeof(Task) - (2 * sizeof(size_t*)));
-    memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * disabledSetsSize);
+    memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * DISABLED_SETS_SIZE);
     memcpy(newTask->bundlesUsed, task->bundlesUsed, sizeof(size_t) * setBundlesSetSize);
 
     return newTask;
@@ -99,7 +98,6 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t** host_seriesData,
                             size_t numSeries,
                             size_t numBundles){
-    size_t disabledSetsSize = MAX_DL + MAX_FREE_BUNDLES;
     size_t numSets = numSeries + numBundles;
 
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
@@ -112,7 +110,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
 
     // Also create a very basic task for the very first thread.
     Task* firstTask = new Task;
-    firstTask->disabledSets = new size_t[disabledSetsSize];
+    firstTask->disabledSets = new size_t[DISABLED_SETS_SIZE];
     firstTask->disabledSetsIndex = 0;
     // Will need the free bundle pointers for score calculations.
     auto** freeBundlePtrs = new size_t*[numBundles];
@@ -198,7 +196,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     firstTask->DLSlotsRemn = MAX_DL;
 
     // Convert everything into CUDA form:
-    convertArrToCuda(firstTask->disabledSets, disabledSetsSize);
+    convertArrToCuda(firstTask->disabledSets, DISABLED_SETS_SIZE);
     convertArrToCuda(firstTask, 1);
     host_liveTaskQueue.queue[0] = firstTask;
 

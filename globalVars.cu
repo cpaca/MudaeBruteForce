@@ -53,21 +53,4 @@ __constant__ size_t* setDeleteOrder = nullptr;
 __device__ TaskQueue liveTaskQueue;
 __device__ TaskQueue deadTaskQueue;
 
-// Turns out if I do this and #include this file, it works fine.
-// Maximum number of bundles/series that can be activated.
-const std::uint32_t MAX_DL = 50;
-// Maximum number of free bundles.
-// Can be changed whenever, but keep it low or CUDA will demand much more memory than necessary.
-const std::uint32_t MAX_FREE_BUNDLES = 5;
-// Overlap limit, defined in Mudae
-const std::uint32_t OVERLAP_LIMIT = 30000;
-// How many blocks to run.
-// Note that each block gets 512 threads.
-const std::uint64_t NUM_BLOCKS = (1 << 12);
-// "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
-// MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
-// down to remainingOverlap levels.
-// MAX_MINSIZE determines the maximum value minSize can be.
-const std::uint32_t MAX_MINSIZE = 100;
-
 #endif
