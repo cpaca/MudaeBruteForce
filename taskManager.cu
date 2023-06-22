@@ -95,6 +95,20 @@ __device__ void killTask(Task* task){
     }
 }
 
+__host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
+    TaskQueue ret;
+    ret.queue = new Task*[1 << queueSize];
+    for(size_t i = 0; i < (1 << queueSize); i++){
+        // this should be done by default anyway, but this is safer
+        ret.queue[i] = nullptr;
+    }
+    convertArrToCuda(ret.queue, (1 << queueSize));
+    ret.size = queueSize;
+    ret.readIdx = 0;
+    ret.writeIdx = 0;
+    return ret;
+}
+
 __host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t** host_bundleData,
                             size_t** host_seriesData,
@@ -173,16 +187,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     host_liveTaskQueue.writeIdx = 1;
     cudaMemcpyToSymbol(liveTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));
 
-    TaskQueue host_deadTaskQueue;
-    host_deadTaskQueue.queue = new Task*[1 << DEAD_QUEUE_SIZE];
-    for(size_t i = 0; i < (1 << DEAD_QUEUE_SIZE); i++){
-        // this should be done by default anyway, but this is safer
-        host_deadTaskQueue.queue[i] = nullptr;
-    }
-    convertArrToCuda(host_deadTaskQueue.queue, (1 << DEAD_QUEUE_SIZE));
-    host_deadTaskQueue.size = DEAD_QUEUE_SIZE;
-    host_deadTaskQueue.readIdx = 0;
-    host_deadTaskQueue.writeIdx = 0;
+    TaskQueue host_deadTaskQueue = makeBlankTaskQueue(DEAD_QUEUE_SIZE);
     cudaMemcpyToSymbol(deadTaskQueue, &host_deadTaskQueue, sizeof(TaskQueue));
 
     // Clean up memory
