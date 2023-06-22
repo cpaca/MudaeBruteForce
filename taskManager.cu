@@ -169,9 +169,6 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
         }
     }
 
-    // Initialize setDeleteInformation
-    firstTask->setDeleteIndex = 0;
-
     // Initialize score
     size_t score = 0;
     for(size_t i = 0; i < numSeries; i++){

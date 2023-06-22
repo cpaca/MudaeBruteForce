@@ -11,8 +11,6 @@ __host__ __device__ T get_unsigned_max(){
 }
 
 typedef struct {
-    // Next index in the setDeleteOrder to attempt deleting
-    size_t setDeleteIndex;
 
     // What the score was the last time it was calculated for this Task
     size_t score;

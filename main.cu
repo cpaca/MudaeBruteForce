@@ -305,16 +305,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &copyTaskCheckpoint);
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
-        size_t setToDelete = setDeleteOrder[task->setDeleteIndex];
+        size_t setToDelete = expectedSetToDelete;
         task->disabledSets[task->disabledSetsIndex] = setToDelete;
         task->disabledSetsIndex++;
         task->DLSlotsRemn--;
-
-        // This is the only way to get it to shut up about assert being a host function.
-#ifdef __CUDA_ARCH__
-        assert(task->setDeleteIndex == expectedSetDeleteIndex);
-        assert(setToDelete == expectedSetToDelete);
-#endif
 
         size_t setSize = getSetSize(numSeries, setToDelete);
         checkpoint(clocks, 0, &makeNewTaskCheckpoint);
@@ -358,13 +352,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             printDL(task);
         }
         // newTask is unchanged so no print
-
-        // Increment setDeleteIndex on both tasks...
-        // (Compiler probably optimizes this to the very front for like 1 or 2 machine operations faster)
-        if(task != nullptr) {
-            task->setDeleteIndex++;
-        }
-        newTask->setDeleteIndex++;
 
         // And put both tasks to the front.
         putTask(outTaskQueue, task);
