@@ -356,7 +356,13 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
         // And put both tasks to the front.
         putTask(outTaskQueue, task);
-        putTask(outTaskQueue, newTask);
+        if(knapsackIsTaskGood(newTask)) {
+            putTask(outTaskQueue, newTask);
+        }
+        else{
+            killTask(newTask);
+            newTask = nullptr;
+        }
         checkpoint(clocks, 0, &finishLoopCheckpoint);
     }
     destructProfiling(clocks);

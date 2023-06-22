@@ -58,8 +58,18 @@ __device__ bool knapsackIsTaskGood(Task* task){
     size_t overlapUsed = OVERLAP_LIMIT - remainingOverlap;
 
     size_t oldBestScore = knapsackGetBestScore(DLSlotsUsed, overlapUsed);
+    size_t taskBestScore = task->score;
 
-    return true;
+    // shut up about "return oldBestScore <= taskBestScore"
+    // compiler got that for me
+    if(oldBestScore > taskBestScore){
+        // An older DL got better results in some way
+        // so this one is not good
+        return false;
+    }
+    else{
+        return true;
+    }
 }
 
 __device__ void knapsackWrite(const size_t &DLSlotsUsed, const size_t &overlapUsed, const size_t &score){
