@@ -11,7 +11,7 @@
 #include "taskManager.cu"
 #include "task.cu"
 #include "killUtils.cu"
-#include "knapsack.cu"
+#include "deleteOrderManager.cu"
 
 bool bundleContainsSet(size_t setNum,
                        size_t bundleNum,
