@@ -28,6 +28,8 @@ typedef struct {
     // and disabledSets[index] onwards are undefined
     size_t disabledSetsIndex;
     // disabledSets is at the end so that all of the pointers can be together at the end
+    // Do NOT make this a size_t disabledSets[DISABLED_SETS_SIZE]
+    // Doing so slowed down the copyTask part by like 2x for some reason
     size_t* disabledSets;
 
     // setBundles compatibility
