@@ -19,6 +19,7 @@ __device__ size_t fullTaskCheckpoint = 0;
 __device__ size_t bundlePtrCheckpoint = 0;
 __device__ size_t activateBundleCheckpoint = 0;
 __device__ size_t deleteSetCheckpoint = 0;
+__device__ size_t tryKillTaskCheckpoint = 0;
 __device__ size_t finishLoopCheckpoint = 0;
 
 __device__ size_t tasksCreated = 0;
@@ -116,6 +117,7 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used getting the bundle ptr: ", bundlePtrCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used deleting the bundle's series: ", activateBundleCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used finishing deleteSet: ", deleteSetCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used trying to kill the task: ", tryKillTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used postprocessing: ", finishLoopCheckpoint, totalThreads);
     std::cout << "\n";
     std::cout << "Note that the below number does not account for the very first task, the one created by host\n";

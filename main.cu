@@ -335,6 +335,17 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         }
         checkpoint(clocks, 0, &deleteSetCheckpoint);
 
+        if(task != nullptr){
+            if(task->score == newTask->score){
+                // Performing this Task didn't add any value...
+                // So we shouldn't continue it
+                killTask(task);
+                task = nullptr;
+            }
+        }
+
+        checkpoint(clocks, 0, &tryKillTaskCheckpoint);
+
         // Is the new DL good?
         if(task != nullptr) {
             printDL(task);
