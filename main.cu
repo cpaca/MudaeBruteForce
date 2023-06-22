@@ -518,7 +518,7 @@ int main() {
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
-//    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+    newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
     cudaError_t syncError = cudaDeviceSynchronize();
 
     clock_t endTime = clock();

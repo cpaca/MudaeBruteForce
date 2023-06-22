@@ -99,8 +99,8 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
             }
         }
 
-        // Just for now.
-        setValue = setSize;
+        // Delete sets based on their rewarded score.
+        setValue = setDeleteScore;
 
         host_setDeleteOrder[setNum] = setNum;
         host_setDeleteValue[setNum] = setValue;
