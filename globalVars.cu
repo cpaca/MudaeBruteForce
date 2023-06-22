@@ -47,8 +47,6 @@ __constant__ setSize_t* global_setSizes = nullptr;
 extern __shared__ setSize_t setSizes[];
 
 // The order to delete each set in.
-// TODO Delete
-__constant__ size_t* setDeleteOrder = nullptr;
 
 size_t* host_setDeleteOrder;
 size_t setDeleteIndex = 0;

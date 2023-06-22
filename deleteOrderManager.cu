@@ -125,12 +125,7 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
                         host_setDeleteValue+numSets,
                         host_setDeleteOrder,
                         thrust::greater<size_t>());
-    // Convert to CUDA form...
-    auto* dev_setDeleteOrder = new size_t[numSets];
-    memcpy(dev_setDeleteOrder, host_setDeleteOrder, sizeof(size_t) * numSets);
-    convertArrToCuda(dev_setDeleteOrder, numSets);
     // And take it to CUDA
-    cudaMemcpyToSymbol(setDeleteOrder, &dev_setDeleteOrder, sizeof(dev_setDeleteOrder));
     cudaMemcpyToSymbol(expectedSetToDelete, &host_setDeleteOrder[0], sizeof(size_t));
 }
 
