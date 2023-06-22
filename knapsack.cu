@@ -90,6 +90,10 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
                     }
                 }
 
+                if(addSeriesScore){
+                    setDeleteScore += host_seriesData[seriesNum][1];
+                }
+
                 // And next series.
                 bundlePtr++;
             }
