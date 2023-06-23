@@ -1,7 +1,7 @@
 #include "task.cu"
 #include <thrust/sort.h>
 #define LIVE_QUEUE_SIZE 24
-#define DEAD_QUEUE_SIZE 15
+#define DEAD_QUEUE_SIZE 19
 
 /**
  * Gets a task from the task queue.
