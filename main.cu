@@ -1,27 +1,18 @@
 #include <iostream>
 #include <string>
 
+#include "constVars.cu"
+#include "globalVars.cu"
 #include "strUtils.cu"
 #include "hostDeviceUtils.cu"
 #include "randUtils.cu"
 #include "types.cu"
 #include "profileUtils.cu"
-
-// Maximum number of bundles/series that can be activated.
-#define MAX_DL 50
-// Maximum number of free bundles.
-// Can be changed whenever, but keep it low or CUDA will demand much more memory than necessary.
-#define MAX_FREE_BUNDLES 5
-// Overlap limit, defined in Mudae
-#define OVERLAP_LIMIT 30000
-// How many blocks to run.
-// Note that each block gets 512 threads.
-#define NUM_BLOCKS (1 << 12)
-// "MinSize" is a variable determining the minimum size a series needs to be to be added to the DL.
-// MinSize gets divided by 2 while the remainingOverlap exceeds minSize, so even a minSize of 2^31 will get fixed
-// down to remainingOverlap levels.
-// MAX_MINSIZE determines the maximum value minSize can be.
-#define MAX_MINSIZE 100
+#include "knapsack.cu"
+#include "taskManager.cu"
+#include "task.cu"
+#include "killUtils.cu"
+#include "deleteOrderManager.cu"
 
 bool bundleContainsSet(size_t setNum,
                        size_t bundleNum,
@@ -97,58 +88,10 @@ bool bundleContainsSet(size_t setNum,
     return (*bundlePtr) == setNum;
 }
 
-// Score to beat.
-__device__ size_t bestScore = 0;
-
-// For each bundle, what series are in it?
-// (Index 0 is also the bundle's size.)
-__device__ size_t* bundleSeries = nullptr;
-// Index of each bundle in bundleSeries. So bundleSeries[bundleIndices[n]] is the first index of a bundle in bundleSeries.
-__device__ size_t* bundleIndices = nullptr;
-
-// For each set, what bundles contain it?
-// The format is... kind of a long description.
-// First, let setBundlesSetSize = (numBundles/sizeof(size_t))
-// And for shorthand, let sBSS = setBundlesSetSize
-// Indices setBundles[setNum * sBSS] to setBundles[(setNum+1)*sBSS - 1] are the indices for set setNum
-// In other words, to loop over all values in setBundles relevant to a set:
-// for(int i = 0; i < sBSS; i++){/*do something with setBundles[setNum*sBSS + i]*/}
-//
-// Now express setBundles[0], setBundles[1], ... as a bitstream.
-// The first bit represents if the set is in bundle # 0
-// The second bit represents if the set is in bundle # 1
-// etc.
-// Because this is a bitstream and size_t is 64-bits:
-// the 65th bit (aka, the first bit of setBundles[1], aka setBundles[1]&0) represents if the set is in bundle #65
-//
-// Note that this is setBundles, so it needs to work for all SETS. Even Bundles.
-// Also note that for bundles, their "bitstream" is all 0s except for itself, where it is 1.
-__device__ size_t* setBundles = nullptr;
-__constant__ size_t setBundlesSetSize = -1; // note that setBundles[-1] = illegal (unsigned type)
-
-// Data about each series.
-// deviceSeries[2n] is the size of series n
-// deviceSeries[2n+1] is the value of series n
-__device__ size_t* deviceSeries = nullptr;
-
-// Free bundles.
-// If freeBundles[n] is non-zero, then bundle n is free.
-__device__ size_t* freeBundles = nullptr;
-
-// The size of each set.
-// Note that this is setSize_t, not size_t.
-// This is important because of byte limitations.
-__device__ setSize_t* global_setSizes = nullptr;
-extern __shared__ setSize_t setSizes[];
-
 // Initializes setBundles.
 // Note that this needs to be placed after the fuckton of variables because it manipulates some of them.
 void initializeSetBundles(size_t numBundles, size_t numSeries, size_t** bundleData, size_t** seriesData){
     // create setBundles.
-    // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
-    // Explanation of +1: If there are 7 bundles, setSize_t should be 1, not 0.
-    // host_ added because I can't write device data directly @ host level.
-    const size_t host_setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
     cudaMemcpyToSymbol(setBundlesSetSize, &host_setBundlesSetSize, sizeof(size_t));
     size_t numSets = numBundles + numSeries;
 
@@ -261,229 +204,21 @@ __device__ bool bundleOverlap(const size_t* A, const size_t* B){
     return false;
 }
 
-/**
- * If set represents the Set ID of a bundle, then bundlesUsed is modified to acknowledge that that bundle is
- * activated.
- * @param numSeries The total number of series there are.
- * @param bundlesUsed MAY BE MODIFIED to acknowledge this set being added to bundlesUsed.
- * @param setToAdd The Set ID of a bundle.
- */
-__device__ void activateBundle(const size_t numSeries, size_t *bundlesUsed, size_t set) {
-    if(set >= numSeries){
-        // setToAdd is actually a bundle to add
-        // If this bundle is being used, we need to acknowledge that in bundlesUsed
-        size_t bundleNum = set - numSeries;
-        size_t bundlesUsedWordSize = 8 * sizeof(size_t);
-        size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
-        size_t bundleOffset = bundleNum % bundlesUsedWordSize;
-        bundlesUsed[bundlesUsedIndex] |= (((size_t)1) << bundleOffset);
-    }
-}
+__device__ void printDL(Task* task) {
+    size_t* disabledSets = task->disabledSets;
+    size_t disabledSetsIndex = task->disabledSetsIndex;
+    size_t score = task->score;
+    size_t remainingOverlap = task->remainingOverlap;
 
-__global__ void findBest(const size_t numBundles, const size_t numSeries){
-    size_t* clocks = initProfiling();
-    startClock(clocks, 0);
-
-    size_t numSets = numSeries + numBundles;
-    size_t setSizeToRead = threadIdx.x;
-    while(setSizeToRead < numSets){
-        setSizes[setSizeToRead] = global_setSizes[setSizeToRead];
-        setSizeToRead += blockDim.x;
-    }
-
-    checkpoint(clocks, 0, &sharedMemoryCheckpoint);
-
-    __syncthreads();
-
-    checkpoint(clocks, 0, &syncThreadsCheckpoint);
-
-    // Set up randomness
-    // printf("CUDA setting up randomness\n");
-    size_t seed = (blockIdx.x << 10) + threadIdx.x;
-    seed = generateRandom(seed) ^ clock();
-    // seed = 0; // debug to get the same result every time
-
-    // There are three DL limitations.
-    // printf("CUDA initializing DL limitations 1 and 2\n");
-    // You can disable at most a certain number of series. (MAX_DL)
-    auto* disabledSets = new size_t[MAX_DL + MAX_FREE_BUNDLES];
-    size_t disabledSetsIndex = 0;
-
-    // By having DLSlotsUsed start at 1
-    // this is the same as "reserving" the last slot for any series
-    // This way, when there's one slot left, we can run the Greedy Algorithm to find what the best series would be.
-    size_t DLSlotsUsed = 0;
-
-    // You can disable at most a certain number of characters. (Overlap limit.)
-    size_t remainingOverlap = OVERLAP_LIMIT;
-    // A series cannot be disabled twice.
-    // That limitation is handled when the score is calculated.
-
-    // To address restriction 3, we need to know what bundles are used.
-    auto* bundlesUsed = new size_t[setBundlesSetSize];
-    memset(bundlesUsed, 0, sizeof(size_t) * setBundlesSetSize);
-
-    // Apply the free bundles.
-    // printf("CUDA applying free bundles.\n");
-    for(size_t bundleNum = 0; bundleNum < numBundles; bundleNum++){
-        if(freeBundles[bundleNum] != 0){
-            // Add bundle to disabledSets...
-            disabledSets[disabledSetsIndex] = bundleNum + numSeries;
-            disabledSetsIndex++;
-
-            // ... but more importantly add bundle to bundlesUsed
-            // I think the compiler will inline it and apply 0, bundlesUsed, bundleNum
-            // so I don't have to.
-            activateBundle(numSeries, bundlesUsed, bundleNum + numSeries);
-        }
-    }
-
-    // IDEA: What if we have a min_size value to not reserve a ton of 1-size seriess.
-    size_t origMinSize = generateRandom(seed, MAX_MINSIZE);
-    size_t minSize = origMinSize;
-
-    // Create a theoretical DL.
-    // This addresses restriction 1.
-    // printf("CUDA creating theoretical DL\n");
-    size_t numFails = 0;
-    // Did some testing and analysis.
-    // Due to the way CUDA works, it's best to assume this takes 10k loops to complete.
-    // I typically saw it complete in 4-8k loops, but if one thread in a warp needs 10k loops to complete
-    // then the other 31 threads will wait 10k loops
-    // giving them an effective time of 10k loops
-
-    checkpoint(clocks, 0, &whileLoopSetupCheckpoint);
-    startClock(clocks, 1);
-    while(DLSlotsUsed < MAX_DL && numFails < 1000){
-        checkpoint(clocks, 1, &loopConditionCheckpoint);
-        numFails++;
-
-        // Apparantly the bundles-only formula is better now.
-        // Makes sense.
-        size_t setToAdd = generateRandom(seed, numBundles) + numSeries;
-        // size_t setToAdd = generateRandom(seed, numSets);
-
-        // Calculate the size of this set.
-        size_t setSize = setSizes[setToAdd];
-        checkpoint(clocks, 1, &pickSetCheckpoint);
-
-        if(setSize < minSize){
-            checkpoint(clocks, 1, &setSizeCheckpoint);
-            continue;
-        }
-
-        // This addresses restriction 2.
-        if (setSize > remainingOverlap) {
-            checkpoint(clocks, 1, &setSizeCheckpoint);
-            continue;
-        }
-        checkpoint(clocks, 1, &setSizeCheckpoint);
-
-        // Determine redundancy.
-        // First, determine the bundles for this set:
-        size_t* selfBundles = setBundles + (setBundlesSetSize * setToAdd);
-        // Then determine if this set is redundant:
-        if(bundleOverlap(selfBundles, bundlesUsed)){
-            checkpoint(clocks, 1, &bundleOverlapCheckpoint);
-            // This set has already been addressed by a previous bundle.
-            // In other words, this set is redundant.
-            continue;
-        }
-        checkpoint(clocks, 1, &bundleOverlapCheckpoint);
-
-        // Note that "don't add a set twice" is another form of redundancy.
-        // However, also note that this is, computationally, quite slow.
-        bool continueLoop = false;
-        for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
-            size_t setNum = disabledSets[DLIdx];
-            if(setToAdd == setNum){
-                continueLoop = true;
-                break;
-            }
-        }
-        if(continueLoop){
-            checkpoint(clocks, 1, &continueLoopCheckpoint);
-            continue;
-        }
-        checkpoint(clocks, 1, &continueLoopCheckpoint);
-
-        // ADD THIS SET TO THE DL
-        disabledSets[disabledSetsIndex] = setToAdd;
-        disabledSetsIndex++;
-        DLSlotsUsed++;
-        remainingOverlap -= setSize;
-        numFails = 0;
-
-        activateBundle(numSeries, bundlesUsed, setToAdd);
-
-        while (minSize > remainingOverlap) {
-            // I accepted the infinite loop before and it finished really quickly
-            // but now I've decided I want to continue collecting the very, very small series
-            // just in case they have useful information.
-            minSize >>= 1;
-        }
-        checkpoint(clocks, 1, &addSetToDLCheckpoint);
-    }
-    checkpoint(clocks, 0, &whileLoopExecutionCheckpoint);
-
-    // Calculate the score.
-    // printf("CUDA calculating score\n");
-    size_t score = 0;
-
-    // Calculate score from bundles
-    for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
-        setSize_t seriesSize = setSizes[seriesNum];
-
-        if(seriesSize == (OVERLAP_LIMIT+1)){
-            // Series value is 0 so don't even bother looking
-            continue;
-        }
-
-        bool overlapsWithBundle;
-        if(seriesSize == (OVERLAP_LIMIT+2)){
-            // Series is in the free-bundles so don't even bother checking the bundleOverlap()
-            overlapsWithBundle = true;
-        }
-        else{
-            size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
-            overlapsWithBundle = bundleOverlap(bundlesUsed, seriesBundles);
-        }
-
-        if(overlapsWithBundle){
-            size_t seriesValue = deviceSeries[(2 * seriesNum) + 1];
-            // Add this series's value to the score.
-            score += seriesValue;
-        }
-    }
-
-    checkpoint(clocks, 0, &bundleScoreCheckpoint);
-
-    // Calculate score directly from series
-    for(size_t DLIdx = 0; DLIdx < disabledSetsIndex; DLIdx++){
-        size_t setNum = disabledSets[DLIdx];
-
-        // Note that if setNum is a bundle, it'll get caught by bundleOverlap anyway.
-
-        size_t* seriesBundles = setBundles + (setBundlesSetSize * setNum);
-        if(bundleOverlap(bundlesUsed, seriesBundles)){
-            // Already got covered by the bundles earlier.
-            continue;
-        }
-
-        // Add this series's score.
-        size_t seriesValue = deviceSeries[(2 * setNum) + 1];
-        score += seriesValue;
-    }
-
-    checkpoint(clocks, 0, &seriesScoreCheckpoint);
-
-    // printf("CUDA checking if this is the best score.\n");
-    size_t oldBest = atomicMax(&bestScore, score);
+    size_t oldBest = knapsackGetBestScore();
     // if this was <= instead of < and the "best score" got achieved, it would spam out that best score nonstop
     if(oldBest < score){
         // Copied straight from the old implementation of findBest.
-        char betterStr[1000] = "Better DL Found, score: ";
+        char* betterStr = new char[1000];
+        betterStr[0] = '\0';
         char* num = new char[10];
+
+        deviceStrCat(betterStr, "Better DL Found, score: ");
         deviceItos(num, score);
         deviceStrCat(betterStr, num);
         deviceStrCat(betterStr, ", series used, ");
@@ -496,29 +231,138 @@ __global__ void findBest(const size_t numBundles, const size_t numSeries){
         deviceItos(num, remainingOverlap);
         deviceStrCat(betterStr, num);
 
-        deviceStrCat(betterStr, "\nOriginal minSize: ");
-        deviceItos(num, origMinSize);
+        deviceStrCat(betterStr, "\nWriteIdx: ");
+        deviceItos(num, inTaskQueue.writeIdx);
         deviceStrCat(betterStr, num);
 
         deviceStrCat(betterStr, "\n\n");
 
-        size_t secondCheck = atomicMax(&bestScore, score);
-        // If this was < instead of <=, this would never print because bestScore either = score, from this, or > score,
-        // from another thread
-        if(secondCheck <= score) {
-            printf("%s", betterStr);
-        }
+        printf("%s", betterStr);
+        // sleep for 10 ms to MAKE SURE the output works
+        // had a weird bug where sometimes it wouldnt output
+        __nanosleep(10000000);
         delete[] num;
+        delete[] betterStr;
+    }
+}
+
+__device__ size_t getSetSize(const size_t &numSeries, const size_t &setNum){
+    if(setNum < numSeries){
+        return deviceSeries[2 * setNum];
+    }
+    else{
+        size_t bundleNum = setNum - numSeries;
+        return bundleSeries[bundleIndices[bundleNum]];
+    }
+}
+
+/**
+ * Activates a series for a given task.
+ * This does NOT read or write to remainingOverlap
+ * This increments Score if necessary
+ * This assumes seriesNum is a series and NOT A BUNDLE
+ * This reads from (does not write to) task->bundlesUsed
+ * If a bundle for this series has already been used, this does nothing.
+ */
+__device__ void activateSeries(Task* task, size_t seriesNum){
+    size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
+    size_t* taskBundles = task->bundlesUsed;
+    if(bundleOverlap(taskBundles, seriesBundles)){
+        // This series has already been added to the Task.
+        return;
     }
 
-    checkpoint(clocks, 0, &printValsCheckpoint);
+    size_t seriesValue = deviceSeries[(2*seriesNum) + 1];
+    task->score += seriesValue;
+}
 
-    // printf("CUDA findBest finished.\n");
+__global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
-    // Free up memory.
+    // size_t numSets = numBundles + numSeries;
+    size_t* clocks = initProfiling();
+    while(true){
+        // Use this so the program stops and you can profile shit
+        startClock(clocks, 0);
+        Task* task = getTask(inTaskQueue);
+        checkpoint(clocks, 0, &getTaskCheckpoint);
+        if(task == nullptr){
+            if(inTaskQueue.readIdx == inTaskQueue.writeIdx){
+                break;
+            }
+            continue;
+        }
+        if(task->DLSlotsRemn <= 0){
+            // Nope! Stop. Done. Nothing to do on this task.
+            killTask(task);
+            continue;
+        }
+        checkpoint(clocks, 0, &validTaskCheckpoint);
+
+        Task* newTask = copyTask(task);
+        checkpoint(clocks, 0, &copyTaskCheckpoint);
+
+        // Delete the setDeleteIndex on task, leave it alone on newTask
+        size_t setToDelete = expectedSetToDelete;
+        task->disabledSets[task->disabledSetsIndex] = setToDelete;
+        task->disabledSetsIndex++;
+        task->DLSlotsRemn--;
+
+        size_t setSize = getSetSize(numSeries, setToDelete);
+        checkpoint(clocks, 0, &makeNewTaskCheckpoint);
+        if(setSize > task->remainingOverlap){
+            killTask(task);
+            task = nullptr;
+            checkpoint(clocks, 0, &fullTaskCheckpoint);
+        }
+        else {
+            task->remainingOverlap -= setSize;
+            if (setToDelete < numSeries) {
+                activateSeries(task, setToDelete);
+            } else {
+                size_t bundleToDelete = setToDelete - numSeries;
+
+                size_t* bundlePtr = bundleSeries + bundleIndices[bundleToDelete];
+                bundlePtr++; // Get past the size value...
+                checkpoint(clocks, 0, &bundlePtrCheckpoint);
+                while((*bundlePtr) != -1){
+                    activateSeries(task, *bundlePtr);
+                    bundlePtr++;
+                }
+                activateBundle(numSeries, task, setToDelete);
+                checkpoint(clocks, 0, &activateBundleCheckpoint);
+            }
+        }
+        checkpoint(clocks, 0, &deleteSetCheckpoint);
+
+        if(task != nullptr){
+            if(shouldKill(newTask, task)){
+                // We should kill this task, so we will.
+                killTask(task);
+                task = nullptr;
+            }
+        }
+
+        checkpoint(clocks, 0, &tryKillTaskCheckpoint);
+
+        // Is the new DL good?
+        knapsackWriteTask(task);
+        if(task != nullptr) {
+            printDL(task);
+        }
+        // newTask is unchanged so no print
+
+        // And put both tasks to the front.
+        putTask(outTaskQueue, task);
+        if(knapsackIsTaskGood(newTask)) {
+            putTask(outTaskQueue, newTask);
+        }
+        else{
+            killTask(newTask);
+            newTask = nullptr;
+        }
+        checkpoint(clocks, 0, &finishLoopCheckpoint);
+    }
     destructProfiling(clocks);
-    delete[] bundlesUsed;
-    delete[] disabledSets;
 }
 
 int main() {
@@ -588,6 +432,13 @@ int main() {
         }
     }
 
+    // Initialize host_setBundlesSetSize since it's needed several times before setBundles actually gets initialized.
+    // (Notably, the taskQueue needs it)
+    // Explanation of *8: sizeof() returns size in bytes, I want size in bits.
+    // Explanation of +1: If there are 7 bundles, setSize_t should be 1, not 0.
+    // host_ added because I can't write device data directly @ host level.
+    host_setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
+
     // There are certain bundles which are free. Namely, Western and Real Life People, if you have togglewestern and toggleirl
     // There's also togglehentai on some servers.
     // So we should keep track of that.
@@ -615,6 +466,8 @@ int main() {
     // No new so no need for a delete on freeBundleNames.
     // And convert freeBundles into a CUDA usable form.
     initializeGlobalSetSizes(numSeries, numBundles, seriesData, bundleData, host_freeBundles);
+    initSetDeleteOrder(host_freeBundles, bundleData, seriesData, numSeries, numBundles);
+    initTaskQueue(host_freeBundles, bundleData, seriesData, numSeries, numBundles);
     convertArrToCuda(host_freeBundles, numBundles);
     if(host_freeBundles == nullptr){
         std::cout << "FreeBundles not initialized correctly.";
@@ -646,6 +499,8 @@ int main() {
     }
     cudaMemcpyToSymbol(deviceSeries, &host_deviceSeries, sizeof(host_deviceSeries));
 
+    knapsackInit();
+
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     // Section 3.2.2 uses "int N" in both host and device memory.
 
@@ -655,26 +510,55 @@ int main() {
     size_t sharedMemoryNeeded = (numBundles + numSeries) * sizeof(setSize_t);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    clock_t startTime = clock();
-#if PROFILE
-    // Profiling is too hard to read if there's 2 million threads running, all printing profiler info.
-    findBest<<<1, 1, sharedMemoryNeeded>>>(numBundles, numSeries);
-#else
-    std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
-    findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
-#endif
-    cudaDeviceSynchronize();
-    clock_t endTime = clock();
-    printProfilingData();
-    std::cout << "Time taken (seconds): " << std::to_string((endTime - startTime)/(double)CLOCKS_PER_SEC) << "\n";
+    clock_t GPUTime = 0;
+    clock_t CPUTime = 0;
+
+    // std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
+    // findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+    std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
+    // reminder to self: 40 blocks of 512 threads each
+    // for some reason 1024 threads per block throws some sort of error
+    cudaError_t syncError;
+    for(size_t i = 0; i < 22; i++) {
+        GPUTime -= clock();
+        newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
+        syncError = cudaDeviceSynchronize();
+        GPUTime += clock();
+
+        if(syncError != cudaSuccess){
+            break;
+        }
+
+        CPUTime -= clock();
+        reloadTaskQueue();
+        CPUTime += clock();
+    }
+
+//    printProfilingData();
+    std::cout << "Time taken on GPU (seconds): " << std::to_string(GPUTime/(double)CLOCKS_PER_SEC) << "\n";
+    std::cout << "Time taken on CPU (seconds): " << std::to_string(CPUTime/(double)CLOCKS_PER_SEC) << "\n";
+
+    if (syncError != cudaSuccess) {
+        std::cout << "cudaDeviceSync   invoked a CUDA error" << std::endl;
+        const char *errName = cudaGetErrorName(syncError);
+        printf("%s\n", errName);
+        const char *errStr = cudaGetErrorString(syncError);
+        printf("%s\n", errStr);
+    }
+    else{
+        std::cout << "cudaDeviceSync   did not invoke a CUDA error" << std::endl;
+    }
 
     cudaError_t lasterror = cudaGetLastError();
     if (lasterror != cudaSuccess) {
+        std::cout << "cudaGetLastError found a CUDA error" << std::endl;
         const char *errName = cudaGetErrorName(lasterror);
         printf("%s\n", errName);
+        const char *errStr = cudaGetErrorString(lasterror);
+        printf("%s\n", errStr);
     }
     else{
-        printf("No CUDA errors.\n");
+        std::cout << "cudaGetLastError did not find a CUDA error" << std::endl;
     }
 
     printf("FindBest finished\n");
