@@ -40,7 +40,7 @@ __host__ void knapsackReload(){
     // "cudaMemcpyAsync() is asynchronous with respect to the host, so the call may return before the copy is complete."
     // https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__MEMORY.html#group__CUDART__MEMORY_1g85073372f776b4c4d5f89f7124b7bf79
     // in other words it'll continue on the device as long as i give it stream 0, which is default
-    cudaMemcpyAsync(host_bestScores, host_newBestScores, numBytes, cudaMemcpyDeviceToDevice);
+    cudaMemcpy(host_bestScores, host_newBestScores, numBytes, cudaMemcpyDeviceToDevice);
 }
 
 __device__ size_t knapsackGetBestScore(size_t rowNum = MAX_DL, size_t colNum = OVERLAP_LIMIT){
