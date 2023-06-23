@@ -519,7 +519,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError;
-    for(size_t i = 0; i < 22; i++) {
+    for(size_t i = 0; i < 50; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();
@@ -534,7 +534,7 @@ int main() {
         CPUTime += clock();
     }
 
-//    printProfilingData();
+    printProfilingData();
     std::cout << "Time taken on GPU (seconds): " << std::to_string(GPUTime/(double)CLOCKS_PER_SEC) << "\n";
     std::cout << "Time taken on CPU (seconds): " << std::to_string(CPUTime/(double)CLOCKS_PER_SEC) << "\n";
 

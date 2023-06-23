@@ -115,19 +115,22 @@ __host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
 __host__ void reloadTaskQueue(){
     knapsackReload();
 
-    // First free the inTaskQueue
+    // Get and swap the two task queues
+    // Note that device inTaskQueue goes to host outTaskQueue
     TaskQueue host_inTaskQueue;
-    cudaMemcpyFromSymbol(&host_inTaskQueue, inTaskQueue, sizeof(TaskQueue));
-    cudaFree(host_inTaskQueue.queue);
-
-    // Then copy the outTaskQueue to the inTaskQueue
     TaskQueue host_outTaskQueue;
-    cudaMemcpyFromSymbol(&host_outTaskQueue, outTaskQueue, sizeof(TaskQueue));
-    size_t numTasks = host_outTaskQueue.writeIdx - host_outTaskQueue.readIdx;
-    cudaMemcpyToSymbol(inTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
+    cudaMemcpyFromSymbol(&host_outTaskQueue, inTaskQueue, sizeof(TaskQueue));
+    cudaMemcpyFromSymbol(&host_inTaskQueue, outTaskQueue, sizeof(TaskQueue));
 
-    // Then make a new outTaskQueue
-    host_outTaskQueue = makeBlankTaskQueue(LIVE_QUEUE_SIZE);
+    // Save data for debug...
+    size_t numTasks = host_inTaskQueue.writeIdx - host_inTaskQueue.readIdx;
+
+    // Reset...
+    host_outTaskQueue.readIdx = 0;
+    host_outTaskQueue.writeIdx = 0;
+
+    // Reload...
+    cudaMemcpyToSymbol(inTaskQueue, &host_inTaskQueue, sizeof(TaskQueue));
     cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
     // Update the expected setDeleteIndex
