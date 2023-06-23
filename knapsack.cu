@@ -35,7 +35,12 @@ __host__ void knapsackReload(){
     cudaMemcpyFromSymbol(&host_newBestScores, newBestScores, sizeof(char*));
     cudaMemcpyFromSymbol(&host_bestScores, bestScores, sizeof(char*));
 
-    cudaMemcpy(host_bestScores, host_newBestScores, numBytes, cudaMemcpyDeviceToDevice);
+    // Since memcpy's are on a stream this one will happen AND COMPLETE before any of the CUDA tasks occur
+    // To quote from the Docs:
+    // "cudaMemcpyAsync() is asynchronous with respect to the host, so the call may return before the copy is complete."
+    // https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__MEMORY.html#group__CUDART__MEMORY_1g85073372f776b4c4d5f89f7124b7bf79
+    // in other words it'll continue on the device as long as i give it stream 0, which is default
+    cudaMemcpyAsync(host_bestScores, host_newBestScores, numBytes, cudaMemcpyDeviceToDevice);
 }
 
 __device__ size_t knapsackGetBestScore(size_t rowNum = MAX_DL, size_t colNum = OVERLAP_LIMIT){

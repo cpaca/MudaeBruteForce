@@ -113,6 +113,8 @@ __host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
  * Copies the outTaskQueue to the inTaskQueue
  */
 __host__ void reloadTaskQueue(){
+    knapsackReload();
+
     // First free the inTaskQueue
     TaskQueue host_inTaskQueue;
     cudaMemcpyFromSymbol(&host_inTaskQueue, inTaskQueue, sizeof(TaskQueue));
@@ -132,8 +134,6 @@ __host__ void reloadTaskQueue(){
     setDeleteIndex++;
     size_t host_expectedSetToDelete = host_setDeleteOrder[setDeleteIndex];
     cudaMemcpyToSymbol(expectedSetToDelete, &host_expectedSetToDelete, sizeof(size_t));
-
-    knapsackReload();
 
     // Print some stuff for debug reasons
     std::cout << "With a setDeleteIndex of " << std::to_string(setDeleteIndex) << ",\n";
