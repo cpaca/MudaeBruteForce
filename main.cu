@@ -277,9 +277,6 @@ __device__ void activateSeries(Task* task, size_t seriesNum){
 }
 
 __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
-    if(threadIdx.x == 1 && blockIdx.x == 1){
-        devicePrintStrNum("Best score in knapsack: ", knapsackGetBestScore(MAX_DL, OVERLAP_LIMIT));
-    }
 
     // size_t numSets = numBundles + numSeries;
     size_t* clocks = initProfiling();
