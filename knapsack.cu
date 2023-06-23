@@ -29,17 +29,13 @@ __host__ void knapsackInit(){
 __host__ void knapsackReload(){
     // apparently this is the only way to do it
     const size_t numBytes = host_pitch * numRows;
-    void* temp = malloc(numBytes);
 
     void* host_bestScores;
     char* host_newBestScores;
     cudaMemcpyFromSymbol(&host_newBestScores, newBestScores, sizeof(char*));
     cudaMemcpyFromSymbol(&host_bestScores, bestScores, sizeof(char*));
 
-    cudaMemcpy(temp, host_newBestScores, numBytes, cudaMemcpyDeviceToHost);
-    cudaMemcpy(host_bestScores, temp, numBytes, cudaMemcpyHostToDevice);
-
-    free(temp);
+    cudaMemcpy(host_bestScores, host_newBestScores, numBytes, cudaMemcpyDeviceToDevice);
 }
 
 __device__ size_t knapsackGetBestScore(size_t rowNum = MAX_DL, size_t colNum = OVERLAP_LIMIT){
