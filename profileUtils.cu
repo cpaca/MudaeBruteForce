@@ -22,6 +22,10 @@ __device__ size_t deleteSetCheckpoint = 0;
 __device__ size_t tryKillTaskCheckpoint = 0;
 __device__ size_t finishLoopCheckpoint = 0;
 
+__device__ size_t tryRezTaskCheckpoint = 0;
+__device__ size_t checkTaskAliveCheckpoint = 0;
+__device__ size_t memcpyTaskCheckpoint = 0;
+
 __device__ size_t tasksCreated = 0;
 __device__ size_t tasksRezzed = 0;
 __device__ size_t tasksDestructed = 0;
@@ -119,6 +123,10 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used finishing deleteSet: ", deleteSetCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used trying to kill the task: ", tryKillTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used postprocessing: ", finishLoopCheckpoint, totalThreads);
+    std::cout << "\n";
+    printProfilingStrNum("Avg. time used trying to rez tasks: ", tryRezTaskCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used checking task life: ", checkTaskAliveCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used memcpy in copyTask: ", memcpyTaskCheckpoint, totalThreads);
     std::cout << "\n";
     std::cout << "Note that the below number does not account for the very first task, the one created by host\n";
     printProfilingStrNum("Number of tasks created: ", tasksCreated);

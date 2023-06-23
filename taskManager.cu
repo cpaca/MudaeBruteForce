@@ -55,11 +55,14 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
  * Returns a new Task that is identical to the given Task
  * Basically, a copy constructor.
  */
-__device__ Task* copyTask(Task* task){
+__device__ Task* copyTask(Task* task, size_t* clocks){
+    startClock(clocks, 1);
     if(task == nullptr){
         return nullptr;
     }
     Task* newTask = getTask(deadTaskQueue);
+    checkpoint(clocks, 1, &tryRezTaskCheckpoint);
+
     if(newTask == nullptr) {
         newTask = createTask();
         profileIncrement(&tasksCreated);
@@ -67,12 +70,14 @@ __device__ Task* copyTask(Task* task){
     else{
         profileIncrement(&tasksRezzed);
     }
+    checkpoint(clocks, 1, &checkTaskAliveCheckpoint);
 
     memcpy(newTask, task, sizeof(Task) - (2 * sizeof(size_t*)));
     // Absolutely GENIUS optimization
     // We don't care about anything from disabledSetsIndex onward so we don't have to copy it
     memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * task->disabledSetsIndex);
     memcpy(newTask->bundlesUsed, task->bundlesUsed, sizeof(size_t) * setBundlesSetSize);
+    checkpoint(clocks, 1, &memcpyTaskCheckpoint);
 
     return newTask;
 }
