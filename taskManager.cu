@@ -123,7 +123,7 @@ __host__ void reloadTaskQueue(){
     // Then copy the outTaskQueue to the inTaskQueue
     TaskQueue host_outTaskQueue;
     cudaMemcpyFromSymbol(&host_outTaskQueue, outTaskQueue, sizeof(TaskQueue));
-//    size_t numTasks = host_outTaskQueue.writeIdx - host_outTaskQueue.readIdx;
+    size_t numTasks = host_outTaskQueue.writeIdx - host_outTaskQueue.readIdx;
     cudaMemcpyToSymbol(inTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
     // Then make a new outTaskQueue
@@ -136,8 +136,8 @@ __host__ void reloadTaskQueue(){
     cudaMemcpyToSymbol(expectedSetToDelete, &host_expectedSetToDelete, sizeof(size_t));
 
     // Print some stuff for debug reasons
-//    std::cout << "With a setDeleteIndex of " << std::to_string(setDeleteIndex) << ",\n";
-//    std::cout << "the inTaskQueue has " << std::to_string(numTasks) << " tasks\n" << std::endl;
+    std::cout << "With a setDeleteIndex of " << std::to_string(setDeleteIndex) << ",\n";
+    std::cout << "the inTaskQueue has " << std::to_string(numTasks) << " tasks\n" << std::endl;
 }
 
 __host__ void initTaskQueue(const size_t* host_freeBundles,
