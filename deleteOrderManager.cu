@@ -41,6 +41,12 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
     // Score gained from deleting a set.
     // Accounts for freeBundles, but is otherwise naive.
     auto* host_setDeleteScore = new size_t[numSets];
+
+    size_t numScoresToNote = 10;
+    auto* scoresToNote = (size_t*) malloc(numScoresToNote * sizeof(size_t));
+    memset(scoresToNote, 0, numScoresToNote * sizeof(size_t));
+    size_t unnotedScores = 0;
+
     for(size_t setNum = 0; setNum < numSets; setNum++){
         size_t setValue;
         size_t setSize;
@@ -116,6 +122,14 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
         host_setDeleteOrder[setNum] = setNum;
         host_setDeleteValue[setNum] = setValue;
         host_setDeleteScore[setNum] = setDeleteScore;
+
+        // Note notable stuff
+        if(setDeleteScore < numScoresToNote){
+            scoresToNote[setDeleteScore]++;
+        }
+        else{
+            unnotedScores++;
+        }
     }
     // From the example:
     // The first array input will be sorted
@@ -127,6 +141,14 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
                         thrust::greater<size_t>());
     // And take it to CUDA
     cudaMemcpyToSymbol(expectedSetToDelete, &host_setDeleteOrder[0], sizeof(size_t));
+
+    // Also state anything notable
+    for(size_t i = 0; i < numScoresToNote; i++){
+        std::cout << "There were " << std::to_string(scoresToNote[i]) << " sets with a size of " << std::to_string(i) << "\n";
+    }
+    std::cout << "There were " << std::to_string(unnotedScores) << " other sets\n";
+    std::cout << std::endl;
+    delete[] scoresToNote;
 }
 
 // TODO solve the 0-1 knapsack problem
