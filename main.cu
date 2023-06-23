@@ -534,7 +534,7 @@ int main() {
         CPUTime += clock();
     }
 
-    printProfilingData();
+//    printProfilingData();
     std::cout << "Time taken on GPU (seconds): " << std::to_string(GPUTime/(double)CLOCKS_PER_SEC) << "\n";
     std::cout << "Time taken on CPU (seconds): " << std::to_string(CPUTime/(double)CLOCKS_PER_SEC) << "\n";
 
