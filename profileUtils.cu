@@ -24,6 +24,7 @@ __device__ size_t finishLoopCheckpoint = 0;
 
 __device__ size_t tryRezTaskCheckpoint = 0;
 __device__ size_t checkTaskAliveCheckpoint = 0;
+__device__ size_t createNewTaskCheckpoint = 0;
 __device__ size_t memcpyTaskCheckpoint = 0;
 
 __device__ size_t tasksCreated = 0;
@@ -126,6 +127,7 @@ __host__ void printProfilingData(){
     std::cout << "\n";
     printProfilingStrNum("Avg. time used trying to rez tasks: ", tryRezTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used checking task life: ", checkTaskAliveCheckpoint, totalThreads);
+    printProfilingStrNum("Avg. time used createTask()ing: ", createNewTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used memcpy in copyTask: ", memcpyTaskCheckpoint, totalThreads);
     std::cout << "\n";
     std::cout << "Note that the below number does not account for the very first task, the one created by host\n";

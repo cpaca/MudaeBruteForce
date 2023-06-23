@@ -64,7 +64,9 @@ __device__ Task* copyTask(Task* task, size_t* clocks){
     checkpoint(clocks, 1, &tryRezTaskCheckpoint);
 
     if(newTask == nullptr) {
+        startClock(clocks, 2);
         newTask = createTask();
+        checkpoint(clocks, 2, &createNewTaskCheckpoint);
         profileIncrement(&tasksCreated);
     }
     else{
