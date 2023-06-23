@@ -513,7 +513,8 @@ int main() {
     size_t sharedMemoryNeeded = (numBundles + numSeries) * sizeof(setSize_t);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
-    clock_t startTime = clock();
+    clock_t GPUTime = 0;
+    clock_t CPUTime = 0;
 
     // std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
     // findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
@@ -522,17 +523,23 @@ int main() {
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError;
     for(size_t i = 0; i < 22; i++) {
+        GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();
+        GPUTime += clock();
+
         if(syncError != cudaSuccess){
             break;
         }
+
+        CPUTime -= clock();
         reloadTaskQueue();
+        CPUTime += clock();
     }
 
-    clock_t endTime = clock();
     printProfilingData();
-    std::cout << "Time taken (seconds): " << std::to_string((endTime - startTime)/(double)CLOCKS_PER_SEC) << "\n";
+    std::cout << "Time taken on GPU (seconds): " << std::to_string(GPUTime/(double)CLOCKS_PER_SEC) << "\n";
+    std::cout << "Time taken on CPU (seconds): " << std::to_string(CPUTime/(double)CLOCKS_PER_SEC) << "\n";
 
     if (syncError != cudaSuccess) {
         std::cout << "cudaDeviceSync   invoked a CUDA error" << std::endl;
