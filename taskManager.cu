@@ -123,7 +123,7 @@ __host__ void reloadTaskQueue(){
     // Then copy the outTaskQueue to the inTaskQueue
     TaskQueue host_outTaskQueue;
     cudaMemcpyFromSymbol(&host_outTaskQueue, outTaskQueue, sizeof(TaskQueue));
-    size_t numTasks = host_outTaskQueue.writeIdx - host_outTaskQueue.readIdx;
+//    size_t numTasks = host_outTaskQueue.writeIdx - host_outTaskQueue.readIdx;
     cudaMemcpyToSymbol(inTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
     // Then make a new outTaskQueue
