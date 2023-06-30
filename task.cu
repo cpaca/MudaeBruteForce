@@ -1,30 +1,7 @@
 #ifndef MUDAEBRUTEFORCE_TASK
 #define MUDAEBRUTEFORCE_TASK
 
-/**
- * Creates a blank task.
- * The contents of the task are unspecified
- */
-__device__ Task* createTask(){
-    Task* ret = new Task;
-    ret->disabledSets = new size_t[DISABLED_SETS_SIZE];
-    ret->bundlesUsed = new size_t[setBundlesSetSize];
-
-    return ret;
-}
-
-/**
- * Destructs task. WILL cause a segfault if you use the pointer after destruction.
- */
-__device__ void destructTask(Task* task){
-    delete[] task->disabledSets;
-    delete[] task->bundlesUsed;
-
-    delete task;
-
-    profileIncrement(&tasksDestructed);
-}
-
+// TODO put this back in taskManager.cu
 // Moved to here since it's needed in both Main and TaskQueue
 // Moved it here instead of its own file because I couldn't think of a good filename.
 /**
