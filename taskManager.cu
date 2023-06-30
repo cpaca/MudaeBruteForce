@@ -51,7 +51,7 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
     memcpy(destAddress, srcAddress, queuePitch);
 }
 
-__host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
+__host__ TaskQueue makeBlankTaskQueue() {
     size_t taskStructBytes = sizeof(Task);
     size_t bundlesUsedBytes = sizeof(size_t) * host_setBundlesSetSize;
     size_t disabledSetsBytes = DISABLED_SETS_SIZE * sizeof(size_t);
@@ -108,7 +108,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t numSeries,
                             size_t numBundles){
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
-    TaskQueue host_inTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
+    TaskQueue host_inTaskQueue = makeBlankTaskQueue();
 
     // Also create a very basic task for the very first thread.
     // TODO maybe make this a one-thread kernel call?
@@ -171,7 +171,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     host_inTaskQueue.writeIdx = 1;
     cudaMemcpyToSymbol(inTaskQueue, &host_inTaskQueue, sizeof(TaskQueue));
 
-    TaskQueue host_outTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
+    TaskQueue host_outTaskQueue = makeBlankTaskQueue();
     cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
     // Clean up memory
