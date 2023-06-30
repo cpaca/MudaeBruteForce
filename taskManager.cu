@@ -9,32 +9,7 @@
  * @return
  */
 __device__ Task* getTask(TaskQueue &tasks){
-    size_t offset = (threadIdx.x % 32) + 1;
-    while(true){
-        offset = min(offset, offset-1);
-
-        size_t expectedReadIdx = tasks.readIdx + offset;
-        if(expectedReadIdx >= tasks.writeIdx){
-            return nullptr;
-        }
-
-        size_t queueIdx = expectedReadIdx % (1 << tasks.size);
-        Task* ret = tasks.queue[queueIdx];
-        if(ret == nullptr){
-            // putTask is in the process of putting the task in.
-            // So pick it up next time.
-            return nullptr;
-        }
-
-        // Otherwise, attempt to get the read idx...
-        size_t atomicReadIdx = atomicCAS(&(tasks.readIdx), expectedReadIdx, expectedReadIdx+1);
-        if(atomicReadIdx != expectedReadIdx){
-            // Some other thread got the expectedReadIdx task, so we can't.
-            continue;
-        }
-        tasks.queue[queueIdx] = nullptr;
-        return ret;
-    }
+    // TODO reimplement
 }
 
 /**
@@ -43,12 +18,7 @@ __device__ Task* getTask(TaskQueue &tasks){
  * (Because getTask could do something with it in another thread)
  */
 __device__ void putTask(TaskQueue &tasks, Task* task){
-    if(task == nullptr){
-        return;
-    }
-    size_t putIdx = atomicAdd(&(tasks.writeIdx), 1);
-    size_t queueIdx = putIdx % (1 << tasks.size);
-    tasks.queue[queueIdx] = task;
+    // TODO reimplement
 }
 
 /**
@@ -56,32 +26,7 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
  * Basically, a copy constructor.
  */
 __device__ Task* copyTask(Task* task, size_t* clocks){
-    startClock(clocks, 1);
-    if(task == nullptr){
-        return nullptr;
-    }
-    Task* newTask = getTask(deadTaskQueue);
-    checkpoint(clocks, 1, &tryRezTaskCheckpoint);
-
-    if(newTask == nullptr) {
-        startClock(clocks, 2);
-        newTask = createTask();
-        checkpoint(clocks, 2, &createNewTaskCheckpoint);
-        profileIncrement(&tasksCreated);
-    }
-    else{
-        profileIncrement(&tasksRezzed);
-    }
-    checkpoint(clocks, 1, &checkTaskAliveCheckpoint);
-
-    memcpy(newTask, task, sizeof(Task) - (2 * sizeof(size_t*)));
-    // Absolutely GENIUS optimization
-    // We don't care about anything from disabledSetsIndex onward so we don't have to copy it
-    memcpy(newTask->disabledSets, task->disabledSets, sizeof(size_t) * task->disabledSetsIndex);
-    memcpy(newTask->bundlesUsed, task->bundlesUsed, sizeof(size_t) * setBundlesSetSize);
-    checkpoint(clocks, 1, &memcpyTaskCheckpoint);
-
-    return newTask;
+    // TODO reimplement or remove
 }
 
 /**
@@ -91,15 +36,7 @@ __device__ Task* copyTask(Task* task, size_t* clocks){
  * Renamed to killTask because when it's killed, it goes into the dead task queue ("dead". "kill".)
  */
 __device__ void killTask(Task* task){
-    size_t queueFullness = deadTaskQueue.writeIdx - deadTaskQueue.readIdx;
-    if(queueFullness >= QUEUE_ELEMENTS){
-        // Too many dead tasks, just really truly kill this one
-        destructTask(task);
-    }
-    else{
-        // Kill this one for resurrection later.
-        putTask(deadTaskQueue, task);
-    }
+    // TODO reimplement ... or remove?
 }
 
 __host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
