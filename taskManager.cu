@@ -96,7 +96,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t numSeries,
                             size_t numBundles){
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
-    TaskQueue host_liveTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
+    TaskQueue host_inTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
 
     // Also create a very basic task for the very first thread.
     Task* firstTask = new Task;
@@ -151,12 +151,12 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
 
     // Convert everything into CUDA form:
     convertArrToCuda(firstTask->disabledSets, DISABLED_SETS_SIZE);
-    cudaMemcpy(host_liveTaskQueue.queue, firstTask, sizeof(Task), cudaMemcpyHostToDevice);
+    cudaMemcpy(host_inTaskQueue.queue, firstTask, sizeof(Task), cudaMemcpyHostToDevice);
 
-    convertArrToCuda(host_liveTaskQueue.queue, QUEUE_ELEMENTS);
-    host_liveTaskQueue.readIdx = 0;
-    host_liveTaskQueue.writeIdx = 1;
-    cudaMemcpyToSymbol(inTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));
+    convertArrToCuda(host_inTaskQueue.queue, QUEUE_ELEMENTS);
+    host_inTaskQueue.readIdx = 0;
+    host_inTaskQueue.writeIdx = 1;
+    cudaMemcpyToSymbol(inTaskQueue, &host_inTaskQueue, sizeof(TaskQueue));
 
     TaskQueue host_deadTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
     cudaMemcpyToSymbol(deadTaskQueue, &host_deadTaskQueue, sizeof(TaskQueue));
