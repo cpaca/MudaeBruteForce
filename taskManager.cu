@@ -21,24 +21,6 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
     // TODO reimplement
 }
 
-/**
- * Returns a new Task that is identical to the given Task
- * Basically, a copy constructor.
- */
-__device__ Task* copyTask(Task* task, size_t* clocks){
-    // TODO reimplement or remove
-}
-
-/**
- * Deletes a task.
- * Treat this like you would a destructor; if you call this then DON'T TOUCH THE TASK FOR ANY REASON
- * Unless you want a segfault.
- * Renamed to killTask because when it's killed, it goes into the dead task queue ("dead". "kill".)
- */
-__device__ void killTask(Task* task){
-    // TODO reimplement ... or remove?
-}
-
 __host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
     size_t taskStructBytes = sizeof(Task);
     size_t bundlesUsedBytes = sizeof(size_t) * host_setBundlesSetSize;
@@ -99,6 +81,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     TaskQueue host_inTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
 
     // Also create a very basic task for the very first thread.
+    // TODO maybe make this a one-thread kernel call?
     Task* firstTask = new Task;
     firstTask->disabledSets = new size_t[DISABLED_SETS_SIZE];
     firstTask->disabledSetsIndex = 0;

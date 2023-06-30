@@ -292,12 +292,12 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         }
         if(task->DLSlotsRemn <= 0){
             // Nope! Stop. Done. Nothing to do on this task.
-            killTask(task);
             continue;
         }
         checkpoint(clocks, 0, &validTaskCheckpoint);
 
-        Task* newTask = copyTask(task, clocks);
+        // TODO fix: Used to involve copyTask
+        Task* newTask;
         checkpoint(clocks, 0, &copyTaskCheckpoint);
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
@@ -309,7 +309,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         size_t setSize = getSetSize(numSeries, setToDelete);
         checkpoint(clocks, 0, &makeNewTaskCheckpoint);
         if(setSize > task->remainingOverlap){
-            killTask(task);
             task = nullptr;
             checkpoint(clocks, 0, &fullTaskCheckpoint);
         }
@@ -336,7 +335,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         if(task != nullptr){
             if(shouldKill(newTask, task)){
                 // We should kill this task, so we will.
-                killTask(task);
                 task = nullptr;
             }
         }
@@ -356,7 +354,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             putTask(outTaskQueue, newTask);
         }
         else{
-            killTask(newTask);
             newTask = nullptr;
         }
         checkpoint(clocks, 0, &finishLoopCheckpoint);
