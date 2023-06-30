@@ -1,7 +1,7 @@
 #include "task.cu"
 #include <thrust/sort.h>
-#define LIVE_QUEUE_SIZE 24
-#define DEAD_QUEUE_SIZE 19
+#define QUEUE_SIZE 24
+#define QUEUE_ELEMENTS (((size_t) 1) << QUEUE_SIZE)
 
 /**
  * Gets a task from the task queue.
@@ -92,7 +92,7 @@ __device__ Task* copyTask(Task* task, size_t* clocks){
  */
 __device__ void killTask(Task* task){
     size_t queueFullness = deadTaskQueue.writeIdx - deadTaskQueue.readIdx;
-    if(queueFullness >= (1 << DEAD_QUEUE_SIZE)){
+    if(queueFullness >= QUEUE_ELEMENTS){
         // Too many dead tasks, just really truly kill this one
         destructTask(task);
     }
@@ -157,8 +157,8 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t numBundles){
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
     TaskQueue host_liveTaskQueue;
-    host_liveTaskQueue.queue = new Task*[1 << LIVE_QUEUE_SIZE];
-    for(size_t i = 0; i < (1 << LIVE_QUEUE_SIZE); i++){
+    host_liveTaskQueue.queue = new Task*[1 << QUEUE_SIZE];
+    for(size_t i = 0; i < (1 << QUEUE_SIZE); i++){
         // this should be done by default anyway, but this is safer
         host_liveTaskQueue.queue[i] = nullptr;
     }
@@ -219,16 +219,16 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     convertArrToCuda(firstTask, 1);
     host_liveTaskQueue.queue[0] = firstTask;
 
-    convertArrToCuda(host_liveTaskQueue.queue, (1 << LIVE_QUEUE_SIZE));
-    host_liveTaskQueue.size = LIVE_QUEUE_SIZE;
+    convertArrToCuda(host_liveTaskQueue.queue, QUEUE_ELEMENTS);
+    host_liveTaskQueue.size = QUEUE_SIZE;
     host_liveTaskQueue.readIdx = 0;
     host_liveTaskQueue.writeIdx = 1;
     cudaMemcpyToSymbol(inTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));
 
-    TaskQueue host_deadTaskQueue = makeBlankTaskQueue(DEAD_QUEUE_SIZE);
+    TaskQueue host_deadTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
     cudaMemcpyToSymbol(deadTaskQueue, &host_deadTaskQueue, sizeof(TaskQueue));
 
-    TaskQueue host_outTaskQueue = makeBlankTaskQueue(LIVE_QUEUE_SIZE);
+    TaskQueue host_outTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
     cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
     // Clean up memory
