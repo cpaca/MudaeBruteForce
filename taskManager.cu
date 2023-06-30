@@ -108,16 +108,22 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
     // This is VERY VERY BAD programming practice to have repeated code in makeBlankTaskQueue and in kernelInitTaskQueue
     size_t taskStructBytes = sizeof(Task);
     size_t bundlesUsedBytes = sizeof(size_t) * setBundlesSetSize;
-    size_t disabledSetsBytes = DISABLED_SETS_SIZE * sizeof(size_t);
+    size_t disabledSetsBytes = sizeof(size_t) * ((size_t) DISABLED_SETS_SIZE);
     size_t taskTotalBytes = taskStructBytes+bundlesUsedBytes+disabledSetsBytes;
 
     // Create and init task:
     // Init malloc-related stuff
-    char* baseAddress = (char*) malloc(queuePitch);
-    devicePrintStrNum("baseAddress: ", (size_t) baseAddress);
+    char* baseAddress;
+    cudaMalloc(&baseAddress, queuePitch);
     Task* taskAddress = (Task*) (baseAddress);
     auto* bundlesUsedAddress = (size_t*) (baseAddress + taskStructBytes);
     auto* disabledSetsAddress = (size_t*) (baseAddress + taskStructBytes + disabledSetsBytes);
+    devicePrintStrNum("taskAddress: ", (size_t) taskAddress);
+    devicePrintStrNum("bundlesUsedAddress: ", (size_t) bundlesUsedAddress);
+    devicePrintStrNum("disabledSetsAddress: ", (size_t) disabledSetsAddress);
+    devicePrintStrNum("disabledSetsBytes: ", (size_t) disabledSetsBytes);
+    devicePrintStrNum("disabledSetsSize: ", (size_t) DISABLED_SETS_SIZE);
+    devicePrintStrNum("size_t size: ", (size_t) sizeof(size_t));
 
     taskAddress->bundlesUsed = bundlesUsedAddress;
     taskAddress->disabledSets = disabledSetsAddress;
@@ -130,6 +136,7 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
 
     // Init complex constants
     // Proper init score and disabledSetsIndex... and disabledSets
+    printf("1");
     auto** bundlePtrs = new size_t*[numBundles];
     for(size_t i = 0; i < numBundles; i++){
         if(freeBundles[i] != 0){
@@ -140,6 +147,7 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
             taskAddress->disabledSetsIndex++;
         }
     }
+    printf("2");
 
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         bool addSeries = false;
@@ -159,16 +167,19 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
         }
     }
     delete[] bundlePtrs;
+    printf("3");
 
     putTask(outTaskQueue, taskAddress);
+    printf("4");
 
     auto* queue = (std::uint8_t*) outTaskQueue.queue;
     printf("kernelInitTaskQueue, printing bytes:\n");
     for(size_t byteNum = 0; byteNum < taskTotalBytes; byteNum++){
         devicePrintStrNum("", queue[byteNum], 16, 0, true);
     }
+    printf("5");
 
-    free(baseAddress);
+    cudaFree(baseAddress);
 }
 
 __host__ void initTaskQueue(size_t numSeries, size_t numBundles){
