@@ -151,6 +151,4 @@ __host__ void initSetDeleteOrder(const size_t* host_freeBundles,
     delete[] scoresToNote;
 }
 
-// TODO solve the 0-1 knapsack problem
-
 #endif
