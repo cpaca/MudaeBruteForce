@@ -35,7 +35,7 @@ typedef struct {
 } Task;
 
 typedef struct {
-    Task** queue;
+    Task* queue;
     size_t readIdx;
     size_t writeIdx;
 } TaskQueue;

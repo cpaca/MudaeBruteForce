@@ -96,12 +96,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
                             size_t numSeries,
                             size_t numBundles){
     // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
-    TaskQueue host_liveTaskQueue;
-    host_liveTaskQueue.queue = new Task*[1 << QUEUE_SIZE];
-    for(size_t i = 0; i < (1 << QUEUE_SIZE); i++){
-        // this should be done by default anyway, but this is safer
-        host_liveTaskQueue.queue[i] = nullptr;
-    }
+    TaskQueue host_liveTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
 
     // Also create a very basic task for the very first thread.
     Task* firstTask = new Task;
@@ -156,8 +151,7 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
 
     // Convert everything into CUDA form:
     convertArrToCuda(firstTask->disabledSets, DISABLED_SETS_SIZE);
-    convertArrToCuda(firstTask, 1);
-    host_liveTaskQueue.queue[0] = firstTask;
+    cudaMemcpy(host_liveTaskQueue.queue, firstTask, sizeof(Task), cudaMemcpyHostToDevice);
 
     convertArrToCuda(host_liveTaskQueue.queue, QUEUE_ELEMENTS);
     host_liveTaskQueue.readIdx = 0;
