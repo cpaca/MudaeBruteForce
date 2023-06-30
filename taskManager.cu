@@ -50,8 +50,7 @@ __host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
     size_t host_queuePitch;
     cudaMallocPitch(&ret.queue, &host_queuePitch, taskTotalBytes, QUEUE_ELEMENTS);
     cudaMemcpyToSymbol(queuePitch, &host_queuePitch, sizeof(host_queuePitch));
-    
-    ret.size = queueSize;
+
     ret.readIdx = 0;
     ret.writeIdx = 0;
     return ret;
@@ -161,7 +160,6 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     host_liveTaskQueue.queue[0] = firstTask;
 
     convertArrToCuda(host_liveTaskQueue.queue, QUEUE_ELEMENTS);
-    host_liveTaskQueue.size = QUEUE_SIZE;
     host_liveTaskQueue.readIdx = 0;
     host_liveTaskQueue.writeIdx = 1;
     cudaMemcpyToSymbol(inTaskQueue, &host_liveTaskQueue, sizeof(TaskQueue));

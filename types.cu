@@ -36,10 +36,6 @@ typedef struct {
 
 typedef struct {
     Task** queue;
-
-    // The length of the queue is 2 to the power of size
-    // so if size is 24, then the length of the queue is (1 << 24)
-    std::uint8_t size;
     size_t readIdx;
     size_t writeIdx;
 } TaskQueue;
