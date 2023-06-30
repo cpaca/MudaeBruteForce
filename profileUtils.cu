@@ -136,11 +136,6 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Number of tasks destructed: ", tasksDestructed);
     std::cout << "\n";
 
-    TaskQueue host_deadTaskQueue;
-    cudaMemcpyFromSymbol(&host_deadTaskQueue, deadTaskQueue, sizeof(TaskQueue));
-    std::cout << "Dead queue fullness: " << std::to_string(host_deadTaskQueue.writeIdx - host_deadTaskQueue.readIdx) << "\n";
-    std::cout << "Dead queue writeIdx: " << std::to_string(host_deadTaskQueue.writeIdx) << "\n";
-
     TaskQueue host_liveTaskQueue;
     cudaMemcpyFromSymbol(&host_liveTaskQueue, inTaskQueue, sizeof(TaskQueue));
     std::cout << "Live queue fullness: " << std::to_string(host_liveTaskQueue.writeIdx - host_liveTaskQueue.readIdx) << "\n";

@@ -171,9 +171,6 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     host_inTaskQueue.writeIdx = 1;
     cudaMemcpyToSymbol(inTaskQueue, &host_inTaskQueue, sizeof(TaskQueue));
 
-    TaskQueue host_deadTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
-    cudaMemcpyToSymbol(deadTaskQueue, &host_deadTaskQueue, sizeof(TaskQueue));
-
     TaskQueue host_outTaskQueue = makeBlankTaskQueue(QUEUE_SIZE);
     cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
