@@ -308,6 +308,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
         size_t setSize = getSetSize(numSeries, setToDelete);
         // TODO rename checkpoint?
+        //  - low priority
         checkpoint(clocks, 0, &makeNewTaskCheckpoint);
         if(setSize > task->remainingOverlap){
             task = nullptr;
@@ -334,6 +335,8 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &deleteSetCheckpoint);
 
         // TODO more efficient shouldKill?
+        //  - Low priority, a task that should be killed will eventually be killed by the knapsack, leaving one
+        //    (fatter) child. Eventually the child will be so fat that remainingOverlap kills the child.
         /*
         if(task != nullptr){
             if(shouldKill(newTask, task)){

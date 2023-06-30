@@ -181,4 +181,5 @@ __host__ void initTaskQueue(const size_t* host_freeBundles,
     // Looks like this is the only one which doesn't get sent to CUDA.
     delete[] freeBundlePtrs;
     // TODO check if delete firstTask is safe
+    //  low-priority, if you make firstTask a one-thread kernel call this goes away
 }
