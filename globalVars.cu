@@ -53,5 +53,6 @@ __constant__ size_t expectedSetToDelete = 0;
 __device__ TaskQueue inTaskQueue;
 __device__ TaskQueue outTaskQueue;
 __device__ TaskQueue deadTaskQueue;
+__constant__ size_t queuePitch;
 
 #endif

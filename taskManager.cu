@@ -40,13 +40,17 @@ __device__ void killTask(Task* task){
 }
 
 __host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
+    size_t taskStructBytes = sizeof(Task);
+    size_t bundlesUsedBytes = sizeof(size_t) * host_setBundlesSetSize;
+    size_t disabledSetsBytes = DISABLED_SETS_SIZE * sizeof(size_t);
+    size_t taskTotalBytes = taskStructBytes+bundlesUsedBytes+disabledSetsBytes;
+
     TaskQueue ret;
-    ret.queue = new Task*[1 << queueSize];
-    for(size_t i = 0; i < (1 << queueSize); i++){
-        // this should be done by default anyway, but this is safer
-        ret.queue[i] = nullptr;
-    }
-    convertArrToCuda(ret.queue, (1 << queueSize));
+
+    size_t host_queuePitch;
+    cudaMallocPitch(&ret.queue, &host_queuePitch, taskTotalBytes, QUEUE_ELEMENTS);
+    cudaMemcpyToSymbol(queuePitch, &host_queuePitch, sizeof(host_queuePitch));
+    
     ret.size = queueSize;
     ret.readIdx = 0;
     ret.writeIdx = 0;
