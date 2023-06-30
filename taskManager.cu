@@ -9,7 +9,29 @@
  * @return
  */
 __device__ Task* getTask(TaskQueue &tasks){
-    // TODO reimplement
+    // TODO rewrite using atomicAdd
+    //  - low priority, is just an optimization idea
+    size_t offset = (threadIdx.x % 32) + 1;
+    while(true){
+        offset = min(offset, offset-1);
+        size_t expectedReadIdx = tasks.readIdx + offset;
+        if(expectedReadIdx > tasks.writeIdx){
+            return nullptr;
+        }
+
+        // Attempt to acquire this read idx...
+        size_t atomicReadIdx = atomicCAS(&(tasks.readIdx), expectedReadIdx, expectedReadIdx+1);
+        if(atomicReadIdx != expectedReadIdx){
+            // Some other thread got the readIdx, so we gotta try again.
+            continue;
+        }
+
+        char* queueAddress = (char*) tasks.queue;
+        size_t queueIdx = expectedReadIdx % QUEUE_ELEMENTS;
+        char* taskAddress = queueAddress + (queueIdx * queuePitch);
+        Task* ret = (Task*) taskAddress;
+        return ret;
+    }
 }
 
 /**
