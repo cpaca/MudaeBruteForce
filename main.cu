@@ -296,9 +296,9 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         }
         checkpoint(clocks, 0, &validTaskCheckpoint);
 
-        // TODO fix: Used to involve copyTask
-        Task* newTask;
-        checkpoint(clocks, 0, &copyTaskCheckpoint);
+        if(knapsackIsTaskGood(task)){
+            putTask(outTaskQueue, task);
+        }
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = expectedSetToDelete;
@@ -307,6 +307,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         task->DLSlotsRemn--;
 
         size_t setSize = getSetSize(numSeries, setToDelete);
+        // TODO rename checkpoint?
         checkpoint(clocks, 0, &makeNewTaskCheckpoint);
         if(setSize > task->remainingOverlap){
             task = nullptr;
@@ -332,12 +333,15 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         }
         checkpoint(clocks, 0, &deleteSetCheckpoint);
 
+        // TODO more efficient shouldKill?
+        /*
         if(task != nullptr){
             if(shouldKill(newTask, task)){
                 // We should kill this task, so we will.
                 task = nullptr;
             }
         }
+        */
 
         checkpoint(clocks, 0, &tryKillTaskCheckpoint);
 
@@ -350,12 +354,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
         // And put both tasks to the front.
         putTask(outTaskQueue, task);
-        if(knapsackIsTaskGood(newTask)) {
-            putTask(outTaskQueue, newTask);
-        }
-        else{
-            newTask = nullptr;
-        }
         checkpoint(clocks, 0, &finishLoopCheckpoint);
     }
     destructProfiling(clocks);

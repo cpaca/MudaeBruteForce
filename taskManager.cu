@@ -36,8 +36,6 @@ __device__ Task* getTask(TaskQueue &tasks){
 
 /**
  * Puts a task into the task queue.
- * WARNING: USING OR TOUCHING THE TASK AFTER CALLING PUTTASK() IS **UNDEFINED BEHAVIOR**
- * (Because getTask could do something with it in another thread)
  */
 __device__ void putTask(TaskQueue &tasks, Task* task){
     if(task == nullptr){
@@ -47,7 +45,7 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
     size_t queueIdx = putIdx % QUEUE_ELEMENTS;
     char* queueAddress = (char*) tasks.queue;
     char* taskAddress = queueAddress + (queueIdx * queuePitch);
-    
+
     char* destAddress = taskAddress;
     char* srcAddress = (char*) task;
     memcpy(destAddress, srcAddress, queuePitch);
