@@ -179,7 +179,7 @@ __device__ void deviceStrCat(char* dest, const char* src){
  *
  * This function was created largely for the in-code Profiler to use.
  */
-__device__ void devicePrintStrNum(const char* str, size_t num, size_t base = 10, size_t minLen = 0){
+__device__ void devicePrintStrNum(const char* str, size_t num, size_t base = 10, size_t minLen = 0, bool newline = true){
     // add 2 just in case i messed something up somehow
     // because i'm pretty sure I messed something up and this is easier than checking
     size_t strlen = 2;
@@ -199,7 +199,12 @@ __device__ void devicePrintStrNum(const char* str, size_t num, size_t base = 10,
 
     deviceStrCat(prntStr, str);
     deviceStrCat(prntStr, numStr);
-    printf("%s\n", prntStr);
+    if(newline){
+        printf("%s\n", prntStr);
+    }
+    else{
+        printf("%s", prntStr);
+    }
 
     delete[] numStr;
     delete[] prntStr;

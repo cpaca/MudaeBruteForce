@@ -464,7 +464,6 @@ int main() {
     // And convert freeBundles into a CUDA usable form.
     initializeGlobalSetSizes(numSeries, numBundles, seriesData, bundleData, host_freeBundles);
     initSetDeleteOrder(host_freeBundles, bundleData, seriesData, numSeries, numBundles);
-    initTaskQueue(host_freeBundles, bundleData, seriesData, numSeries, numBundles);
     convertArrToCuda(host_freeBundles, numBundles);
     if(host_freeBundles == nullptr){
         std::cout << "FreeBundles not initialized correctly.";
@@ -496,6 +495,8 @@ int main() {
     }
     cudaMemcpyToSymbol(deviceSeries, &host_deviceSeries, sizeof(host_deviceSeries));
 
+    initTaskQueue(numSeries, numBundles);
+
     knapsackInit();
 
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
@@ -516,7 +517,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError;
-    for(size_t i = 0; i < 80; i++) {
+    for(size_t i = 0; i < 0; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();

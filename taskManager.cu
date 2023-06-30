@@ -52,6 +52,7 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
 }
 
 __host__ TaskQueue makeBlankTaskQueue() {
+    // This is VERY VERY BAD programming practice to have repeated code in makeBlankTaskQueue and in kernelInitTaskQueue
     size_t taskStructBytes = sizeof(Task);
     size_t bundlesUsedBytes = sizeof(size_t) * host_setBundlesSetSize;
     size_t disabledSetsBytes = DISABLED_SETS_SIZE * sizeof(size_t);
@@ -102,81 +103,96 @@ __host__ void reloadTaskQueue(){
     std::cout << "the inTaskQueue has " << std::to_string(numTasks) << " tasks\n" << std::endl;
 }
 
-__host__ void initTaskQueue(const size_t* host_freeBundles,
-                            size_t** host_bundleData,
-                            size_t** host_seriesData,
-                            size_t numSeries,
-                            size_t numBundles){
-    // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
-    TaskQueue host_inTaskQueue = makeBlankTaskQueue();
+// The kernel-side function that assists with initializing the taskQueue
+__global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
+    // This is VERY VERY BAD programming practice to have repeated code in makeBlankTaskQueue and in kernelInitTaskQueue
+    size_t taskStructBytes = sizeof(Task);
+    size_t bundlesUsedBytes = sizeof(size_t) * setBundlesSetSize;
+    size_t disabledSetsBytes = DISABLED_SETS_SIZE * sizeof(size_t);
+    size_t taskTotalBytes = taskStructBytes+bundlesUsedBytes+disabledSetsBytes;
 
-    // Also create a very basic task for the very first thread.
-    // TODO maybe make this a one-thread kernel call?
-    Task* firstTask = new Task;
-    firstTask->disabledSets = new size_t[DISABLED_SETS_SIZE];
-    firstTask->disabledSetsIndex = 0;
-    // Will need the free bundle pointers for score calculations.
-    auto** freeBundlePtrs = new size_t*[numBundles];
-    size_t numFreeBundles = 0;
+    // Create and init task:
+    // Init malloc-related stuff
+    char* baseAddress = (char*) malloc(queuePitch);
+    devicePrintStrNum("baseAddress: ", (size_t) baseAddress);
+    Task* taskAddress = (Task*) (baseAddress);
+    auto* bundlesUsedAddress = (size_t*) (baseAddress + taskStructBytes);
+    auto* disabledSetsAddress = (size_t*) (baseAddress + taskStructBytes + disabledSetsBytes);
+
+    taskAddress->bundlesUsed = bundlesUsedAddress;
+    taskAddress->disabledSets = disabledSetsAddress;
+
+    // Init simple constants
+    taskAddress->remainingOverlap = OVERLAP_LIMIT;
+    taskAddress->DLSlotsRemn = MAX_DL;
+    taskAddress->disabledSetsIndex = 0;
+    taskAddress->score = 0;
+
+    // Init complex constants
+    // Proper init score and disabledSetsIndex... and disabledSets
+    auto** bundlePtrs = new size_t*[numBundles];
     for(size_t i = 0; i < numBundles; i++){
-        if(host_freeBundles[i] != 0){
-            // Add this free bundle to disabledSets.
-            firstTask->disabledSets[firstTask->disabledSetsIndex] = numSeries + i;
-            firstTask->disabledSetsIndex++;
-
-            // Note free bundle in pointers:
-            // And skip the size value.
-            freeBundlePtrs[numFreeBundles] = (host_bundleData[i])+1;
-            numFreeBundles++;
+        if(freeBundles[i] != 0){
+            size_t setNum = numSeries + i;
+            activateBundle(numSeries, taskAddress, setNum);
+            taskAddress->disabledSets[taskAddress->disabledSetsIndex] = setNum;
+            bundlePtrs[taskAddress->disabledSetsIndex] = bundleSeries + bundleIndices[i];
+            taskAddress->disabledSetsIndex++;
         }
     }
 
-    // Initialize score
-    size_t score = 0;
-    for(size_t i = 0; i < numSeries; i++){
+    for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         bool addSeries = false;
-        for(size_t j = 0; j < numFreeBundles; j++){
-            if((*(freeBundlePtrs[j])) == i){
-                freeBundlePtrs[j]++;
+        for(size_t i = 0; i < taskAddress->disabledSetsIndex; i++){
+            size_t bundleSetNum = *(bundlePtrs[i]);
+            while(bundleSetNum < seriesNum){
+                bundlePtrs[i]++;
+                bundleSetNum = *(bundlePtrs[i]);
+            }
+            if(bundleSetNum == seriesNum){
                 addSeries = true;
             }
         }
+
         if(addSeries){
-            score += host_seriesData[i][1];
+            taskAddress->score += deviceSeries[(2 * seriesNum) + 1];
         }
     }
-    firstTask->score = score;
+    delete[] bundlePtrs;
 
-    // Initialize setBundles
-    firstTask->bundlesUsed = new size_t[host_setBundlesSetSize];
-    for(size_t i = 0; i < host_setBundlesSetSize; i++){
-        // otherwise it's filled with random 1s and 0s and there are problems
-        firstTask->bundlesUsed[i] = 0;
+    putTask(outTaskQueue, taskAddress);
+
+    auto* queue = (std::uint8_t*) outTaskQueue.queue;
+    printf("kernelInitTaskQueue, printing bytes:\n");
+    for(size_t byteNum = 0; byteNum < taskTotalBytes; byteNum++){
+        devicePrintStrNum("", queue[byteNum], 16, 0, true);
     }
-    for(size_t i = 0; i < firstTask->disabledSetsIndex; i++){
-        activateBundle(numSeries, firstTask, firstTask->disabledSets[i]);
-    }
-    convertArrToCuda(firstTask->bundlesUsed, host_setBundlesSetSize);
 
-    // Initialize constant variables
-    firstTask->remainingOverlap = OVERLAP_LIMIT;
-    firstTask->DLSlotsRemn = MAX_DL;
+    free(baseAddress);
+}
 
-    // Convert everything into CUDA form:
-    convertArrToCuda(firstTask->disabledSets, DISABLED_SETS_SIZE);
-    cudaMemcpy(host_inTaskQueue.queue, firstTask, sizeof(Task), cudaMemcpyHostToDevice);
-
-    convertArrToCuda(host_inTaskQueue.queue, QUEUE_ELEMENTS);
-    host_inTaskQueue.readIdx = 0;
-    host_inTaskQueue.writeIdx = 1;
+__host__ void initTaskQueue(size_t numSeries, size_t numBundles){
+    // This is a weird way to do it, but doing it this way lets me basically 1:1 repeat other code.
+    TaskQueue host_inTaskQueue = makeBlankTaskQueue();
     cudaMemcpyToSymbol(inTaskQueue, &host_inTaskQueue, sizeof(TaskQueue));
 
     TaskQueue host_outTaskQueue = makeBlankTaskQueue();
     cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
-    // Clean up memory
-    // Looks like this is the only one which doesn't get sent to CUDA.
-    delete[] freeBundlePtrs;
-    // TODO check if delete firstTask is safe
-    //  low-priority, if you make firstTask a one-thread kernel call this goes away
+    kernelInitTaskQueue<<<1, 1>>>(numSeries, numBundles);
+    cudaError_t syncError = cudaDeviceSynchronize();
+    if(syncError != cudaSuccess){
+        std::cout << "initTaskQueue invoked a CUDA error" << std::endl;
+        const char *errName = cudaGetErrorName(syncError);
+        printf("%s\n", errName);
+        const char *errStr = cudaGetErrorString(syncError);
+        printf("%s\n", errStr);
+        std::cout << std::endl;
+        assert(false);
+    }
+
+    // Since kernelInitTaskQueue calls putTask and I plan to make putTask go to outQueue only
+    // this is how I have to swap the input and output sides.
+    std::cout << "InitTaskQueue calling Reload";
+    reloadTaskQueue();
 }
