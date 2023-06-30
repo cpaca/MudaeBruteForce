@@ -40,7 +40,17 @@ __device__ Task* getTask(TaskQueue &tasks){
  * (Because getTask could do something with it in another thread)
  */
 __device__ void putTask(TaskQueue &tasks, Task* task){
-    // TODO reimplement
+    if(task == nullptr){
+        return;
+    }
+    size_t putIdx = atomicAdd(&(tasks.writeIdx), 1);
+    size_t queueIdx = putIdx % QUEUE_ELEMENTS;
+    char* queueAddress = (char*) tasks.queue;
+    char* taskAddress = queueAddress + (queueIdx * queuePitch);
+    
+    char* destAddress = taskAddress;
+    char* srcAddress = (char*) task;
+    memcpy(destAddress, srcAddress, queuePitch);
 }
 
 __host__ TaskQueue makeBlankTaskQueue(size_t queueSize){
