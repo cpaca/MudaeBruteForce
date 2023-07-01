@@ -15,7 +15,7 @@ __device__ Task* getTask(TaskQueue &tasks){
     while(true){
         offset = min(offset, offset-1);
         size_t expectedReadIdx = tasks.readIdx + offset;
-        if(expectedReadIdx > tasks.writeIdx){
+        if(expectedReadIdx >= tasks.writeIdx){
             return nullptr;
         }
 
@@ -30,6 +30,7 @@ __device__ Task* getTask(TaskQueue &tasks){
         size_t queueIdx = expectedReadIdx % QUEUE_ELEMENTS;
         char* taskAddress = queueAddress + (queueIdx * queuePitch);
         Task* ret = (Task*) taskAddress;
+        devicePrintStrNum("task ReadIdx: ", expectedReadIdx);
         return ret;
     }
 }
@@ -75,7 +76,7 @@ __host__ TaskQueue makeBlankTaskQueue() {
 /**
  * Copies the outTaskQueue to the inTaskQueue
  */
-__host__ void reloadTaskQueue(){
+__host__ void reloadTaskQueue(bool incrementSDI = true){
     knapsackReload();
 
     // Get and swap the two task queues
@@ -97,7 +98,9 @@ __host__ void reloadTaskQueue(){
     cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
     // Update the expected setDeleteIndex
-    setDeleteIndex++;
+    if(incrementSDI){
+        setDeleteIndex++;
+    }
     size_t host_expectedSetToDelete = host_setDeleteOrder[setDeleteIndex];
     cudaMemcpyToSymbol(expectedSetToDelete, &host_expectedSetToDelete, sizeof(size_t));
 
@@ -166,6 +169,11 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
     putTask(outTaskQueue, taskAddress);
 
     auto* queue = (std::uint8_t*) outTaskQueue.queue;
+    Task* task = (Task*) queue;
+    devicePrintStrNum("Score ", task->score);
+    devicePrintStrNum("Overlap ", task->remainingOverlap);
+    devicePrintStrNum("Slots ", task->DLSlotsRemn);
+    devicePrintStrNum("Index ", task->disabledSetsIndex);
 
     cudaFree(baseAddress);
 }
@@ -192,6 +200,7 @@ __host__ void initTaskQueue(size_t numSeries, size_t numBundles){
 
     // Since kernelInitTaskQueue calls putTask and I plan to make putTask go to outQueue only
     // this is how I have to swap the input and output sides.
-    std::cout << "InitTaskQueue calling Reload";
-    reloadTaskQueue();
+    std::cout << "InitTaskQueue calling Reload\n";
+    reloadTaskQueue(false);
+    std::cout << "InitTaskQueue done calling Reload\n";
 }

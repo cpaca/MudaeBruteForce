@@ -291,6 +291,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             }
             continue;
         }
+        devicePrintStrNum("Score ", task->score);
+        devicePrintStrNum("Overlap ", task->remainingOverlap);
+        devicePrintStrNum("Slots ", task->DLSlotsRemn);
+        devicePrintStrNum("Index ", task->disabledSetsIndex);
         if(task->DLSlotsRemn <= 0){
             // Nope! Stop. Done. Nothing to do on this task.
             continue;
@@ -518,7 +522,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError = cudaSuccess;
-    for(size_t i = 0; i < 0; i++) {
+    for(size_t i = 0; i < 1; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();
