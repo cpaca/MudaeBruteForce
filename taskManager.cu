@@ -1,6 +1,6 @@
 #include "task.cu"
 #include <thrust/sort.h>
-#define QUEUE_SIZE 24
+#define QUEUE_SIZE 22
 #define QUEUE_ELEMENTS (((size_t) 1) << QUEUE_SIZE)
 
 /**
@@ -48,7 +48,11 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
 
     char* destAddress = taskAddress;
     char* srcAddress = (char*) task;
+    printf("4A");
+    devicePrintStrNum("srcAddress", (size_t) srcAddress);
+    devicePrintStrNum("destAddress", (size_t) destAddress);
     memcpy(destAddress, srcAddress, queuePitch);
+    printf("4B");
 }
 
 __host__ TaskQueue makeBlankTaskQueue() {
@@ -61,8 +65,11 @@ __host__ TaskQueue makeBlankTaskQueue() {
     TaskQueue ret;
 
     size_t host_queuePitch;
-    cudaMallocPitch(&ret.queue, &host_queuePitch, taskTotalBytes, QUEUE_ELEMENTS);
+    cudaErrorCheck(
+            cudaMallocPitch(&ret.queue, &host_queuePitch, taskTotalBytes, QUEUE_ELEMENTS),
+            "makeBlankTaskQueue mallocPitch error");
     cudaMemcpyToSymbol(queuePitch, &host_queuePitch, sizeof(host_queuePitch));
+    std::cout << "host queue pitch " << std::to_string(host_queuePitch) << std::endl;
 
     ret.readIdx = 0;
     ret.writeIdx = 0;

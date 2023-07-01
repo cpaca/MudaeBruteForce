@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 
+#include "deviceErrorChecker.cu"
 #include "globalVars.cu"
 #include "strUtils.cu"
 #include "hostDeviceUtils.cu"
@@ -473,6 +474,9 @@ int main() {
     initializeSetBundles(numBundles, numSeries, bundleData, seriesData);
 
     // time to do CUDA.
+    // https://stackoverflow.com/questions/23260074/allocating-malloc-a-double-in-cuda-device-function
+    cudaDeviceSetLimit(cudaLimitMallocHeapSize, (((size_t)1) << 30));
+
     // https://forums.developer.nvidia.com/t/how-to-cudamalloc-two-dimensional-array/4042
     // Mother fucker, I'm gonna have to convert the bundleData into a 1D array.
     // At least I can use seriesData as a 2D array, using the same schema as before.
@@ -502,9 +506,6 @@ int main() {
     // Non-array values are available in Device memory. Proof: https://docs.nvidia.com/cuda/cuda-c-programming-guide/
     // Section 3.2.2 uses "int N" in both host and device memory.
 
-    // https://stackoverflow.com/questions/23260074/allocating-malloc-a-double-in-cuda-device-function
-    cudaDeviceSetLimit(cudaLimitMallocHeapSize, 1 << 30);
-
     size_t sharedMemoryNeeded = (numBundles + numSeries) * sizeof(setSize_t);
 
     // makeError<<<2, 512>>>(numBundles, numSeries);
@@ -516,7 +517,7 @@ int main() {
     std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
-    cudaError_t syncError;
+    cudaError_t syncError = cudaSuccess;
     for(size_t i = 0; i < 0; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
