@@ -48,11 +48,7 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
 
     char* destAddress = taskAddress;
     char* srcAddress = (char*) task;
-    printf("4A");
-    devicePrintStrNum("srcAddress", (size_t) srcAddress);
-    devicePrintStrNum("destAddress", (size_t) destAddress);
     memcpy(destAddress, srcAddress, queuePitch);
-    printf("4B");
 }
 
 __host__ TaskQueue makeBlankTaskQueue() {
@@ -125,12 +121,6 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
     Task* taskAddress = (Task*) (baseAddress);
     auto* bundlesUsedAddress = (size_t*) (baseAddress + taskStructBytes);
     auto* disabledSetsAddress = (size_t*) (baseAddress + taskStructBytes + disabledSetsBytes);
-    devicePrintStrNum("taskAddress: ", (size_t) taskAddress);
-    devicePrintStrNum("bundlesUsedAddress: ", (size_t) bundlesUsedAddress);
-    devicePrintStrNum("disabledSetsAddress: ", (size_t) disabledSetsAddress);
-    devicePrintStrNum("disabledSetsBytes: ", (size_t) disabledSetsBytes);
-    devicePrintStrNum("disabledSetsSize: ", (size_t) DISABLED_SETS_SIZE);
-    devicePrintStrNum("size_t size: ", (size_t) sizeof(size_t));
 
     taskAddress->bundlesUsed = bundlesUsedAddress;
     taskAddress->disabledSets = disabledSetsAddress;
@@ -143,7 +133,6 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
 
     // Init complex constants
     // Proper init score and disabledSetsIndex... and disabledSets
-    printf("1");
     auto** bundlePtrs = new size_t*[numBundles];
     for(size_t i = 0; i < numBundles; i++){
         if(freeBundles[i] != 0){
@@ -154,7 +143,6 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
             taskAddress->disabledSetsIndex++;
         }
     }
-    printf("2");
 
     for(size_t seriesNum = 0; seriesNum < numSeries; seriesNum++){
         bool addSeries = false;
@@ -174,17 +162,10 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
         }
     }
     delete[] bundlePtrs;
-    printf("3");
 
     putTask(outTaskQueue, taskAddress);
-    printf("4");
 
     auto* queue = (std::uint8_t*) outTaskQueue.queue;
-    printf("kernelInitTaskQueue, printing bytes:\n");
-    for(size_t byteNum = 0; byteNum < taskTotalBytes; byteNum++){
-        devicePrintStrNum("", queue[byteNum], 16, 0, true);
-    }
-    printf("5");
 
     cudaFree(baseAddress);
 }
