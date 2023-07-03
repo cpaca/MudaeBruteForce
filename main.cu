@@ -350,6 +350,17 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             }
         }
 
+        if(task != nullptr){
+            if(knapsackGetBestScore(task) >= task->score){
+                // Either:
+                // Existing score is > task.score, in which case this task is worse than that task
+                // Existing score is == task.score, in which case this task is basically a dupe of that task.
+                // And we know we're not deleting a dupe of itself, because the "itself" from last time
+                // has already been added by the putTask() above.
+                task = nullptr;
+            }
+        }
+
         checkpoint(clocks, 0, &tryKillTaskCheckpoint);
 
         // Is the new DL good?

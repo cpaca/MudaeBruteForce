@@ -51,6 +51,16 @@ __device__ size_t knapsackGetBestScore(size_t rowNum = MAX_DL, size_t colNum = O
     return *col;
 }
 
+__device__ size_t knapsackGetBestScore(Task* task){
+    size_t DLSlotsRemn = task->DLSlotsRemn;
+    size_t DLSlotsUsed = MAX_DL - DLSlotsRemn;
+
+    size_t remainingOverlap = task->remainingOverlap;
+    size_t overlapUsed = OVERLAP_LIMIT - remainingOverlap;
+
+    return knapsackGetBestScore(DLSlotsUsed, overlapUsed);
+}
+
 __device__ bool knapsackIsTaskGood(Task* task){
     size_t DLSlotsRemn = task->DLSlotsRemn;
     size_t DLSlotsUsed = MAX_DL - DLSlotsRemn;
