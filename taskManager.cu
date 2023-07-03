@@ -1,6 +1,6 @@
 #include "task.cu"
 #include <thrust/sort.h>
-#define QUEUE_SIZE 22
+#define QUEUE_SIZE 20
 #define QUEUE_ELEMENTS (((size_t) 1) << QUEUE_SIZE)
 
 /**
@@ -30,6 +30,18 @@ __device__ Task* getTask(TaskQueue &tasks){
         size_t queueIdx = expectedReadIdx % QUEUE_ELEMENTS;
         char* taskAddress = queueAddress + (queueIdx * queuePitch);
         Task* ret = (Task*) taskAddress;
+
+        // TODO come up with a better fix?
+        //  - very low priority, honestly it's just a CPU optimization
+        //  and the cudaMallocPitch will never go to less than 2 pages with a MAX_DL of 55ish
+        // This is VERY VERY BAD programming practice to have repeated code in 3 places
+        size_t taskStructBytes = sizeof(Task);
+        size_t bundlesUsedBytes = sizeof(size_t) * setBundlesSetSize;
+        size_t disabledSetsBytes = sizeof(size_t) * ((size_t) DISABLED_SETS_SIZE);
+        size_t taskTotalBytes = taskStructBytes+bundlesUsedBytes+disabledSetsBytes;
+        ret->bundlesUsed = (size_t*) (taskAddress + taskStructBytes);
+        ret->disabledSets = (size_t*) (taskAddress + taskStructBytes + bundlesUsedBytes);
+
         devicePrintStrNum("task ReadIdx: ", expectedReadIdx);
         return ret;
     }
@@ -53,7 +65,7 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
 }
 
 __host__ TaskQueue makeBlankTaskQueue() {
-    // This is VERY VERY BAD programming practice to have repeated code in makeBlankTaskQueue and in kernelInitTaskQueue
+    // This is VERY VERY BAD programming practice to have repeated code in 3 places
     size_t taskStructBytes = sizeof(Task);
     size_t bundlesUsedBytes = sizeof(size_t) * host_setBundlesSetSize;
     size_t disabledSetsBytes = DISABLED_SETS_SIZE * sizeof(size_t);
@@ -111,7 +123,7 @@ __host__ void reloadTaskQueue(bool incrementSDI = true){
 
 // The kernel-side function that assists with initializing the taskQueue
 __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
-    // This is VERY VERY BAD programming practice to have repeated code in makeBlankTaskQueue and in kernelInitTaskQueue
+    // This is VERY VERY BAD programming practice to have repeated code in 3 places
     size_t taskStructBytes = sizeof(Task);
     size_t bundlesUsedBytes = sizeof(size_t) * setBundlesSetSize;
     size_t disabledSetsBytes = sizeof(size_t) * ((size_t) DISABLED_SETS_SIZE);
@@ -119,11 +131,10 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
 
     // Create and init task:
     // Init malloc-related stuff
-    char* baseAddress;
-    cudaMalloc(&baseAddress, queuePitch);
+    char* baseAddress = (char*) malloc(queuePitch);
     Task* taskAddress = (Task*) (baseAddress);
     auto* bundlesUsedAddress = (size_t*) (baseAddress + taskStructBytes);
-    auto* disabledSetsAddress = (size_t*) (baseAddress + taskStructBytes + disabledSetsBytes);
+    auto* disabledSetsAddress = (size_t*) (baseAddress + taskStructBytes + bundlesUsedBytes);
 
     taskAddress->bundlesUsed = bundlesUsedAddress;
     taskAddress->disabledSets = disabledSetsAddress;
@@ -174,8 +185,9 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
     devicePrintStrNum("Overlap ", task->remainingOverlap);
     devicePrintStrNum("Slots ", task->DLSlotsRemn);
     devicePrintStrNum("Index ", task->disabledSetsIndex);
+    devicePrintStrNum("task item: ", task->disabledSets[(task->disabledSetsIndex)-1]);
 
-    cudaFree(baseAddress);
+    free(baseAddress);
 }
 
 __host__ void initTaskQueue(size_t numSeries, size_t numBundles){
@@ -186,17 +198,10 @@ __host__ void initTaskQueue(size_t numSeries, size_t numBundles){
     TaskQueue host_outTaskQueue = makeBlankTaskQueue();
     cudaMemcpyToSymbol(outTaskQueue, &host_outTaskQueue, sizeof(TaskQueue));
 
+    cudaErrorCheck(cudaDeviceSynchronize(), "initTaskQueue first synchronize invoked a CUDA error");
+
     kernelInitTaskQueue<<<1, 1>>>(numSeries, numBundles);
-    cudaError_t syncError = cudaDeviceSynchronize();
-    if(syncError != cudaSuccess){
-        std::cout << "initTaskQueue invoked a CUDA error" << std::endl;
-        const char *errName = cudaGetErrorName(syncError);
-        printf("%s\n", errName);
-        const char *errStr = cudaGetErrorString(syncError);
-        printf("%s\n", errStr);
-        std::cout << std::endl;
-        assert(false);
-    }
+    cudaErrorCheck(cudaDeviceSynchronize(), "initTaskQueue second synchronize invoked a CUDA error");
 
     // Since kernelInitTaskQueue calls putTask and I plan to make putTask go to outQueue only
     // this is how I have to swap the input and output sides.
