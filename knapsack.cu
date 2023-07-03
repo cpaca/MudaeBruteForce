@@ -76,16 +76,20 @@ __device__ bool knapsackIsTaskGood(Task* task){
         return false;
     }
 
-    if(knapsackGetBestScore(DLSlotsUsed, overlapUsed-1) >= taskBestScore){
-        // A DL got the same results with one fewer overlap limit
-        // So this one is bad.
-        return false;
+    if(overlapUsed > 0) {
+        if (knapsackGetBestScore(DLSlotsUsed, overlapUsed - 1) >= taskBestScore) {
+            // A DL got the same results with one fewer overlap limit
+            // So this one is bad.
+            return false;
+        }
     }
 
-    if(knapsackGetBestScore(DLSlotsUsed-1, overlapUsed) >= taskBestScore) {
-        // A DL got the same results with one fewer set
-        // So this one is bad.
-        return false;
+    if(DLSlotsUsed > 0) {
+        if (knapsackGetBestScore(DLSlotsUsed - 1, overlapUsed) >= taskBestScore) {
+            // A DL got the same results with one fewer set
+            // So this one is bad.
+            return false;
+        }
     }
 
     return true;
