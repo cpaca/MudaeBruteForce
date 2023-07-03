@@ -133,6 +133,7 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
     char* baseAddress = (char*) malloc(queuePitch);
     Task* taskAddress = (Task*) (baseAddress);
     auto* bundlesUsedAddress = (size_t*) (baseAddress + taskStructBytes);
+    memset(bundlesUsedAddress, 0, bundlesUsedBytes);
     auto* disabledSetsAddress = (size_t*) (baseAddress + taskStructBytes + bundlesUsedBytes);
 
     taskAddress->bundlesUsed = bundlesUsedAddress;
