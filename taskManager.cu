@@ -32,6 +32,10 @@ __device__ Task* getTask(TaskQueue &tasks){
         ret->bundlesUsed = (size_t*) (taskAddress + taskStructBytes);
         ret->disabledSets = (size_t*) (taskAddress + taskStructBytes + bundlesUsedBytes);
 
+        if(ret->DLSlotsRemn > MAX_DL){
+            devicePrintStrNum("getTask error slotsRemn ", ret->DLSlotsRemn);
+        }
+
         return ret;
     }
 }
@@ -50,6 +54,9 @@ __device__ void putTask(TaskQueue &tasks, Task* task){
 
     char* destAddress = taskAddress;
     char* srcAddress = (char*) task;
+    if(task->DLSlotsRemn > MAX_DL){
+        devicePrintStrNum("putTask error slotsRemn ", task->DLSlotsRemn);
+    }
     memcpy(destAddress, srcAddress, queuePitch);
 }
 
@@ -88,6 +95,7 @@ __host__ void reloadTaskQueue(bool incrementSDI = true){
 
     // Save data for debug...
     size_t numTasks = host_inTaskQueue.writeIdx - host_inTaskQueue.readIdx;
+    size_t idx = host_inTaskQueue.readIdx;
 
     // Reset...
     host_outTaskQueue.readIdx = 0;
@@ -106,7 +114,8 @@ __host__ void reloadTaskQueue(bool incrementSDI = true){
 
     // Print some stuff for debug reasons
     std::cout << "With a setDeleteIndex of " << std::to_string(setDeleteIndex) << ",\n";
-    std::cout << "the inTaskQueue has " << std::to_string(numTasks) << " tasks\n" << std::endl;
+    std::cout << "the inTaskQueue has " << std::to_string(numTasks) << " tasks\n";
+    std::cout << "the inTaskQueue readIdx is " << std::to_string(idx) << "\n" << std::endl;
 }
 
 /**

@@ -290,6 +290,14 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             continue;
         }
 
+        size_t old = task->DLSlotsRemn;
+        if(old > MAX_DL){
+            devicePrintStrNum("First error slotsRemn ", task->DLSlotsRemn);
+        }
+        size_t newNum = task->DLSlotsRemn;
+        if(old != newNum){
+            devicePrintStrNum("WTF A ", old);
+        }
         if(task->DLSlotsRemn <= 0){
             // Nope! Stop. Done. Nothing to do on this task.
             continue;
@@ -302,22 +310,29 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &validTaskCheckpoint);
 
         if(knapsackIsTaskGood(task)){
-            size_t old = task->DLSlotsRemn;
             putTask(outTaskQueue, task);
-            size_t newNum = task->DLSlotsRemn;
-            if(old != newNum){
-                devicePrintStrNum("How the fuck is this error appearing ", task->DLSlotsRemn);
-            }
         }
 
         // shouldKill variables
         size_t origOverlap = task->remainingOverlap;
         size_t origScore = task->score;
+        newNum = task->DLSlotsRemn;
+        if(old != newNum){
+            devicePrintStrNum("WTF B ", old);
+        }
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = expectedSetToDelete;
+        newNum = task->DLSlotsRemn;
+        if(old != newNum){
+            devicePrintStrNum("WTF C ", old);
+        }
         task->disabledSets[task->disabledSetsIndex] = setToDelete;
         task->disabledSetsIndex++;
+        newNum = task->DLSlotsRemn;
+        if(old != newNum){
+            devicePrintStrNum("WTF D ", old);
+        }
         task->DLSlotsRemn--;
 
         size_t setSize = getSetSize(numSeries, setToDelete);
@@ -357,9 +372,9 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
 
         if(task != nullptr){
             if(task->DLSlotsRemn > MAX_DL){
-                devicePrintStrNum("Second error slotsRemn ", task->DLSlotsRemn);
+                devicePrintStrNum("Third error slotsRemn ", task->DLSlotsRemn);
+                devicePrintStrNum("Old num ", old);
             }
-
             if(knapsackGetBestScore(task) >= task->score){
                 // Either:
                 // Existing score is > task.score, in which case this task is worse than that task
