@@ -13,7 +13,6 @@ __device__ size_t numThreads = 40*512;
 
 __device__ size_t getTaskCheckpoint = 0;
 __device__ size_t validTaskCheckpoint = 0;
-__device__ size_t copyTaskCheckpoint = 0;
 __device__ size_t makeNewTaskCheckpoint = 0;
 __device__ size_t fullTaskCheckpoint = 0;
 __device__ size_t bundlePtrCheckpoint = 0;
@@ -21,15 +20,6 @@ __device__ size_t activateBundleCheckpoint = 0;
 __device__ size_t deleteSetCheckpoint = 0;
 __device__ size_t tryKillTaskCheckpoint = 0;
 __device__ size_t finishLoopCheckpoint = 0;
-
-__device__ size_t tryRezTaskCheckpoint = 0;
-__device__ size_t checkTaskAliveCheckpoint = 0;
-__device__ size_t createNewTaskCheckpoint = 0;
-__device__ size_t memcpyTaskCheckpoint = 0;
-
-__device__ size_t tasksCreated = 0;
-__device__ size_t tasksRezzed = 0;
-__device__ size_t tasksDestructed = 0;
 
 // The actual computation functions and whatnot.
 
@@ -116,7 +106,6 @@ __host__ void printProfilingData(){
     std::cout << "Threads counted: " << std::to_string(totalThreads) << "\n";
     printProfilingStrNum("Avg. time used getting the task: ", getTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used validating the task: ", validTaskCheckpoint, totalThreads);
-    printProfilingStrNum("Avg. time used copying new task: ", copyTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used initializing new task: ", makeNewTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used deleting an overfilled set: ", fullTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used getting the bundle ptr: ", bundlePtrCheckpoint, totalThreads);
@@ -124,16 +113,6 @@ __host__ void printProfilingData(){
     printProfilingStrNum("Avg. time used finishing deleteSet: ", deleteSetCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used trying to kill the task: ", tryKillTaskCheckpoint, totalThreads);
     printProfilingStrNum("Avg. time used postprocessing: ", finishLoopCheckpoint, totalThreads);
-    std::cout << "\n";
-    printProfilingStrNum("Avg. time used trying to rez tasks: ", tryRezTaskCheckpoint, totalThreads);
-    printProfilingStrNum("Avg. time used checking task life: ", checkTaskAliveCheckpoint, totalThreads);
-    printProfilingStrNum("Avg. time used createTask()ing: ", createNewTaskCheckpoint, totalThreads);
-    printProfilingStrNum("Avg. time used memcpy in copyTask: ", memcpyTaskCheckpoint, totalThreads);
-    std::cout << "\n";
-    std::cout << "Note that the below number does not account for the very first task, the one created by host\n";
-    printProfilingStrNum("Number of tasks created: ", tasksCreated);
-    printProfilingStrNum("Number of tasks resurrected: ", tasksRezzed);
-    printProfilingStrNum("Number of tasks destructed: ", tasksDestructed);
     std::cout << "\n";
 
     TaskQueue host_liveTaskQueue;
