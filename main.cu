@@ -302,6 +302,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             putTask(outTaskQueue, task);
         }
 
+        // shouldKill variables
+        size_t origOverlap = task->remainingOverlap;
+        size_t origScore = task->score;
+
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = expectedSetToDelete;
         task->disabledSets[task->disabledSetsIndex] = setToDelete;
@@ -336,17 +340,12 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         }
         checkpoint(clocks, 0, &deleteSetCheckpoint);
 
-        // TODO more efficient shouldKill?
-        //  - Low priority, a task that should be killed will eventually be killed by the knapsack, leaving one
-        //    (fatter) child. Eventually the child will be so fat that remainingOverlap kills the child.
-        /*
         if(task != nullptr){
-            if(shouldKill(newTask, task)){
+            if(shouldKill(origOverlap, origScore, task)){
                 // We should kill this task, so we will.
                 task = nullptr;
             }
         }
-        */
 
         checkpoint(clocks, 0, &tryKillTaskCheckpoint);
 
@@ -519,7 +518,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError = cudaSuccess;
-    for(size_t i = 0; i < 1; i++) {
+    for(size_t i = 0; i < 120; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();

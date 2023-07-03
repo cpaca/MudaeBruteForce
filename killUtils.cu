@@ -21,13 +21,13 @@ __device__ bool isEfficient(const size_t &scoreGained, const size_t &overlapUsed
  * @param task The version of the task after the latest set got added.
  * @return If you should kill the task.
  */
-__device__ bool shouldKill(Task* prevTask, Task* task){
-    if(task->score == prevTask->score) {
+__device__ bool shouldKill(size_t origOverlap, size_t origScore, Task* task){
+    if(task->score == origScore) {
         // Performing this Task didn't add any value...
         // So we shouldn't continue it
         return true;
     }
-    if (!isEfficient(task->score - prevTask->score, prevTask->remainingOverlap - task->remainingOverlap)){
+    if (!isEfficient(task->score - origScore, origOverlap - task->remainingOverlap)){
         // Is NOT efficient
         // Kill!
         return true;
