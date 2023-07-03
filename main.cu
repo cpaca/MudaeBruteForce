@@ -276,7 +276,6 @@ __device__ void activateSeries(Task* task, size_t seriesNum){
 }
 
 __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
-
     // size_t numSets = numBundles + numSeries;
     size_t* clocks = initProfiling();
     while(true){
@@ -285,7 +284,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         Task* task = getTask(inTaskQueue);
         checkpoint(clocks, 0, &getTaskCheckpoint);
         if(task == nullptr){
-            if(inTaskQueue.readIdx == inTaskQueue.writeIdx){
+            if(inTaskQueue.readIdx >= inTaskQueue.writeIdx){
                 break;
             }
             continue;
@@ -522,7 +521,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError = cudaSuccess;
-    for(size_t i = 0; i < 120; i++) {
+    for(size_t i = 0; i < 150; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();
