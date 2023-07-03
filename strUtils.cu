@@ -135,15 +135,18 @@ __device__ void deviceItos(char* &str, size_t num, const size_t base = 10, size_
 
     // str is now one past the last index
     // ie the null index
-    str[strIdx] = NULL;
     strIdx--;
 
     if(strIdx < minLen){
         strIdx = minLen;
     }
 
+    // Str is now at the very last letter
+    // So right after this last letter should be a null
+    str[strIdx+1] = '\0';
+
     while(num > 0){
-        str[strIdx] = ('0' + num%base); // NOLINT(cppcoreguidelines-narrowing-conversions)
+        str[strIdx] = ('0' + (num%base)); // NOLINT(cppcoreguidelines-narrowing-conversions)
         strIdx--;
         num /= base;
     }
@@ -195,10 +198,23 @@ __device__ void devicePrintStrNum(const char* str, size_t num, size_t base = 10,
     // Increased to 70 because the base-2 would need 64 chars at worst
     char* numStr = new char[70];
 
-    deviceItos(numStr, num, base, minLen);
+    deviceStrCat(prntStr, "[");
+
+    deviceItos(numStr, blockIdx.x, 10, 2);
+    deviceStrCat(prntStr, numStr);
+
+    deviceStrCat(prntStr, ":");
+
+    deviceItos(numStr, threadIdx.x, 10, 4);
+    deviceStrCat(prntStr, numStr);
+
+    deviceStrCat(prntStr, "] ");
 
     deviceStrCat(prntStr, str);
+
+    deviceItos(numStr, num, base, minLen);
     deviceStrCat(prntStr, numStr);
+
     if(newline){
         printf("%s\n", prntStr);
     }

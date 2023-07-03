@@ -332,8 +332,12 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         newNum = task->DLSlotsRemn;
         if(old != newNum){
             devicePrintStrNum("WTF D ", old);
+            devicePrintStrNum("WTF E ", newNum);
         }
         task->DLSlotsRemn--;
+        if(old != newNum){
+            devicePrintStrNum("WTF F ", task->DLSlotsRemn);
+        }
 
         size_t setSize = getSetSize(numSeries, setToDelete);
         // TODO rename checkpoint?
