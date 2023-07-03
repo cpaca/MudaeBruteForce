@@ -152,7 +152,12 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
             size_t setNum = numSeries + i;
             activateBundle(numSeries, taskAddress, setNum);
             taskAddress->disabledSets[taskAddress->disabledSetsIndex] = setNum;
-            bundlePtrs[taskAddress->disabledSetsIndex] = bundleSeries + bundleIndices[i];
+
+            // +1 because otherwise pointing at the size of the bundle
+            // I've done this like a billion times now and I'm writing this comment because I forgot about that.
+            // Again.
+            bundlePtrs[taskAddress->disabledSetsIndex] = (bundleSeries + bundleIndices[i] + 1);
+
             taskAddress->disabledSetsIndex++;
         }
     }
@@ -174,6 +179,7 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
             taskAddress->score += deviceSeries[(2 * seriesNum) + 1];
         }
     }
+    devicePrintStrNum("Free-bundles-only score: ", taskAddress->score);
     delete[] bundlePtrs;
 
     putTask(outTaskQueue, taskAddress);

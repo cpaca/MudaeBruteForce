@@ -268,6 +268,7 @@ __device__ void activateSeries(Task* task, size_t seriesNum){
     size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
     size_t* taskBundles = task->bundlesUsed;
     if(bundleOverlap(taskBundles, seriesBundles)){
+        devicePrintStrNum("Series has already been added: ", seriesNum);
         // This series has already been added to the Task.
         return;
     }
@@ -337,6 +338,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
                 activateBundle(numSeries, task, setToDelete);
                 checkpoint(clocks, 0, &activateBundleCheckpoint);
             }
+            devicePrintStrNum("Task bundlesUsed[0] ", task->bundlesUsed[0], 2, 70);
         }
         checkpoint(clocks, 0, &deleteSetCheckpoint);
 
@@ -518,7 +520,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError = cudaSuccess;
-    for(size_t i = 0; i < 120; i++) {
+    for(size_t i = 0; i < 1; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();
