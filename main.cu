@@ -316,28 +316,27 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         // shouldKill variables
         size_t origOverlap = task->remainingOverlap;
         size_t origScore = task->score;
-        newNum = task->DLSlotsRemn;
-        if(old != newNum){
-            devicePrintStrNum("WTF B ", old);
-        }
 
         // Delete the setDeleteIndex on task, leave it alone on newTask
         size_t setToDelete = expectedSetToDelete;
         newNum = task->DLSlotsRemn;
         if(old != newNum){
-            devicePrintStrNum("WTF C ", old);
+            devicePrintStrNum("WTF B1 ", old);
+            devicePrintStrNum("WTF B2 ", newNum);
         }
-        task->disabledSets[task->disabledSetsIndex] = setToDelete;
-        task->disabledSetsIndex++;
+        (task->disabledSets[task->disabledSetsIndex]) = setToDelete;
         newNum = task->DLSlotsRemn;
         if(old != newNum){
-            devicePrintStrNum("WTF D ", old);
-            devicePrintStrNum("WTF E ", newNum);
+            devicePrintStrNum("WTF C1 ", old);
+            devicePrintStrNum("WTF C2 ", newNum);
+            devicePrintStrNum("WTF C-DSI ", task->disabledSetsIndex);
+            devicePrintStrNum("WTF task ", (size_t) task);
+            devicePrintStrNum("WTF dS ", (size_t) task->disabledSets);
+            devicePrintStrNum("WTF dS+DSI ", (size_t) (task->disabledSets + task->disabledSetsIndex));
+            devicePrintStrNum("WTF sTD ", setToDelete);
         }
+        task->disabledSetsIndex++;
         task->DLSlotsRemn--;
-        if(old != newNum){
-            devicePrintStrNum("WTF F ", task->DLSlotsRemn);
-        }
 
         size_t setSize = getSetSize(numSeries, setToDelete);
         // TODO rename checkpoint?
@@ -478,6 +477,7 @@ int main() {
     // Explanation of +1: If there are 7 bundles, setSize_t should be 1, not 0.
     // host_ added because I can't write device data directly @ host level.
     host_setBundlesSetSize = (numBundles / (sizeof(size_t) * 8)) + 1;
+    std::cout << "Host SBSS is set to " << std::to_string(host_setBundlesSetSize) << std::endl;
 
     // There are certain bundles which are free. Namely, Western and Real Life People, if you have togglewestern and toggleirl
     // There's also togglehentai on some servers.
@@ -560,7 +560,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError = cudaSuccess;
-    for(size_t i = 0; i < 1000; i++) {
+    for(size_t i = 0; i < 127; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();
