@@ -268,7 +268,6 @@ __device__ void activateSeries(Task* task, size_t seriesNum){
     size_t* seriesBundles = setBundles + (setBundlesSetSize * seriesNum);
     size_t* taskBundles = task->bundlesUsed;
     if(bundleOverlap(taskBundles, seriesBundles)){
-        devicePrintStrNum("Series has already been added: ", seriesNum);
         // This series has already been added to the Task.
         return;
     }
@@ -338,7 +337,6 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
                 activateBundle(numSeries, task, setToDelete);
                 checkpoint(clocks, 0, &activateBundleCheckpoint);
             }
-            devicePrintStrNum("Task bundlesUsed[0] ", task->bundlesUsed[0], 2, 70);
         }
         checkpoint(clocks, 0, &deleteSetCheckpoint);
 
