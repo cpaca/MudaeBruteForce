@@ -296,6 +296,11 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             // Nope! Stop. Done. Nothing to do on this task.
             continue;
         }
+        if(task->remainingOverlap <= 0){
+            // Same thing! Can't disable any sets so why bother.
+            continue;
+        }
+
         checkpoint(clocks, 0, &validTaskCheckpoint);
 
         if(knapsackIsTaskGood(task)){
