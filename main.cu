@@ -10,7 +10,6 @@
 #include "profileUtils.cu"
 #include "knapsack.cu"
 #include "taskManager.cu"
-#include "task.cu"
 #include "killUtils.cu"
 #include "deleteOrderManager.cu"
 

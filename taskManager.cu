@@ -1,4 +1,3 @@
-#include "task.cu"
 #include <thrust/sort.h>
 #define QUEUE_SIZE 20
 #define QUEUE_ELEMENTS (((size_t) 1) << QUEUE_SIZE)
@@ -117,6 +116,25 @@ __host__ void reloadTaskQueue(bool incrementSDI = true){
     // Print some stuff for debug reasons
     std::cout << "With a setDeleteIndex of " << std::to_string(setDeleteIndex) << ",\n";
     std::cout << "the inTaskQueue has " << std::to_string(numTasks) << " tasks\n" << std::endl;
+}
+
+/**
+ * If set represents the Set ID of a bundle, then bundlesUsed is modified to acknowledge that that bundle is
+ * activated.
+ * @param numSeries The total number of series there are.
+ * @param bundlesUsed MAY BE MODIFIED to acknowledge this set being added to bundlesUsed.
+ * @param setToAdd The Set ID of a bundle.
+ */
+__host__ __device__ void activateBundle(const size_t numSeries, Task* task, size_t set) {
+    if(set >= numSeries){
+        // setToAdd is actually a bundle to add
+        // If this bundle is being used, we need to acknowledge that in bundlesUsed
+        size_t bundleNum = set - numSeries;
+        size_t bundlesUsedWordSize = 8 * sizeof(size_t);
+        size_t bundlesUsedIndex = bundleNum / bundlesUsedWordSize;
+        size_t bundleOffset = bundleNum % bundlesUsedWordSize;
+        task->bundlesUsed[bundlesUsedIndex] |= (((size_t)1) << bundleOffset);
+    }
 }
 
 // The kernel-side function that assists with initializing the taskQueue
