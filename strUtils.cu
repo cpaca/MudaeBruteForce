@@ -169,7 +169,7 @@ __device__ void deviceStrCat(char* dest, const char* src){
         destIdx++;
         srcIdx++;
     }
-    dest[destIdx] = NULL;
+    dest[destIdx] = '\0';
 }
 
 /**
@@ -189,7 +189,7 @@ __device__ void devicePrintStrNum(const char* str, size_t num, size_t base = 10,
         strlen++;
     }
 
-    char* prntStr = new char[strlen+10];
+    char* prntStr = new char[strlen+70];
     prntStr[0] = '\0';
 
     // Increased to 70 because the base-2 would need 64 chars at worst

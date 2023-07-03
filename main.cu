@@ -302,7 +302,12 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         checkpoint(clocks, 0, &validTaskCheckpoint);
 
         if(knapsackIsTaskGood(task)){
+            size_t old = task->DLSlotsRemn;
             putTask(outTaskQueue, task);
+            size_t newNum = task->DLSlotsRemn;
+            if(old != newNum){
+                devicePrintStrNum("How the fuck is this error appearing ", task->DLSlotsRemn);
+            }
         }
 
         // shouldKill variables
@@ -351,6 +356,10 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
         }
 
         if(task != nullptr){
+            if(task->DLSlotsRemn > MAX_DL){
+                devicePrintStrNum("Second error slotsRemn ", task->DLSlotsRemn);
+            }
+
             if(knapsackGetBestScore(task) >= task->score){
                 // Either:
                 // Existing score is > task.score, in which case this task is worse than that task
