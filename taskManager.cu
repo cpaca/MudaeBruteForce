@@ -77,7 +77,6 @@ __host__ TaskQueue makeBlankTaskQueue() {
             cudaMallocPitch(&ret.queue, &host_queuePitch, taskTotalBytes, QUEUE_ELEMENTS),
             "makeBlankTaskQueue mallocPitch error");
     cudaMemcpyToSymbol(queuePitch, &host_queuePitch, sizeof(host_queuePitch));
-    std::cout << "host queue pitch " << std::to_string(host_queuePitch) << std::endl;
 
     ret.readIdx = 0;
     ret.writeIdx = 0;
