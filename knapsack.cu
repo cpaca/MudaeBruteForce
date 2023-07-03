@@ -15,7 +15,7 @@ __host__ void knapsackInit(){
 
     char* host_newBestScores;
     cudaMallocPitch(&host_newBestScores, &host_pitch, fakeRowWidth, numRows);
-    std::cout << "host_pitch: " << std::to_string(host_pitch) << "\n";
+    std::cout << "Knapsack pitch: " << std::to_string(host_pitch) << "\n";
     cudaMemset(host_newBestScores, 0, host_pitch * numRows);
     cudaMemcpyToSymbol(bestScoresPitch, &host_pitch, sizeof(size_t));
     cudaMemcpyToSymbol(newBestScores, &host_newBestScores, sizeof(char*));

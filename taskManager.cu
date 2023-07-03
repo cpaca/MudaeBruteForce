@@ -42,7 +42,6 @@ __device__ Task* getTask(TaskQueue &tasks){
         ret->bundlesUsed = (size_t*) (taskAddress + taskStructBytes);
         ret->disabledSets = (size_t*) (taskAddress + taskStructBytes + bundlesUsedBytes);
 
-        devicePrintStrNum("task ReadIdx: ", expectedReadIdx);
         return ret;
     }
 }
@@ -181,11 +180,6 @@ __global__ void kernelInitTaskQueue(size_t numSeries, size_t numBundles){
 
     auto* queue = (std::uint8_t*) outTaskQueue.queue;
     Task* task = (Task*) queue;
-    devicePrintStrNum("Score ", task->score);
-    devicePrintStrNum("Overlap ", task->remainingOverlap);
-    devicePrintStrNum("Slots ", task->DLSlotsRemn);
-    devicePrintStrNum("Index ", task->disabledSetsIndex);
-    devicePrintStrNum("task item: ", task->disabledSets[(task->disabledSetsIndex)-1]);
 
     free(baseAddress);
 }

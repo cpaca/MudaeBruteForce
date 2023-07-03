@@ -291,10 +291,7 @@ __global__ void newFindBest(const size_t numBundles, const size_t numSeries){
             }
             continue;
         }
-        devicePrintStrNum("Score ", task->score);
-        devicePrintStrNum("Overlap ", task->remainingOverlap);
-        devicePrintStrNum("Slots ", task->DLSlotsRemn);
-        devicePrintStrNum("Index ", task->disabledSetsIndex);
+
         if(task->DLSlotsRemn <= 0){
             // Nope! Stop. Done. Nothing to do on this task.
             continue;
@@ -518,7 +515,7 @@ int main() {
 
     // std::cout << "Executing FindBest with " << std::to_string(NUM_BLOCKS) << " blocks of 512 threads each.\n";
     // findBest<<<NUM_BLOCKS, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
-    std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n";
+    std::cout << "Shared memory needed: " << std::to_string(sharedMemoryNeeded) << "\n\n";
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError = cudaSuccess;
