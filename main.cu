@@ -518,7 +518,7 @@ int main() {
     // reminder to self: 40 blocks of 512 threads each
     // for some reason 1024 threads per block throws some sort of error
     cudaError_t syncError = cudaSuccess;
-    for(size_t i = 0; i < 1; i++) {
+    for(size_t i = 0; i < 120; i++) {
         GPUTime -= clock();
         newFindBest<<<40, 512, sharedMemoryNeeded>>>(numBundles, numSeries);
         syncError = cudaDeviceSynchronize();
