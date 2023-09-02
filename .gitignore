@@ -3,3 +3,7 @@
 
 # It's good practice not to have working data in the github repo.
 /working-data/
+
+# Migrating to visual studio, get these fixed
+.vs/
+out/
