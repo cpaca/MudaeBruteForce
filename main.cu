@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 
+#include "deviceErrorChecker.cu"
 #include "globalVars.cu"
 #include "strUtils.cu"
 #include "hostDeviceUtils.cu"
