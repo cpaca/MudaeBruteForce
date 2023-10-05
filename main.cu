@@ -6,6 +6,7 @@
 int main() {
 
     std::cout << "Testing IntelliSense\n";
+
     size_t numBundles;
     // first read the bundlesStr
     //std::string* bundlesStr = getLines("../working-data/bundle_data.txt", numBundles);
