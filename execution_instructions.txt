@@ -1,0 +1,10 @@
+Execution instructions:
+This is for the dev, because Visual Studio is *not* cooperating with CMake.
+I would've done this with Visual Studio's SLN method from the beginning if I wasn't using CLion in the beginning.
+
+1. Select CMakeLists.txt
+2. Click the filled in green arrow on the top-middle of the screen. It'll say "Current Document (CMakeLists.txt)"
+This runs it in debug mode.
+
+There is also a not-filled-in green arrow in that taskbar to the left of that arrow.
+That runs it in "not debug mode", aka normal mode.
