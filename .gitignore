@@ -3,6 +3,8 @@
 /.idea/
 
 # It's good practice not to have working data in the github repo.
+# Also, while I am making this project public, I would still like to keep my working-data private.
+# If I get asked in the future, I'll write up a whole document explaining why I don't want to make this part public.
 /working-data/
 
 # Migrating to visual studio, get these fixed

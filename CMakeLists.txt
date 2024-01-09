@@ -34,9 +34,6 @@ message("CUDA_HEADER_FILES: " ${CUDA_HEADER_FILES})
 
 set(SOURCES
     main.cu
-    read_sets.cu
-    constants.cu
-    memory_handler.cu
 )
 
 add_executable(MudaeBruteForce ${SOURCES} ${CUDA_HEADER_FILES})
