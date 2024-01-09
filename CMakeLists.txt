@@ -32,7 +32,14 @@ message("CUDA_INCLUDES_DIR: " ${CUDA_INCLUDES_DIR})
 set(CUDA_HEADER_FILES ${CUDA_INCLUDES_DIR}/cuda_runtime.h)
 message("CUDA_HEADER_FILES: " ${CUDA_HEADER_FILES})
 
-add_executable(MudaeBruteForce main.cu "${CUDA_HEADER_FILES}")
+set(SOURCES
+    main.cu
+    read_sets.cu
+    constants.cu
+)
+
+add_executable(MudaeBruteForce ${SOURCES} ${CUDA_HEADER_FILES})
+# add_executable(MudaeBruteForce ${SOURCES} "${CUDA_HEADER_FILES}")
 target_include_directories(MudaeBruteForce PRIVATE "${CUDA_INCLUDES_DIR}")
 
 set_target_properties(MudaeBruteForce PROPERTIES
