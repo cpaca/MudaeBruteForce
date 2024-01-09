@@ -7,7 +7,6 @@
 #include "device_launch_parameters.h"
 #include <iostream>
 
-#define CUDAErrorCheck(ans, abort) { CUDAAssert((ans), __FILE__, __LINE__, abort); }
 #define CUDAErrorCheck(ans) { CUDAAssert((ans), __FILE__, __LINE__); }
 
 inline void CUDAAssert(cudaError_t code, const char* file, int line, bool abort = true)
