@@ -31,10 +31,13 @@ set(CUDA_INCLUDES_DIR ${CUDA_PATH}/include)
 message("CUDA_INCLUDES_DIR: " ${CUDA_INCLUDES_DIR})
 set(CUDA_HEADER_FILES ${CUDA_INCLUDES_DIR}/cuda_runtime.h)
 message("CUDA_HEADER_FILES: " ${CUDA_HEADER_FILES})
-
+ 
 set(SOURCES
-    main.cu
-)
+    "main.cu"
+    "error_handler.cu"  # No cuh for this because when I tried, it kept breaking. Something about the #define.
+    "memory_handler.cu" "memory_handler.cuh"
+    "read_sets.cu" "read_sets.cuh"
+    "constants.cuh")
 
 add_executable(MudaeBruteForce ${SOURCES} ${CUDA_HEADER_FILES})
 # add_executable(MudaeBruteForce ${SOURCES} "${CUDA_HEADER_FILES}")

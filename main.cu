@@ -1,15 +1,16 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "error_handler.cu"
-#include "read_sets.cu"
+#include "read_sets.cuh"
 #include <string>
 #include <iostream>
 
 int main() {
     std::cout << "Testing IntelliSense\n";
-    // CUDAErrorCheck(cudaErrorMemoryAllocation);
 
     readFile();
+
+    CUDAErrorCheck(cudaErrorMemoryAllocation);
 
     size_t numBundles;
     // first read the bundlesStr

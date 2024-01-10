@@ -1,11 +1,11 @@
 #include <fstream>
 #include <thrust/host_vector.h>
-#include "constants.cu"
+#include "constants.cuh"
 
 // Note to self: Use thrust
 // https://docs.nvidia.com/cuda/thrust/index.html
 
-void readFile() {
+__host__ void readFile() {
 	// Probably not the best method, but it's the best way to avoid exposing the structure of my computer
 	// and also makes it so this wont break if i re-build this on a different computer... assuming i have working-data.
 	std::string fileName = std::string(__FILE__) + "\\..\\working-data\\series.txt";
