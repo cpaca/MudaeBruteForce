@@ -22,9 +22,3 @@ __host__ void readFile();
 /// <param name="arr"></param>
 /// <returns></returns>
 __host__ groupType* hostArrayToDevice(groupType* arr, int size);
-
-/// <summary>
-/// Validates the device-side global-variables written in readFile. These are groupData, rowIndices, and numRows.
-/// This is a device-side function, but is meant to be run with 1-thread since the validation is done by looking at the numbers visually.
-/// </summary>
-__global__ void readFileDeviceValidate();
