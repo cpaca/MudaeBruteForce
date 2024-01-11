@@ -37,7 +37,9 @@ set(SOURCES
     "error_handler.cu"  # No cuh for this because when I tried, it kept breaking. Something about the #define.
     "memory_handler.cu" "memory_handler.cuh"
     "read_sets.cu" "read_sets.cuh"
-    "constants.cuh")
+    "constants.cuh" # No cu for this because it's just constants.
+    "vector_helper.cuh" "vector_helper.cu"
+)
 
 add_executable(MudaeBruteForce ${SOURCES} ${CUDA_HEADER_FILES})
 # add_executable(MudaeBruteForce ${SOURCES} "${CUDA_HEADER_FILES}")

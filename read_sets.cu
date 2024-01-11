@@ -1,6 +1,7 @@
 #include <fstream>
 #include <thrust/host_vector.h>
 #include "constants.cuh"
+#include "vector_helper.cuh"
 
 // Note to self: Use thrust
 // https://docs.nvidia.com/cuda/thrust/index.html
@@ -41,27 +42,28 @@ __host__ void readFile() {
 	// We can't have a non-rectangular 2D array in device memory
 	// but we can have a very long 1D array and then make a note of where each row starts and stops.
 	// so if we have [[1,2], [3,4,5,6,7], [8], [9,10]], we would make note of the 1, 3, 8, and 9.
-	thrust::host_vector<groupType> group_data;
-	thrust::host_vector<groupType> row_indices;
+	thrust::host_vector<groupType> groupData;
+	thrust::host_vector<groupType> rowIndices;
 
 	while (std::getline(file, line)) {
-		std::cout << line << "\n";
+		// Validation that readline works
+		// std::cout << line << "\n";
 		
 		// Start of a new row.
-		auto size = group_data.size();
-		row_indices.push_back(size);
+		auto size = groupData.size();
+		rowIndices.push_back(size);
 
 		while (!line.empty()) {
 			auto token = getToken(line);
 
 			groupType num = (groupType) stoi(token);
-			group_data.push_back(num);
+			groupData.push_back(num);
 		}
 	}
 	// Add one more so the very-last row knows where it ends.
-	auto size = group_data.size();
-	// If any of the elements of row_indices exceeds 2billion, then this one will also exceed 2billion.
-	// The only exception would be if there's over 9 quintillion elements in group_data, but for that to happen without an out-of-memory exception
+	auto size = groupData.size();
+	// If any of the elements of rowIndices exceeds 2billion, then this one will also exceed 2billion.
+	// The only exception would be if there's over 9 quintillion elements in groupData, but for that to happen without an out-of-memory exception
 	// would require approximately 36 exabytes of RAM.
 	if (size > 2000000000) {
 		// over 2 billion... might overload groupType.
@@ -69,10 +71,27 @@ __host__ void readFile() {
 		std::cerr << "SetType is going to get overloaded. Make it a bigger type.";
 		exit(1);
 	}
-	row_indices.push_back(size);
+	rowIndices.push_back(size);
 
 	// These vectors will never, ever be modified again (may be read again)
 	// So shrink them to min size...
-	group_data.shrink_to_fit();
-	row_indices.shrink_to_fit();
+	groupData.shrink_to_fit();
+	rowIndices.shrink_to_fit();
+
+	groupType* host_groupData = vectorToArray(groupData);
+	groupType* host_rowIndices = vectorToArray(rowIndices);
+	groupType numRows = rowIndices.size();
+
+	// Validation that vectorToArray works on host-side:
+
+	std::cout << "Reconstructing groupData..." << "\n";
+
+	for (int i = 0; i < numRows - 1; i++) {
+		groupType startIdx = host_rowIndices[i];
+		groupType endIdx = host_rowIndices[i + 1];
+		for (int i = startIdx; i < endIdx; i++) {
+			std::cout << host_groupData[i] << " ";
+		}
+		std::cout << "\n";
+	}
 }
