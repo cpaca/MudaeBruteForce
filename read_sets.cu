@@ -109,21 +109,6 @@ __host__ void readFile() {
 	auto numRows = rowIndices.size() - 1; // Note the last item represents the *end* of the last row
 	saveGroupData(arr_groupData, arr_rowIndices, numRows);
 
-	// Validation that vectorToArray works on host-side:
-
-	//*
-	std::cout << "Reconstructing groupData..." << "\n";
-
-	for (int i = 0; i < numRows; i++) {
-		groupType startIdx = arr_rowIndices[i];
-		groupType endIdx = arr_rowIndices[i + 1];
-		for (int i = startIdx; i < endIdx; i++) {
-			std::cout << arr_groupData[i] << " ";
-		}
-		std::cout << "\n";
-	}
-	//*/
-
 	// I understand that this is "sort of" a 2D array so theoretically, I should use cudaMallocPitch, however:
 	// - This is NOT a proper 2D array; the first row always has 2 elements and the last (many) rows always have at least 3 elements
 	// --- (Also, some rows may have 4, 5, 6, etc. elements, so this is even less of a 2D array)
