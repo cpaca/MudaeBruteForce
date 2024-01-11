@@ -1,8 +1,12 @@
 #include <fstream>
 #include <thrust/host_vector.h>
+#include "cuda.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 #include "constants.cuh"
 #include "vector_helper.cuh"
-#include "global_vars.cuh"
+#include "memory_handler.cuh"
+#include "group_handler.cuh"
 
 // Note to self: Use thrust
 // https://docs.nvidia.com/cuda/thrust/index.html
@@ -22,6 +26,33 @@ __host__ std::string getToken(std::string& str) {
 		str = str.substr(idx + 1);
 	}
 	return token;
+}
+
+// I understand that this function should logically be at the bottom of the file, not near the top,
+// but when I put it near the bottom, I can't compile.
+// It's weird, but this is easier than finding a fix.
+__global__ void readFileDeviceValidate() {
+	// I understand I could just do this in one for-loop
+	// but this is a more "genuine" representation of what each row represents
+	/*
+	for (int i = 0; i < dev_numRows; i++) {
+		groupType rowStart = dev_rowIndices[i]; // inclusive
+		groupType rowEnd = dev_rowIndices[i + 1]; // exclusive
+
+		printf("Row data: ");
+		for (int j = rowStart; j < rowEnd; j++) {
+			printf("%u ", dev_groupData[j]);
+		}
+		printf("\n");
+	}
+	*/
+}
+
+__host__ groupType* hostArrayToDevice(groupType* arr, int size)
+{
+	groupType* ret = (groupType*) cudaMallocSafe(size * sizeof(groupType));
+	cudaMemcpy(ret, arr, size * sizeof(groupType), cudaMemcpyHostToDevice);
+	return ret;
 }
 
 __host__ void readFile() {
@@ -73,23 +104,38 @@ __host__ void readFile() {
 	groupData.shrink_to_fit();
 	rowIndices.shrink_to_fit();
 
-	host_groupData = vectorToArray(groupData);
-	host_rowIndices = vectorToArray(rowIndices);
-	host_numRows = rowIndices.size();
+	auto arr_groupData = vectorToArray(groupData);
+	auto arr_rowIndices = vectorToArray(rowIndices);
+	auto numRows = rowIndices.size() - 1; // Note the last item represents the *end* of the last row
+	saveGroupData(arr_groupData, arr_rowIndices, numRows);
 
 	// Validation that vectorToArray works on host-side:
 
-	/*
+	//*
 	std::cout << "Reconstructing groupData..." << "\n";
 
-	for (int i = 0; i < host_numRows - 1; i++) {
-		groupType startIdx = host_rowIndices[i];
-		groupType endIdx = host_rowIndices[i + 1];
+	for (int i = 0; i < numRows; i++) {
+		groupType startIdx = arr_rowIndices[i];
+		groupType endIdx = arr_rowIndices[i + 1];
 		for (int i = startIdx; i < endIdx; i++) {
-			std::cout << host_groupData[i] << " ";
+			std::cout << arr_groupData[i] << " ";
 		}
 		std::cout << "\n";
 	}
-	*/
+	//*/
 
+	// I understand that this is "sort of" a 2D array so theoretically, I should use cudaMallocPitch, however:
+	// - This is NOT a proper 2D array; the first row always has 2 elements and the last (many) rows always have at least 3 elements
+	// --- (Also, some rows may have 4, 5, 6, etc. elements, so this is even less of a 2D array)
+	// --- so cudaMallocPitch probably wouldn't function properly here
+	// Basically, as I understand it, cudaMallocPitch is built for rectangular 2D arrays
+	// This isn't rectangular.
+	// auto devClone_groupData = hostArrayToDevice(host_groupData, host_rowIndices[host_numRows]);
+	// auto devClone_rowIndices = hostArrayToDevice(host_rowIndices, host_numRows);
+
+	// cudaMemcpyToSymbol(dev_groupData, &devClone_groupData, sizeof(devClone_groupData));
+	// cudaMemcpyToSymbol(dev_rowIndices, &devClone_rowIndices, sizeof(devClone_rowIndices));
+	// cudaMemcpyToSymbol(dev_numRows, &host_numRows, sizeof(host_numRows));
+
+	// readFileDeviceValidate<<<1, 1 >>>();
 }

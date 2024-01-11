@@ -5,16 +5,11 @@
 #include <string>
 #include <iostream>
 #include <cassert>
-#include "global_vars.cuh"
 
 int main() {
     std::cout << "Testing IntelliSense\n";
 
     readFile();
-    // if any of these are true then nothing got loaded.
-    assert(host_groupData != nullptr);
-    assert(host_rowIndices != nullptr);
-    assert(host_numRows != 0);
 
     // CUDAErrorCheck(cudaErrorMemoryAllocation);
 
@@ -91,8 +86,8 @@ int main() {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    delete[] host_groupData;
-    delete[] host_rowIndices;
+    // delete[] host_groupData;
+    // delete[] host_rowIndices;
 
     return 0;
 }
