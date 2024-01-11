@@ -1,20 +1,16 @@
-// Credit to this StackOverflow question and answer for pretty much this entire file.
-// I change out some bits into formats that I like more or to make it work properly (like the #includes)
-// but I change it so little that I cannot take credit for this work.
-// https://stackoverflow.com/a/14038590
-// Accessed January 8, 2023
 #include "cuda_runtime.h"
-#include "device_launch_parameters.h"
 #include <iostream>
 
-#define CUDAErrorCheck(ans) { CUDAAssert((ans), __FILE__, __LINE__); }
+__host__ void CUDAErrorCheck(cudaError_t error) {
+	if (error == cudaSuccess) {
+		// No error.
+		return;
+	}
 
-inline void CUDAAssert(cudaError_t code, const char* file, int line, bool abort = true)
-{
-    if (code != cudaSuccess)
-    {
-        // Changed this line out because it wasn't playing nicely
-        std::cerr << "GPUassert: " << cudaGetErrorString(code) << " " << file << " " << line << "\n";
-        if (abort) exit(code);
-    }
+	// Error detected!
+	// Can __FILE__ access the parent file?
+	// probably not tbh, it's a compile-time thing
+	// Well, if it becomes a problem I investigate __FILE__ harder
+	std::cerr << "CUDA Error detected: " << cudaGetErrorString(error);
+	exit(error);
 }
