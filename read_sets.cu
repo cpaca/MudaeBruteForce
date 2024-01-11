@@ -85,6 +85,7 @@ __host__ void readFile() {
 
 	// Validation that vectorToArray works on host-side:
 
+	/*
 	std::cout << "Reconstructing groupData..." << "\n";
 
 	for (int i = 0; i < host_numRows - 1; i++) {
@@ -95,4 +96,6 @@ __host__ void readFile() {
 		}
 		std::cout << "\n";
 	}
+	*/
+
 }
