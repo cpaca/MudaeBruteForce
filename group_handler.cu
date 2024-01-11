@@ -11,7 +11,7 @@ __device__ groupType* dev_groupData = nullptr;
 __device__ groupType* dev_rowIndices = nullptr;
 __device__ groupType dev_numRows = 0;
 
-// I understand that this function should logically be at the bottom of the file, not near the top,
+// I understand that these functions should logically be at the bottom of the file, not near the top,
 // but when I put it near the bottom, I can't compile.
 // It's weird, but this is easier than finding a fix.
 __global__ void groupDataDeviceValidate() {
