@@ -1,6 +1,6 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "error_handler.cu"
+#include "error_handler.cuh"
 #include "read_sets.cuh"
 #include <string>
 #include <iostream>

@@ -1,6 +1,6 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "error_handler.cu"
+#include "error_handler.cuh"
 
 // It's possible that these could be inlined safely
 // However until it becomes an issue I don't think I'm gonna do that.

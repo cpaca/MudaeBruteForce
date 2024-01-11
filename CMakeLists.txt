@@ -34,7 +34,7 @@ message("CUDA_HEADER_FILES: " ${CUDA_HEADER_FILES})
  
 set(SOURCES
     "main.cu"
-    "error_handler.cu"  # No cuh for this because when I tried, it kept breaking. Something about the #define.
+    "error_handler.cu" "error_handler.cuh"
     "memory_handler.cu" "memory_handler.cuh"
     "read_sets.cu" "read_sets.cuh"
     "constants.cuh" # No cu for this because it's just constants.
