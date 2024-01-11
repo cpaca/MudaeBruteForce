@@ -2,6 +2,7 @@
 
 // Included so that __host__ gets the correct code-sense coloring.
 #include "cuda_runtime.h"
+#include "constants.cuh"
 
 // Malloc equivalents
 
@@ -31,3 +32,13 @@ __host__ void* cudaMallocManagedSafe(size_t size, unsigned int flags = cudaMemAt
 /// <param name="size"></param>
 /// <returns></returns>
 __host__ void cudaFreeSafe(void* devPtr);
+
+// Misc functions
+
+/// <summary>
+/// Copies an array from host-side to device-side memory.
+/// </summary>
+/// <param name="arr">Pointer to the start of the array</param>
+/// <param name="size">Size of the array</param>
+/// <returns></returns>
+__host__ groupNum* hostArrayToDevice(groupNum* arr, int size);

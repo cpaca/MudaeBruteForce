@@ -39,13 +39,6 @@ __global__ void groupDataDeviceValidate() {
 	//*/
 }
 
-__host__ groupNum* hostArrayToDevice(groupNum* arr, int size)
-{
-	groupNum* ret = (groupNum*)cudaMallocSafe(size * sizeof(groupNum));
-	cudaMemcpy(ret, arr, size * sizeof(groupNum), cudaMemcpyHostToDevice);
-	return ret;
-}
-
 __host__ void saveGroupData(groupNum* groupData, groupNum* rowIndices, groupNum numRows)
 {
 	// Array validation host-side:

@@ -1,6 +1,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "error_handler.cuh"
+#include "constants.cuh"
 
 // It's possible that these could be inlined safely
 // However until it becomes an issue I don't think I'm gonna do that.
@@ -23,4 +24,11 @@ __host__ void* cudaMallocManagedSafe(size_t size, unsigned int flags = cudaMemAt
 __host__ void cudaFreeSafe(void* devPtr) {
 	cudaError_t err = cudaFree(devPtr);
 	CUDAErrorCheck(err);
+}
+
+__host__ groupNum* hostArrayToDevice(groupNum* arr, int size)
+{
+	groupNum* ret = (groupNum*)cudaMallocSafe(size * sizeof(groupNum));
+	cudaMemcpy(ret, arr, size * sizeof(groupNum), cudaMemcpyHostToDevice);
+	return ret;
 }
