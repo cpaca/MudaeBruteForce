@@ -35,7 +35,7 @@ message("CUDA_HEADER_FILES: " ${CUDA_HEADER_FILES})
 set(SOURCES
     "main.cu"
     "error_handler.cu" "error_handler.cuh"
-    "memory_handler.cu" "memory_handler.cuh"
+    "host_device_helper.cu" "host_device_helper.cuh"
     "read_sets.cu" "read_sets.cuh"
     "constants.cuh" # No cu for this because it's just constants.
     "vector_helper.cuh" "vector_helper.cu"

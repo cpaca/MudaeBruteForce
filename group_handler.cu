@@ -1,7 +1,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include "constants.cuh"
-#include "memory_handler.cuh"
+#include "host_device_helper.cuh"
 #include <iostream>
 
 groupNum* host_groupData = nullptr;
