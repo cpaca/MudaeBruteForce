@@ -3,4 +3,4 @@
 #include <cstdint>
 #define TEST "123abc\n"
 
-typedef std::uint32_t setType;
+typedef std::uint32_t groupType;
