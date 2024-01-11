@@ -135,7 +135,8 @@ __host__ void saveAllGroupData(groupNum* groupData, groupNum* rowIndices, groupN
 	// Basically, as I understand it, cudaMallocPitch is built for rectangular 2D arrays
 	// This isn't rectangular.
 	auto devClone_groupData = hostArrayToDevice(host_groupData, host_rowIndices[host_numRows]);
-	auto devClone_rowIndices = hostArrayToDevice(host_rowIndices, host_numRows);
+	// +1 because the element after the last row exists so the last row knows when to stop
+	auto devClone_rowIndices = hostArrayToDevice(host_rowIndices, host_numRows + 1); 
 
 	cudaMemcpyToSymbol(dev_groupData, &devClone_groupData, sizeof(devClone_groupData));
 	cudaMemcpyToSymbol(dev_rowIndices, &devClone_rowIndices, sizeof(devClone_rowIndices));
