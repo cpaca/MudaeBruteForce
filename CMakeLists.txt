@@ -39,6 +39,7 @@ set(SOURCES
     "read_sets.cu" "read_sets.cuh"
     "constants.cuh" # No cu for this because it's just constants.
     "vector_helper.cuh" "vector_helper.cu"
+    "global_vars.cuh" "global_vars.cu"
 )
 
 add_executable(MudaeBruteForce ${SOURCES} ${CUDA_HEADER_FILES})

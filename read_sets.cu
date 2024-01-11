@@ -2,6 +2,7 @@
 #include <thrust/host_vector.h>
 #include "constants.cuh"
 #include "vector_helper.cuh"
+#include "global_vars.cuh"
 
 // Note to self: Use thrust
 // https://docs.nvidia.com/cuda/thrust/index.html
@@ -78,15 +79,15 @@ __host__ void readFile() {
 	groupData.shrink_to_fit();
 	rowIndices.shrink_to_fit();
 
-	groupType* host_groupData = vectorToArray(groupData);
-	groupType* host_rowIndices = vectorToArray(rowIndices);
-	groupType numRows = rowIndices.size();
+	host_groupData = vectorToArray(groupData);
+	host_rowIndices = vectorToArray(rowIndices);
+	host_numRows = rowIndices.size();
 
 	// Validation that vectorToArray works on host-side:
 
 	std::cout << "Reconstructing groupData..." << "\n";
 
-	for (int i = 0; i < numRows - 1; i++) {
+	for (int i = 0; i < host_numRows - 1; i++) {
 		groupType startIdx = host_rowIndices[i];
 		groupType endIdx = host_rowIndices[i + 1];
 		for (int i = startIdx; i < endIdx; i++) {
