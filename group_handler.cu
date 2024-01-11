@@ -19,16 +19,16 @@ __device__ groupNum dev_numRows = 0;
 __global__ void groupDataDeviceValidate() {
 	// I understand I could just do this in one for-loop
 	// but this is a more "genuine" representation of what each row represents
-	/*
+	//*
 	for (int i = 0; i < dev_numRows; i++) {
 		groupNum rowStart = dev_rowIndices[i]; // inclusive
 		groupNum rowEnd = dev_rowIndices[i + 1]; // exclusive
 
-		printf("Row data: ");
+		printf("Row #%4u data:", i+1);
 		for (int j = rowStart; j < rowEnd; j++) {
-			printf("%u ", dev_groupData[j]);
+			printf(" %u", dev_groupData[j]);
 		}
-		printf("\n");
+		printf(", from idx %u to idx %u\n", rowStart, rowEnd);
 
 		// ... visual studio is too dumb so only have nvcc process this part
 #ifdef __CUDA_ARCH__
@@ -41,14 +41,30 @@ __global__ void groupDataDeviceValidate() {
 	//*/
 }
 
-__global__ void getGroupDataDeviceValidate() {
+__host__ __device__ void getGroupDataValidate() {
+	groupNum numRows;
+#ifdef __CUDA_ARCH__
+	numRows = dev_numRows;
+#else
+	numRows = host_numRows;
+#endif
+	for (int i = 1; i <= numRows; i++) {
+		groupType data = getGroupData(i);
+		printf("Group %u has an efficiency of %u/%u and %u bundles\n", i, data.value, data.weight, data.numBundles);
+#ifdef __CUDA_ARCH__
+		__nanosleep(1000000);
+#endif
+	}
+}
 
+__global__ void getGroupDataDeviceValidate() {
+	getGroupDataValidate();
 }
 
 __host__ __device__ groupType getGroupData(groupNum numGroup)
 {
 	// Like the comment said, 1-indexed.
-	groupNum rowNum = numGroup;
+	groupNum rowNum = numGroup - 1;
 
 	// Technically this variable renaming procedure isn't necessary
 	// but it reduces a LOT of code reuse and also helps visual studio at least somewhat understand what's going on.
@@ -71,6 +87,7 @@ __host__ __device__ groupType getGroupData(groupNum numGroup)
 	// exists in device cuda natively
 	// and in host code with cassert
 	assert(rowNum < numRows);
+	assert(rowNum >= 0);
 
 	groupNum dataIdx = rowIndices[rowNum];
 	groupNum nextIdx = rowIndices[rowNum + 1];
@@ -80,7 +97,7 @@ __host__ __device__ groupType getGroupData(groupNum numGroup)
 
 	out.weight = dataPtr[0];
 	out.value = dataPtr[1];
-	out.numBundles = nextIdx - dataIdx;
+	out.numBundles = nextIdx - dataIdx - 2;
 	out.bundles = dataPtr + 2;
 
 	return out;
@@ -96,6 +113,7 @@ __host__ void saveAllGroupData(groupNum* groupData, groupNum* rowIndices, groupN
 	for (int i = 0; i < numRows; i++) {
 		groupNum startIdx = rowIndices[i];
 		groupNum endIdx = rowIndices[i + 1];
+		std::cout << "Row data: ";
 		for (int i = startIdx; i < endIdx; i++) {
 			std::cout << groupData[i] << " ";
 		}
@@ -121,4 +139,7 @@ __host__ void saveAllGroupData(groupNum* groupData, groupNum* rowIndices, groupN
 	cudaMemcpyToSymbol(dev_numRows, &host_numRows, sizeof(host_numRows));
 
 	groupDataDeviceValidate<<<1, 1 >>>();
+
+	// getGroupDataValidate();
+	// getGroupDataDeviceValidate<<<1, 1 >>>();
 }
