@@ -20,18 +20,15 @@ __global__ void groupDataDeviceValidate() {
 	// I understand I could just do this in one for-loop
 	// but this is a more "genuine" representation of what each row represents
 	//*
-	printf("dev_numRows: %u\n", dev_numRows);
 	for (int i = 0; i < dev_numRows; i++) {
 		groupNum rowStart = dev_rowIndices[i]; // inclusive
 		groupNum rowEnd = dev_rowIndices[i + 1]; // exclusive
 
-		//printf("Row #%4u data:", i+1);
-		assert(i < 15000);
+		printf("Row #%4u data:", i+1);
 		for (int j = rowStart; j < rowEnd; j++) {
-			//printf(" %u", dev_groupData[j]);
-			assert(j < 15000);
+			printf(" %u", dev_groupData[j]);
 		}
-		//printf(", from idx %u to idx %u\n", rowStart, rowEnd);
+		printf(", from idx %u to idx %u\n", rowStart, rowEnd);
 
 		// ... visual studio is too dumb so only have nvcc process this part
 #ifdef __CUDA_ARCH__
@@ -142,7 +139,7 @@ __host__ void saveAllGroupData(groupNum* groupData, groupNum* rowIndices, groupN
 	cudaMemcpyToSymbol(dev_rowIndices, &devClone_rowIndices, sizeof(devClone_rowIndices));
 	cudaMemcpyToSymbol(dev_numRows, &host_numRows, sizeof(host_numRows));
 
-	groupDataDeviceValidate<<<1, 1 >>>();
+	// groupDataDeviceValidate<<<1, 1 >>>();
 
 	// getGroupDataValidate();
 	// getGroupDataDeviceValidate<<<1, 1 >>>();
