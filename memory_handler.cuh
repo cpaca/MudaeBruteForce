@@ -4,8 +4,30 @@
 #include "cuda_runtime.h"
 
 // Malloc equivalents
+
+/// <summary>
+/// Similar to cudaMalloc, however the error-handling is automatically done.
+/// This means that the signature can be treated more like ordinary malloc.
+/// </summary>
+/// <param name="size">Number of bytes to allocate.</param>
+/// <returns></returns>
 __host__ void* cudaMallocSafe(size_t size);
+
+/// <summary>
+/// Similar to cudaMallocManaged, however the error-handling is automatically done.
+/// This means that the signature can be treated more like ordinary malloc.
+/// <para/> The "flags" parameter is still available if I ever need it, but looking at documentation, I highly doubt I will.
+/// </summary>
+/// <param name="size">Number of bytes to allocate.</param>
+/// <returns></returns>
 __host__ void* cudaMallocManagedSafe(size_t size, unsigned int flags = cudaMemAttachGlobal);
 
 // Free equivalents
+
+/// <summary>
+/// Similar to cudaFree, however the error-handling is automatically done.
+/// This means that the signature can be treated more like ordinary malloc.
+/// </summary>
+/// <param name="size"></param>
+/// <returns></returns>
 __host__ void cudaFreeSafe(void* devPtr);
