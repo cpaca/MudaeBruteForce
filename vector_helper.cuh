@@ -7,4 +7,4 @@
 
 // Converts a vector to an array.
 // Warning: You WILL need to delete[] this array at some point in the future to avoid memory leaks.
-__host__ groupType* vectorToArray(thrust::host_vector<groupType> vec);
+__host__ groupNum* vectorToArray(thrust::host_vector<groupNum> vec);

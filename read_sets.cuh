@@ -21,4 +21,4 @@ __host__ void readFile();
 /// </summary>
 /// <param name="arr"></param>
 /// <returns></returns>
-__host__ groupType* hostArrayToDevice(groupType* arr, int size);
+__host__ groupNum* hostArrayToDevice(groupNum* arr, int size);
