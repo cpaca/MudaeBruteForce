@@ -41,11 +41,17 @@ __global__ void groupDataDeviceValidate() {
 	//*/
 }
 
+__global__ void getGroupDataDeviceValidate() {
+
+}
+
 __host__ __device__ groupType getGroupData(groupNum numGroup)
 {
+	// Like the comment said, 1-indexed.
+	groupNum rowNum = numGroup;
+
 	// Technically this variable renaming procedure isn't necessary
 	// but it reduces a LOT of code reuse and also helps visual studio at least somewhat understand what's going on.
-
 	groupNum* groupData;
 	groupNum* rowIndices;
 	groupNum numRows;
@@ -62,12 +68,12 @@ __host__ __device__ groupType getGroupData(groupNum numGroup)
 	numRows = host_numRows;
 #endif
 
-	// exists in device cude natively
+	// exists in device cuda natively
 	// and in host code with cassert
-	assert(numGroup < numRows);
+	assert(rowNum < numRows);
 
-	groupNum dataIdx = rowIndices[numGroup];
-	groupNum nextIdx = rowIndices[numGroup + 1];
+	groupNum dataIdx = rowIndices[rowNum];
+	groupNum nextIdx = rowIndices[rowNum + 1];
 	groupNum* dataPtr = groupData + dataIdx;
 
 	groupType out;

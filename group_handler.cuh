@@ -16,6 +16,9 @@ struct groupType {
 __host__ void saveAllGroupData(groupNum* groupData, groupNum* rowIndices, groupNum numRows);
 
 // Gets the data for one group (aka one row)
+// WARNING: ONE-INDEXED
+// SO GROUP 1 IS INDEX ZERO OF GROUPDATA
+// This way, group 1 represents line 1 of the actual text file.
 __host__ __device__ groupType getGroupData(groupNum numGroup);
 
 /// <summary>
