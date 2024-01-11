@@ -2,7 +2,9 @@
 #include "device_launch_parameters.h"
 #include "constants.cuh"
 #include "host_device_helper.cuh"
+#include "group_handler.cuh"
 #include <iostream>
+#include <cassert>
 
 groupNum* host_groupData = nullptr;
 groupNum* host_rowIndices = nullptr;
@@ -39,7 +41,46 @@ __global__ void groupDataDeviceValidate() {
 	//*/
 }
 
-__host__ void saveGroupData(groupNum* groupData, groupNum* rowIndices, groupNum numRows)
+__host__ __device__ groupType getGroupData(groupNum numGroup)
+{
+	// Technically this variable renaming procedure isn't necessary
+	// but it reduces a LOT of code reuse and also helps visual studio at least somewhat understand what's going on.
+
+	groupNum* groupData;
+	groupNum* rowIndices;
+	groupNum numRows;
+
+#ifdef __CUDA_ARCH__
+	// Device side
+	groupData = dev_groupData;
+	rowIndices = dev_rowIndices;
+	numRows = dev_numRows;
+#else
+	// Host side
+	groupData = host_groupData;
+	rowIndices = host_rowIndices;
+	numRows = host_numRows;
+#endif
+
+	// exists in device cude natively
+	// and in host code with cassert
+	assert(numGroup < numRows);
+
+	groupNum dataIdx = rowIndices[numGroup];
+	groupNum nextIdx = rowIndices[numGroup + 1];
+	groupNum* dataPtr = groupData + dataIdx;
+
+	groupType out;
+
+	out.weight = dataPtr[0];
+	out.value = dataPtr[1];
+	out.numBundles = nextIdx - dataIdx;
+	out.bundles = dataPtr + 2;
+
+	return out;
+}
+
+__host__ void saveAllGroupData(groupNum* groupData, groupNum* rowIndices, groupNum numRows)
 {
 	// Array validation host-side:
 

@@ -78,5 +78,5 @@ __host__ void readFile() {
 	auto arr_groupData = vectorToArray(groupData);
 	auto arr_rowIndices = vectorToArray(rowIndices);
 	auto numRows = rowIndices.size() - 1; // Note the last item represents the *end* of the last row
-	saveGroupData(arr_groupData, arr_rowIndices, numRows);
+	saveAllGroupData(arr_groupData, arr_rowIndices, numRows);
 }

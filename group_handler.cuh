@@ -13,7 +13,10 @@ struct groupType {
 
 // Sets and saves the data for groupHandler.
 // Should only be called once.
-__host__ void saveGroupData(groupNum* groupData, groupNum* rowIndices, groupNum numRows);
+__host__ void saveAllGroupData(groupNum* groupData, groupNum* rowIndices, groupNum numRows);
+
+// Gets the data for one group (aka one row)
+__host__ __device__ groupType getGroupData(groupNum numGroup);
 
 /// <summary>
 /// Validates variables: groupData, rowIndices, and numRows.
