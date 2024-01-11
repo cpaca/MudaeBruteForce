@@ -41,8 +41,8 @@ __host__ void readFile() {
 	// We can't have a non-rectangular 2D array in device memory
 	// but we can have a very long 1D array and then make a note of where each row starts and stops.
 	// so if we have [[1,2], [3,4,5,6,7], [8], [9,10]], we would make note of the 1, 3, 8, and 9.
-	thrust::host_vector<setType> group_data;
-	thrust::host_vector<setType> row_indices;
+	thrust::host_vector<groupType> group_data;
+	thrust::host_vector<groupType> row_indices;
 
 	while (std::getline(file, line)) {
 		std::cout << line << "\n";
@@ -54,7 +54,7 @@ __host__ void readFile() {
 		while (!line.empty()) {
 			auto token = getToken(line);
 
-			setType num = (setType) stoi(token);
+			groupType num = (groupType) stoi(token);
 			group_data.push_back(num);
 		}
 	}
@@ -64,7 +64,7 @@ __host__ void readFile() {
 	// The only exception would be if there's over 9 quintillion elements in group_data, but for that to happen without an out-of-memory exception
 	// would require approximately 36 exabytes of RAM.
 	if (size > 2000000000) {
-		// over 2 billion... might overload setType.
+		// over 2 billion... might overload groupType.
 		// I'm pretty sure this will never happen, but better to have the check.
 		std::cerr << "SetType is going to get overloaded. Make it a bigger type.";
 		exit(1);
