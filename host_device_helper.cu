@@ -2,6 +2,7 @@
 #include "device_launch_parameters.h"
 #include "error_handler.cuh"
 #include "constants.cuh"
+#include <iostream>
 
 // It's possible that these could be inlined safely
 // However until it becomes an issue I don't think I'm gonna do that.
@@ -11,6 +12,7 @@ __host__ void* cudaMallocSafe(size_t size) {
 	void* dev_out;
 	cudaError_t err = cudaMalloc(&dev_out, size);
 	CUDAErrorCheck(err);
+	printf("Allocating memory of size %u\n", size);
 	return dev_out;
 }
 

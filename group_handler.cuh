@@ -26,3 +26,6 @@ __host__ __device__ groupType getGroupData(groupNum numGroup);
 /// This is a device-side function, but is meant to be run with 1-thread since the **validation is done by looking at the numbers visually**!!!!.
 /// </summary>
 __global__ void groupDataDeviceValidate();
+
+// Destructor for the group data, basically.
+__host__ void cleanupGroupData();
