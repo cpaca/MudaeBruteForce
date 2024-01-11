@@ -27,10 +27,3 @@ __host__ void cudaFreeSafe(void* devPtr) {
 	cudaError_t err = cudaFree(devPtr);
 	CUDAErrorCheck(err);
 }
-
-__host__ groupNum* hostArrayToDevice(groupNum* arr, int size)
-{
-	groupNum* ret = (groupNum*)cudaMallocSafe(size * sizeof(groupNum));
-	cudaMemcpy(ret, arr, size * sizeof(groupNum), cudaMemcpyHostToDevice);
-	return ret;
-}
