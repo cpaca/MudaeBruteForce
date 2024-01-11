@@ -12,7 +12,7 @@ __host__ void* cudaMallocSafe(size_t size) {
 	void* dev_out;
 	cudaError_t err = cudaMalloc(&dev_out, size);
 	CUDAErrorCheck(err);
-	printf("Allocating memory of size %u\n", size);
+	// printf("Allocating memory of size %u\n", size);
 	return dev_out;
 }
 
