@@ -4,12 +4,12 @@
 #include "memory_handler.cuh"
 #include <iostream>
 
-groupType* host_groupData = nullptr;
-groupType* host_rowIndices = nullptr;
-groupType host_numRows = 0;
-__device__ groupType* dev_groupData = nullptr;
-__device__ groupType* dev_rowIndices = nullptr;
-__device__ groupType dev_numRows = 0;
+groupNum* host_groupData = nullptr;
+groupNum* host_rowIndices = nullptr;
+groupNum host_numRows = 0;
+__device__ groupNum* dev_groupData = nullptr;
+__device__ groupNum* dev_rowIndices = nullptr;
+__device__ groupNum dev_numRows = 0;
 
 // I understand that these functions should logically be at the bottom of the file, not near the top,
 // but when I put it near the bottom, I can't compile.
@@ -19,8 +19,8 @@ __global__ void groupDataDeviceValidate() {
 	// but this is a more "genuine" representation of what each row represents
 	/*
 	for (int i = 0; i < dev_numRows; i++) {
-		groupType rowStart = dev_rowIndices[i]; // inclusive
-		groupType rowEnd = dev_rowIndices[i + 1]; // exclusive
+		groupNum rowStart = dev_rowIndices[i]; // inclusive
+		groupNum rowEnd = dev_rowIndices[i + 1]; // exclusive
 
 		printf("Row data: ");
 		for (int j = rowStart; j < rowEnd; j++) {
@@ -39,14 +39,14 @@ __global__ void groupDataDeviceValidate() {
 	//*/
 }
 
-__host__ groupType* hostArrayToDevice(groupType* arr, int size)
+__host__ groupNum* hostArrayToDevice(groupNum* arr, int size)
 {
-	groupType* ret = (groupType*)cudaMallocSafe(size * sizeof(groupType));
-	cudaMemcpy(ret, arr, size * sizeof(groupType), cudaMemcpyHostToDevice);
+	groupNum* ret = (groupNum*)cudaMallocSafe(size * sizeof(groupNum));
+	cudaMemcpy(ret, arr, size * sizeof(groupNum), cudaMemcpyHostToDevice);
 	return ret;
 }
 
-__host__ void saveGroupData(groupType* groupData, groupType* rowIndices, groupType numRows)
+__host__ void saveGroupData(groupNum* groupData, groupNum* rowIndices, groupNum numRows)
 {
 	// Array validation host-side:
 
@@ -54,8 +54,8 @@ __host__ void saveGroupData(groupType* groupData, groupType* rowIndices, groupTy
 	std::cout << "Reconstructing groupData..." << "\n";
 
 	for (int i = 0; i < numRows; i++) {
-		groupType startIdx = rowIndices[i];
-		groupType endIdx = rowIndices[i + 1];
+		groupNum startIdx = rowIndices[i];
+		groupNum endIdx = rowIndices[i + 1];
 		for (int i = startIdx; i < endIdx; i++) {
 			std::cout << groupData[i] << " ";
 		}
