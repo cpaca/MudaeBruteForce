@@ -10,7 +10,7 @@ int main() {
 
     readFile();
 
-    CUDAErrorCheck(cudaErrorMemoryAllocation);
+    // CUDAErrorCheck(cudaErrorMemoryAllocation);
 
     size_t numBundles;
     // first read the bundlesStr
