@@ -142,7 +142,8 @@ __host__ void saveAllGroupData(groupNum* groupData, groupNum* rowIndices, groupN
 	// groupDataDeviceValidate<<<1, 1 >>>();
 
 	getGroupDataValidate();
-	getGroupDataDeviceValidate<<<1, 1 >>>();
+	globalFunc(getGroupDataDeviceValidate, 1, 1)();
+	// getGroupDataDeviceValidate abc <<< 1, 1 >>>();
 }
 
 __host__ void cleanupGroupData()
